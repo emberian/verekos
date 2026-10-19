@@ -7,12 +7,17 @@ hand-edited. It renders one row per panel from the committed control files
 
 Reading a row:
 
-- **Items / Agree / Classified / Unexplained** — from a control-vs-control
-  run through `score.py`'s own diff code (the positive control of
-  exploration 03 §3.5-1, re-run on every render), so a broken diff can never
-  produce a board. Agree + classified + unexplained = items (§3.1). The law
+- **Items / Test asserts / Agree / Classified / Unexplained.** *Test asserts*
+  is the number that measures something today: EKOS's own function, run by
+  `control-dump` on the transcribed input, reproduced N of M of the Rust
+  test's assertions (`--expected`, from the run recorded in
+  `controls/MANIFEST.json`). *Agree* is a control-vs-candidate run through
+  `score.py`'s diff code; **no VerEKOS candidate exists yet**, so today it is
+  the control against itself (exploration 03 §3.5-1), which proves only that
+  the diff code runs. Agree + classified + unexplained = items (§3.1). The law
   is zero *unexplained*; a classified difference is counted and shown, not
-  hidden, and `verekos_defect` rows stay red until fixed.
+  hidden, and a `verekos_defect` classification stays red (`score.py` exits
+  1) until fixed.
 - **Assurance** — one of the five labels below, from `panels/LABELS.json`.
   The label describes the kernel's *claim*, never the panel result: a panel
   can be 100/100 and still `design target`.
@@ -21,19 +26,24 @@ Reading a row:
 
 ## The five assurance labels
 
-Provenance note: exploration 03 §3.6 sources these from the hyperdreggmedia
-audit and asks the lane to copy the audit's wording verbatim. That audit is
-not in this repository and was not available to the W9 lane, so the
-definitions below are the assignment rules of §3.6 itself; when the audit's
-wording arrives, it replaces this section verbatim.
+Exploration 03 §3.6 took these from the hyperdreggmedia audit, which is not in
+this repository; the wording below is ours. It was rewritten on 2026-10-19 when
+the Isabelle layer was dropped: every kernel is a Lean definition in `world/`,
+so "proved" means a Lean theorem about the definition that is *run* on the
+panel, not a HOL function exported to ML.
 
 | Label | Meaning |
 |---|---|
-| `design target` | no theory yet; the row exists to say the panel is measured by the control only (every row at M0.5 is this) |
-| `executable property` | a HOL/QuickCheck-style property, no theorem |
-| `conditional` | theorem with an explicit premise (e.g. a coverage premise) |
-| `proved` | theorem on the HOL function, unconditional, and the exported ML is hash-tied to the session receipt |
-| `cross-language` | the claim crosses the Lean/Isabelle seam (design §3) |
+| `design target` | no theorem about this kernel yet; the panel is measured by the control only (every row today) |
+| `executable property` | a property checked by running a Lean definition on the panel, with no theorem behind it |
+| `conditional` | a Lean theorem with an explicit premise (injective ids, a coverage premise), and the panel is scored by running that same definition |
+| `proved` | a Lean theorem with no premise beyond the model's definitions, and the panel is scored by running that same definition, hash-tied to the build |
+| `cross-language` | the claim crosses a seam no theorem covers: the Lean model on one side, a deployed minidregg host or a non-Lean reader on the other |
+
+A label describes the kernel's claim, never the panel result. A theorem about
+`World.Visible` does not make the `scope.decision` row `proved` until the
+same definition answers the panel's items; until then the row stays
+`design target` however many theorems exist.
 
 ## Files
 

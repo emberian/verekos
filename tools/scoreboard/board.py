@@ -32,6 +32,11 @@ ROOT = HERE.parent.parent
 STANDING = ("Counts are agree / classified / unexplained. Agree with the control is not "
             "correctness: EKOS can be wrong (see classified ekos_defect rows). Classified "
             "differences are not hidden; they are counted.")
+NO_CANDIDATE = ("No VerEKOS candidate is scored yet. Until one is, the Agree column is the control "
+                "scored against itself (exploration 03 §3.5-1): it shows the diff code runs, nothing "
+                "more. The column that measures something today is **Test asserts**: EKOS's own "
+                "function, run on the transcribed input, reproduced what the Rust test asserts "
+                "(from the last `regen_controls.py` run recorded in controls/MANIFEST.json).")
 
 
 def load_score():
@@ -44,12 +49,33 @@ def load_score():
 def manifest_head():
     path = ROOT / "controls/MANIFEST.json"
     if not path.is_file():
-        return None, None, None
+        return None, None, None, {}
     text = path.read_text()
     m = json.loads(text)
     commit = m.get("ekos", {}).get("commit")
     tree = m.get("ekos", {}).get("tree")
-    return commit, tree, load_score().sha256_of(text)
+    runs = {r["control"]: r for r in m.get("runs", []) if "control" in r}
+    return commit, tree, load_score().sha256_of(text), runs
+
+
+def panel_item_count(path: Path, name: str):
+    """Items of panel `name` in a panel file (several panels share a file)."""
+    if not path.is_file():
+        return None
+    n = 0
+    for line in path.read_text().splitlines():
+        if line.strip() and json.loads(line).get("panel") == name:
+            n += 1
+    return n
+
+
+def asserts_cell(run, expected_file):
+    """The control's reproduction of the transcribed test assertions."""
+    if run and run.get("items") is not None:
+        return f"{run.get('agree')} / {run['items']}"
+    if expected_file:
+        return "no control yet"
+    return "—"
 
 
 def load_manifest_entries():
@@ -85,7 +111,7 @@ def main() -> int:
     labels = json.loads((ROOT / "panels/LABELS.json").read_text())
     check_labels(labels)
     classified = load_manifest_entries()
-    commit, tree, manifest_sha = manifest_head()
+    commit, tree, manifest_sha, runs = manifest_head()
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     lines = []
@@ -98,12 +124,16 @@ def main() -> int:
         lines.append(f"- EKOS pin: `{commit}`"
                      + (f" (tree `{tree}`)" if tree else "")
                      + (f", control manifest `sha256:{manifest_sha[:12]}…`" if manifest_sha else ""))
-    lines.append(f"- Panels: {len(labels['panels'])} measured rows, {len(labels['placeholders'])} placeholder rows")
+    scored = sum(1 for r in labels["panels"].values() if r.get("control_file"))
+    lines.append(f"- Panels: {scored} rows with an item-keyed control, "
+                 f"{len(labels['panels']) - scored} rows with inputs but no item-keyed control, "
+                 f"{len(labels['placeholders'])} placeholder rows (no panel yet)")
     lines.append(f"- {STANDING}")
+    lines.append(f"- {NO_CANDIDATE}")
     lines.append("")
 
-    lines.append("| Kernel | Panel | Items | Agree | Classified (E / V / N) | Unexplained | Assurance | Scope: what this panel measures | Does NOT measure |")
-    lines.append("|---|---|---|---|---|---|---|---|---|")
+    lines.append("| Kernel | Panel | Items | Test asserts | Agree | Classified (E / V / N) | Unexplained | Assurance | Scope: what this panel measures | Does NOT measure |")
+    lines.append("|---|---|---|---|---|---|---|---|---|---|")
     detail = []
     for key, row in labels["panels"].items():
         if row.get("control_file"):
@@ -114,20 +144,22 @@ def main() -> int:
                 sys.exit(f"{key}: the control self-score is not clean: {r}")
             classes = [e["class"] for _, _, e, _ in r["_classified"]]
             n_e, n_v, n_n = (classes.count(c) for c in ("ekos_defect", "verekos_defect", "non_goal"))
-            lines.append(f"| {row['kernel']} | `{key}` | {r['items']} | {r['agree']} | "
+            lines.append(f"| {row['kernel']} | `{key}` | {r['items']} | "
+                         f"{asserts_cell(runs.get(row['control_file']), row.get('expected_file', True))} | {r['agree']} | "
                          f"{n_e} / {n_v} / {n_n} | {r['unexplained']} (law: 0) | {row['assurance']} | "
                          f"{esc(row['measures'])} | {esc(row['does_not_measure'])} |")
             matched = [e for _, _, e, _ in r["_classified"]]
             detail.append((key, row, r, matched))
         else:
-            status = row.get("status", "no control yet")
-            lines.append(f"| {row['kernel']} | `{key}` | — | — | — | — | {row['assurance']} | "
+            n = panel_item_count(ROOT / row["panel_file"], key) if row.get("panel_file") else None
+            lines.append(f"| {row['kernel']} | `{key}` | {n if n is not None else '—'} | "
+                         f"{asserts_cell(None, row.get('expected_file'))} | — | — | — | {row['assurance']} | "
                          f"{esc(row['measures'])} | {esc(row['does_not_measure'])} |")
             detail.append((key, row, None, []))
     for row in labels["placeholders"]:
         items = row.get("items")
         items_cell = str(items) if items is not None else "—"
-        lines.append(f"| {row['kernel']} | `{row['panel']}` ({esc(row['status'])}) | {items_cell} | — | — | — | "
+        lines.append(f"| {row['kernel']} | `{row['panel']}` ({esc(row['status'])}) | {items_cell} | — | — | — | — | "
                      f"{row['assurance']} | {esc(row['measures'])} | {esc(row['does_not_measure'])} |")
 
     lines.append("")
@@ -172,7 +204,9 @@ def main() -> int:
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text("\n".join(lines))
-    print(json.dumps({"board": str(args.out.relative_to(ROOT)), "rows": len(labels["panels"]),
+    out = args.out.resolve()
+    print(json.dumps({"board": str(out.relative_to(ROOT)) if out.is_relative_to(ROOT) else str(out),
+                      "rows": len(labels["panels"]),
                       "placeholders": len(labels["placeholders"]),
                       "classified_entries": len(classified)}))
     return 0
