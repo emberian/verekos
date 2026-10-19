@@ -46,11 +46,26 @@ use crate::{Item, Report};
 /// (lib.rs:47-53): strip the volatile top-level `created_at`, then hash via
 /// EKOS's own canonical-JSON `ArtifactId::compute`.
 fn content_signature_of(obj: &KirObject) -> Result<String, String> {
+    let payload = serialize_minus(obj, &["created_at"])?;
+    Ok(ArtifactId::compute(&payload).as_str().to_string())
+}
+
+/// The same signature with the `evidence` id list stripped too — the
+/// EKOS#10 discriminator: a re-run that forks a version *only* through new
+/// random evidence ids moves `signature` but not this.
+fn signature_minus_evidence(obj: &KirObject) -> Result<String, String> {
+    let payload = serialize_minus(obj, &["created_at", "evidence"])?;
+    Ok(ArtifactId::compute(&payload).as_str().to_string())
+}
+
+fn serialize_minus(obj: &KirObject, strip: &[&str]) -> Result<Value, String> {
     let mut payload = serde_json::to_value(obj).map_err(|e| format!("serialize object: {e}"))?;
     if let Value::Object(ref mut map) = payload {
-        map.remove("created_at");
+        for key in strip {
+            map.remove(*key);
+        }
     }
-    Ok(ArtifactId::compute(&payload).as_str().to_string())
+    Ok(payload)
 }
 
 /// One object row of the control line.
@@ -68,9 +83,11 @@ fn object_row(ledger: &FactLedger, obj: &KirObject) -> Result<Value, String> {
         .unwrap_or("?")
         .to_string();
     let mut version_signatures = Vec::with_capacity(history.len());
+    let mut version_signatures_no_evidence = Vec::with_capacity(history.len());
     let mut version_evidence = Vec::with_capacity(history.len());
     for version in &history {
         version_signatures.push(content_signature_of(version)?);
+        version_signatures_no_evidence.push(signature_minus_evidence(version)?);
         version_evidence.push(
             version
                 .evidence
@@ -89,6 +106,7 @@ fn object_row(ledger: &FactLedger, obj: &KirObject) -> Result<Value, String> {
         "evidence": current.evidence.iter().map(|ev| ev.0.to_string())
             .collect::<Vec<String>>(),
         "version_signatures": version_signatures,
+        "version_signatures_no_evidence": version_signatures_no_evidence,
         "version_evidence": version_evidence,
     }))
 }
