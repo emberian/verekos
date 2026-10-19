@@ -85,17 +85,17 @@ def isLeaf : J → Bool
 arrays of strings on one line, and a leaf predicate on one line when it is an
 element of a `predicates` list nested at least two lists deep. (This rule was
 fitted to the four files; the receipt is that it reproduces them.) -/
-partial def pretty (level : Nat) (depth : Nat) (j : J) : String :=
+partial def pretty (level : Nat) (depth : Nat) (j : J) (elem : Bool := false) : String :=
   let ind := fun (n : Nat) => "".pushn ' ' (2 * n)
   match j with
   | .obj kvs =>
-    if depth ≥ 2 && isLeaf j then J.flat false ", " ": " j
+    if elem && depth ≥ 2 && isLeaf j then J.flat false ", " ": " j
     else
       "{\n" ++ ",\n".intercalate (kvs.map fun (k, v) =>
         ind (level + 1) ++ J.escape k ++ ": " ++ (match v with
           | .arr xs =>
             if xs.all (fun x => match x with | .obj _ => false | _ => true) then J.flat false ", " ": " v
-            else "[\n" ++ ",\n".intercalate (xs.map fun x => ind (level + 2) ++ pretty (level + 2) (depth + 1) x) ++
+            else "[\n" ++ ",\n".intercalate (xs.map fun x => ind (level + 2) ++ pretty (level + 2) (depth + 1) x true) ++
               "\n" ++ ind (level + 1) ++ "]"
           | .obj _ => pretty (level + 1) depth v
           | _ => J.flat false ", " ": " v)) ++ "\n" ++ ind level ++ "}"
