@@ -28,6 +28,7 @@ pair of claims, so a relation that holds one way round is found.
 Every name here is new to VerEKOS.
 -/
 import World.Conflicts
+import World.ClashCore
 
 namespace World
 
@@ -36,22 +37,7 @@ set_option autoImplicit false
 variable {C : Carriers} {P : C.SchemaId → Type} [∀ s, DecidableEq (P s)]
 variable (reg : Registry C P)
 
-/-- A clash table: for each schema, when two (sources, value) pairs clash. -/
-abbrev Clash (C : Carriers) :=
-  C.SchemaId → (List C.SourceId × C.Digest) → (List C.SourceId × C.Digest) → Bool
-
-/-- The default: values differ. -/
-def Clash.differ : Clash C := fun _ x y => decide (x.2 ≠ y.2)
-
 variable (κ : Clash C)
-
-/-- The attributes on which `c₁` states a value that clashes with one `c₂`
-states. -/
-def disagreeOnBy (c₁ c₂ : Claim C P) : List C.Digest :=
-  (c₁.stated reg).filterMap fun av =>
-    if (c₂.stated reg).any (fun bw => decide (bw.1 = av.1) &&
-        κ c₁.key.schema (c₁.key.sources, av.2) (c₂.key.sources, bw.2))
-    then some av.1 else none
 
 /-- The conflict keys of a claim set under `κ`. -/
 def detectBy (cs : Finset (Claim C P)) : Finset (ConflictKey C) :=
@@ -61,34 +47,6 @@ def detectBy (cs : Finset (Claim C P)) : Finset (ConflictKey C) :=
 /-- `detectBy` on a list: its set of distinct claims. -/
 def detectListBy (l : List (Claim C P)) : Finset (ConflictKey C) :=
   detectBy reg κ l.toFinset
-
-omit [∀ s, DecidableEq (P s)] in
-theorem mem_disagreeOnBy (c₁ c₂ : Claim C P) (a : C.Digest) :
-    a ∈ disagreeOnBy reg κ c₁ c₂ ↔
-      ∃ v₁ v₂, (a, v₁) ∈ c₁.stated reg ∧ (a, v₂) ∈ c₂.stated reg ∧
-        κ c₁.key.schema (c₁.key.sources, v₁) (c₂.key.sources, v₂) = true := by
-  unfold disagreeOnBy
-  rw [List.mem_filterMap]
-  constructor
-  · rintro ⟨⟨a', v₁⟩, hmem, hsome⟩
-    split at hsome
-    · rename_i hany
-      simp only [Option.some.injEq] at hsome
-      subst hsome
-      rw [List.any_eq_true] at hany
-      obtain ⟨⟨b, w⟩, hbw, hdec⟩ := hany
-      simp only [Bool.and_eq_true, decide_eq_true_eq] at hdec
-      obtain ⟨rfl, hk⟩ := hdec
-      exact ⟨v₁, w, hmem, hbw, hk⟩
-    · exact absurd hsome (by simp)
-  · rintro ⟨v₁, v₂, h₁, h₂, hk⟩
-    refine ⟨(a, v₁), h₁, ?_⟩
-    have : (c₂.stated reg).any (fun bw => decide (bw.1 = a) &&
-        κ c₁.key.schema (c₁.key.sources, v₁) (c₂.key.sources, bw.2)) = true := by
-      rw [List.any_eq_true]
-      exact ⟨(a, v₂), h₂, by simp [hk]⟩
-    simp only at this ⊢
-    rw [if_pos this]
 
 /-- **Exact characterization of `detectBy`.** -/
 theorem mem_detectBy (cs : Finset (Claim C P)) (k : ConflictKey C) :
@@ -107,6 +65,13 @@ theorem mem_detectBy (cs : Finset (Claim C P)) (k : ConflictKey C) :
   · rintro ⟨c₁, h₁, c₂, h₂, hne, hsame, a, v₁, v₂, hv₁, hv₂, hk, rfl⟩
     exact ⟨c₁, c₂, ⟨⟨h₁, h₂⟩, hne, hsame⟩, a,
       (mem_disagreeOnBy reg κ c₁ c₂ a).mpr ⟨v₁, v₂, hv₁, hv₂, hk⟩, rfl⟩
+
+/-- **The list detector of `WorldCore` computes `detectListBy`.** -/
+theorem detectLBy_toFinset (l : List (Claim C P)) :
+    (detectLBy reg κ l).toFinset = detectListBy reg κ l := by
+  ext k
+  rw [List.mem_toFinset, mem_detectLBy, detectListBy, mem_detectBy]
+  simp only [List.mem_toFinset]
 
 /-- **Coverage** under any clash table. -/
 theorem coverageBy (cs : Finset (Claim C P)) (c₁ c₂ : Claim C P)
@@ -143,24 +108,6 @@ theorem detectBy_mono (cs cs' : Finset (Claim C P)) (h : cs ⊆ cs') :
   obtain ⟨c₁, h₁, c₂, h₂, rest⟩ := (mem_detectBy reg κ cs k).mp hk
   exact (mem_detectBy reg κ cs' k).mpr ⟨c₁, h₁ |> h, c₂, h h₂, rest⟩
 
-omit [∀ s, DecidableEq (P s)] in
-/-- The default table gives the old `disagreeOn`. -/
-theorem disagreeOnBy_differ (c₁ c₂ : Claim C P) :
-    disagreeOnBy reg Clash.differ c₁ c₂ = disagreeOn reg c₁ c₂ := by
-  unfold disagreeOnBy disagreeOn Clash.differ
-  have key : ∀ av bw : C.Digest × C.Digest,
-      (decide (bw.1 = av.1) && decide ((c₁.key.sources, av.2).2 ≠ (c₂.key.sources, bw.2).2)) =
-        decide (bw.1 = av.1 ∧ bw.2 ≠ av.2) := by
-    intro av bw
-    by_cases h1 : bw.1 = av.1 <;> by_cases h2 : bw.2 = av.2
-    · simp [h1, h2]
-    · have : ¬ av.2 = bw.2 := fun h => h2 h.symm
-      simp [h1, h2, this]
-    · simp [h1, h2]
-    · have : ¬ av.2 = bw.2 := fun h => h2 h.symm
-      simp [h1, h2, this]
-  simp only [key]
-
 /-- **The default clash table is exactly `detect`.** Every theorem about
 `detect` is the default instance of the theorems here. -/
 theorem detectBy_differ (cs : Finset (Claim C P)) : detectBy reg Clash.differ cs = detect reg cs := by
@@ -168,23 +115,6 @@ theorem detectBy_differ (cs : Finset (Claim C P)) : detectBy reg Clash.differ cs
   simp only [disagreeOnBy_differ]
 
 /-! ## EKOS's label-mismatch rule -/
-
-/-- Two lists share no element. -/
-def disjointB {α : Type} [DecidableEq α] (l₁ l₂ : List α) : Bool :=
-  l₁.all fun a => !(l₂.contains a)
-
-theorem disjointB_iff {α : Type} [DecidableEq α] (l₁ l₂ : List α) :
-    disjointB l₁ l₂ = true ↔ ∀ a ∈ l₁, a ∉ l₂ := by
-  simp [disjointB, List.all_eq_true]
-
-/-- EKOS's rule for the schema `label` (word sets read off a value by
-`wordsOf`, standing in for `label_words`): clash iff the source sets are
-disjoint and the word sets are disjoint. Every other schema keeps the
-default. -/
-def labelClash (label : C.SchemaId) (wordsOf : C.Digest → List C.KeyPart) : Clash C :=
-  fun s x y =>
-    if s = label then disjointB x.1 y.1 && disjointB (wordsOf x.2) (wordsOf y.2)
-    else decide (x.2 ≠ y.2)
 
 /-- **What the label rule detects.** A key of the label schema is detected
 iff two different claims about the same subject state labels for that

@@ -1,5 +1,5 @@
 name = "world"
-defaultTargets = ["World"]
+defaultTargets = ["World", "WorldCore"]
 
 # minidregg, pinned to one commit and taken from the local checkout (no network).
 # Why not `path = "/Users/ember/dev/minidregg"`: a path dependency is built in
@@ -16,3 +16,8 @@ rev = "dcab86da8f6153ed2b522fc61c5064608694fd83"
 
 [[lean_lib]]
 name = "World"
+
+# The Mathlib-free core: every module WorldCore.lean imports, and nothing they
+# import may come from outside that set (check-core-imports.sh).
+[[lean_lib]]
+name = "WorldCore"

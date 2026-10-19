@@ -23,7 +23,7 @@ This file imports Mathlib's `Finset`. Every name here is new to VerEKOS.
 -/
 import Mathlib.Data.Finset.Basic
 import Mathlib.Data.Finset.Prod
-import World.Claim
+import World.ConflictsCore
 
 namespace World
 
@@ -31,28 +31,6 @@ set_option autoImplicit false
 
 variable {C : Carriers} {P : C.SchemaId → Type} [∀ s, DecidableEq (P s)]
 variable (reg : Registry C P)
-
-/-- A conflict key: (schema, subject, attribute). There is at most one conflict
-per key because the result of `detect` is a set of keys. -/
-abbrev ConflictKey (C : Carriers) := C.SchemaId × List C.KeyPart × C.Digest
-
-/-- What a claim states outright, through its schema. -/
-def Claim.stated (c : Claim C P) : List (C.Digest × C.Digest) :=
-  (reg c.key.schema).stated c.payload
-
-/-- The attributes on which `c₁` states a value and `c₂` states a different
-value. -/
-def disagreeOn (c₁ c₂ : Claim C P) : List C.Digest :=
-  (c₁.stated reg).filterMap fun av =>
-    if (c₂.stated reg).any (fun bw => decide (bw.1 = av.1 ∧ bw.2 ≠ av.2)) then some av.1
-    else none
-
-/-- Same subject: same schema and same subject key (sources may differ). -/
-def sameSubject (c₁ c₂ : Claim C P) : Prop :=
-  c₁.key.schema = c₂.key.schema ∧ c₁.key.subject = c₂.key.subject
-
-instance (c₁ c₂ : Claim C P) : Decidable (sameSubject c₁ c₂) := by
-  unfold sameSubject; infer_instance
 
 /-- The conflict keys of a claim set. -/
 def detect (cs : Finset (Claim C P)) : Finset (ConflictKey C) :=
@@ -62,29 +40,6 @@ def detect (cs : Finset (Claim C P)) : Finset (ConflictKey C) :=
 /-- `detect` on a list: its set of distinct claims. -/
 def detectList (l : List (Claim C P)) : Finset (ConflictKey C) :=
   detect reg l.toFinset
-
-omit [∀ s, DecidableEq (P s)] in
-theorem mem_disagreeOn (c₁ c₂ : Claim C P) (a : C.Digest) :
-    a ∈ disagreeOn reg c₁ c₂ ↔
-      ∃ v₁ v₂, (a, v₁) ∈ c₁.stated reg ∧ (a, v₂) ∈ c₂.stated reg ∧ v₁ ≠ v₂ := by
-  unfold disagreeOn
-  rw [List.mem_filterMap]
-  constructor
-  · rintro ⟨⟨a', v₁⟩, hmem, hsome⟩
-    split at hsome
-    · rename_i hany
-      simp only [Option.some.injEq] at hsome
-      subst hsome
-      rw [List.any_eq_true] at hany
-      obtain ⟨⟨b, w⟩, hbw, hdec⟩ := hany
-      simp only [decide_eq_true_eq] at hdec
-      obtain ⟨rfl, hne⟩ := hdec
-      exact ⟨v₁, w, hmem, hbw, Ne.symm hne⟩
-    · exact absurd hsome (by simp)
-  · rintro ⟨v₁, v₂, h₁, h₂, hne⟩
-    refine ⟨(a, v₁), h₁, ?_⟩
-    simp
-    exact ⟨v₂, h₂, Ne.symm hne⟩
 
 /-- **Exact characterization of `detect`.** A key is detected iff two
 different claims in the set, about the same schema and subject, state
@@ -104,6 +59,12 @@ theorem mem_detect (cs : Finset (Claim C P)) (k : ConflictKey C) :
   · rintro ⟨c₁, h₁, c₂, h₂, hne, hsame, a, v₁, v₂, hv₁, hv₂, hv, rfl⟩
     exact ⟨c₁, c₂, ⟨⟨h₁, h₂⟩, hne, hsame⟩, a,
       (mem_disagreeOn reg c₁ c₂ a).mpr ⟨v₁, v₂, hv₁, hv₂, hv⟩, rfl⟩
+
+/-- **The list detector of `WorldCore` computes `detectList`.** -/
+theorem detectL_toFinset (l : List (Claim C P)) : (detectL reg l).toFinset = detectList reg l := by
+  ext k
+  rw [List.mem_toFinset, mem_detectL, detectList, mem_detect]
+  simp only [List.mem_toFinset]
 
 /-- **Coverage.** Every disagreement between two different claims about the
 same subject is detected, under the key (schema, subject, attribute). -/

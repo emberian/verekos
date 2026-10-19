@@ -47,7 +47,7 @@ grant.
 
 Every other name here is new to VerEKOS.
 -/
-import World.WellFormed
+import World.Ranked
 import World.Traverse
 
 namespace World

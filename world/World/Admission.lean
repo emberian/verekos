@@ -35,7 +35,7 @@ nothing pins it. A fuller law would re-rank the dependents. See the memo.
 
 Every name here is new to VerEKOS.
 -/
-import World.WellFormed
+import World.Ranked
 
 namespace World
 
