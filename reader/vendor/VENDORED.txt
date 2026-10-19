@@ -1,6 +1,0 @@
-7ceeb05f5d2bd8b571670351061f1d2dda6af98cb5eb1acb17ed0afa7d8302c2  slice1/mapper.py
-(above: sha256 of /Users/ember/dev/verekos/slice1/mapper.py at copy time.)
-mapper.py is W17's file, copied unchanged so the reader folder runs on its own. The reader uses
-it for three things only: `num` (the atom id of a statement from its structural key), `split` /
-`structural_key` (the statement boundaries), and `Doc` / `Source` (reading a signed read).
-Compare with `sha256sum slice1/mapper.py` to see whether W17's file has moved on.

@@ -1,0 +1,1 @@
+These four `L-*.json` files are generated: `verekos-map laws --out laws` (map/, from minidregg `Pred` values) produces them, and `map/receipt.sh` checks they are unchanged; edit `map/VerekosMap/Laws.lean`, not these files (`check.py` stays, as an independent spelling check).
