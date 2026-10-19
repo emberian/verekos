@@ -1,0 +1,34 @@
+{
+  "note": "W5 partial manifest: only the scope.decision and conflicts.unit controls exist yet; the full manifest of exploration 03 \u00a72.1 is written by regen_controls.py, which does not exist yet.",
+  "ekos": {
+    "repo": "/Users/ember/dev/EKOS",
+    "commit": "8e3c178fc45741c7e2b1576e936646e0c461e75c",
+    "dirty": false
+  },
+  "dump_binary": {
+    "path": "tools/scoreboard/control-dump/target/debug/control-dump",
+    "sha256": "7ee741d567dee83c84d84e2b9e09a60650edf34967920870c6cfc8c2ca5fb559",
+    "source_tree_sha256": "aac816f098d320d45c0d2d4ad004e5a9b6e789f422c1a5af8af8ae5f067a8fd8",
+    "source_files": [
+      "tools/scoreboard/control-dump/Cargo.toml",
+      "tools/scoreboard/control-dump/Cargo.lock",
+      "tools/scoreboard/control-dump/src/main.rs",
+      "tools/scoreboard/control-dump/src/scope_dump.rs",
+      "tools/scoreboard/control-dump/src/conflicts_dump.rs"
+    ]
+  },
+  "panels": {
+    "panels/scope/decision.jsonl": "43c3119e3f7a56a258f1bc58f871172ab6e7529b69595e7a90875fb82449d136",
+    "panels/conflicts/unit.jsonl": "b0c268c2161dbac531e38f0601058b15b2048d44ae408e8f5ceb59b15a43d321"
+  },
+  "controls": {
+    "controls/scope.decision.expected.jsonl": "071705f373d7391291fd67bdfe93b6f7ab6c050de941b35f213e569b3cd59020",
+    "controls/scope.decision.control.jsonl": "6249610707a4ad763d39f1f93937ac52cb96fe206dd79b1f7a8a94ceccd58cf2",
+    "controls/conflicts.unit.expected.jsonl": "63dc35d5b8544ac6afbb1342521bc91aeeee641fffe8125ddb85209c27221e50",
+    "controls/conflicts.unit.control.jsonl": "07533414d14b19e3a5c6e46e0042c31c9010a7af39688f69db6298b1895c4494"
+  },
+  "volatile_fields_stripped": [
+    "created_at"
+  ],
+  "recorded": "2026-10-19T14:50:00Z"
+}
