@@ -80,7 +80,7 @@ structure SourceDoc (C : Carriers) (A : Type) where
   deriving DecidableEq
 
 section source
-variable {A : Type} [DecidableEq A] (atomOf : List C.KeyPart → A)
+variable {A : Type} (atomOf : List C.KeyPart → A)
 
 /-- Import a file: one text atom per statement, written at revision `r`, its
 id derived from its structural key. -/
@@ -120,9 +120,11 @@ theorem importSource_statements (D : SourceDoc C A) (r : Nat) (hk : D.WellKeyed 
   conv_rhs => rw [← List.map_id atoms]
   apply List.map_congr_left
   intro a ha
+  have h1 := hk _ ha
+  have h2 := hr _ ha
   obtain ⟨i, k, rv, b⟩ := a
-  simp only [Function.comp_apply, id_eq, TextAtom.mk.injEq]
-  exact ⟨(hk _ ha).symm, rfl, (hr _ ha).symm, rfl⟩
+  simp only at h1 h2
+  simp only [Function.comp_apply, id_eq, h1, h2]
 
 /-- **An import's atom pins are exactly its statements' derived ids at the
 import revision.** -/
@@ -156,10 +158,9 @@ theorem reimport_unchanged (D : SourceDoc C A) (r : Nat) (hk : D.WellKeyed atomO
     refine ⟨by simp, l₁, l₂, rfl, fun b hb => ?_⟩
     simp only [List.map_append, List.map_cons] at hnd
     have := List.nodup_append.mp hnd
-    simp only [beq_iff_eq, Bool.not_eq_true]
-    rw [beq_eq_false_iff_ne]
-    intro hba
-    exact this.2.2 _ (List.mem_map_of_mem hb) _ List.mem_cons_self hba
+    have hne : b.key ≠ a.key := fun hba =>
+      this.2.2 _ (List.mem_map_of_mem hb) _ List.mem_cons_self hba
+    simpa using hne
   rw [hfind]
   simp
 
@@ -167,7 +168,7 @@ theorem reimport_unchanged (D : SourceDoc C A) (r : Nat) (hk : D.WellKeyed atomO
 fresh revision `r` (larger than every revision in the document), the atom for
 statement `s`, whose key had atom `a`, keeps `a`'s revision iff `s`'s bytes
 equal `a`'s. -/
-theorem reimport_rev_iff (D : SourceDoc C A) (stmts : List (Statement C)) (r : Nat)
+theorem reimport_rev_iff (D : SourceDoc C A) (r : Nat)
     (hfresh : ∀ a ∈ D.atoms, a.rev < r) (s : Statement C) (a : TextAtom C A)
     (ha : D.atoms.find? (fun b => b.key == s.key) = some a) :
     (match D.atoms.find? (fun b => b.key == s.key) with
@@ -203,12 +204,16 @@ structure Manifest (C : Carriers) where
 def Manifest.current (M : Manifest C) : List (List C.KeyPart × C.ClaimId) :=
   (M.links.filter (·.live)).map fun l => (l.key, l.cell)
 
+/-- Unlink an entry if it is live and no longer emitted. -/
+def Manifest.unlinkIfGone (emitted : List (List C.KeyPart × C.ClaimId)) (l : ManifestLink C) :
+    ManifestLink C :=
+  if l.live && !(emitted.contains (l.key, l.cell)) then { l with live := false } else l
+
 /-- A compile that emits `emitted`: unlink every live entry it no longer
 emits, link every emitted entry not already live. Nothing is deleted. -/
 def Manifest.compile (M : Manifest C) (emitted : List (List C.KeyPart × C.ClaimId)) :
     Manifest C :=
-  ⟨M.links.map (fun l => if l.live && !(emitted.contains (l.key, l.cell))
-      then { l with live := false } else l) ++
+  ⟨M.links.map (Manifest.unlinkIfGone emitted) ++
     (emitted.filter fun e => !(M.current.contains e)).map fun e => ⟨e.1, e.2, true⟩⟩
 
 /-- A manifest holding exactly a current set. -/
@@ -217,34 +222,44 @@ def Manifest.ofCurrent (es : List (List C.KeyPart × C.ClaimId)) : Manifest C :=
 
 theorem current_ofCurrent (es : List (List C.KeyPart × C.ClaimId)) :
     (Manifest.ofCurrent es).current = es := by
-  simp [Manifest.ofCurrent, Manifest.current, Function.comp_def]
+  induction es with
+  | nil => rfl
+  | cons e es ih =>
+    simp only [Manifest.ofCurrent, Manifest.current, List.map_cons, List.filter_cons,
+      if_true] at ih ⊢
+    rw [ih]
+
+theorem mem_current (M : Manifest C) (e : List C.KeyPart × C.ClaimId) :
+    e ∈ M.current ↔ ∃ l ∈ M.links, l.live = true ∧ (l.key, l.cell) = e := by
+  simp [Manifest.current, and_assoc]
+
+theorem unlinkIfGone_spec (emitted : List (List C.KeyPart × C.ClaimId)) (l : ManifestLink C) :
+    (Manifest.unlinkIfGone emitted l).key = l.key ∧ (Manifest.unlinkIfGone emitted l).cell = l.cell ∧
+      ((Manifest.unlinkIfGone emitted l).live = true ↔
+        l.live = true ∧ (l.key, l.cell) ∈ emitted) := by
+  unfold Manifest.unlinkIfGone
+  by_cases hl : l.live = true <;> by_cases he : (l.key, l.cell) ∈ emitted <;>
+    simp [hl, he]
 
 /-- **After a compile, the current set is exactly what it emitted.** -/
 theorem mem_current_compile (M : Manifest C) (emitted : List (List C.KeyPart × C.ClaimId))
     (e : List C.KeyPart × C.ClaimId) :
     e ∈ (M.compile emitted).current ↔ e ∈ emitted := by
-  simp only [Manifest.compile, Manifest.current, List.filter_append, List.map_append,
-    List.mem_append, List.mem_map, List.mem_filter, Function.comp_def]
+  rw [mem_current]
+  simp only [Manifest.compile, List.mem_append, List.mem_map, List.mem_filter]
   constructor
-  · rintro (⟨l, ⟨hl, hlive⟩, rfl⟩ | ⟨l, ⟨⟨e', ⟨he', -⟩, rfl⟩, -⟩, rfl⟩)
-    · obtain ⟨l₀, hl₀, rfl⟩ := hl
-      by_cases h : l₀.live && !(emitted.contains (l₀.key, l₀.cell))
-      · simp [h] at hlive
-      · simp only [h, Bool.false_eq_true, if_false] at hlive ⊢
-        simp only [hlive, Bool.true_and, Bool.not_eq_true', Bool.not_eq_false] at h
-        simpa using h
+  · rintro ⟨l, (⟨l₀, hl₀, rfl⟩ | ⟨e', ⟨he', -⟩, rfl⟩), hlive, rfl⟩
+    · obtain ⟨hk, hc, hlv⟩ := unlinkIfGone_spec emitted l₀
+      rw [hk, hc]
+      exact (hlv.mp hlive).2
     · exact he'
   · intro he
-    by_cases hc : (M.links.filter (·.live)).map (fun l => (l.key, l.cell)) |>.contains e
-    · left
-      simp only [List.contains_iff_mem, List.mem_map, List.mem_filter] at hc
-      obtain ⟨l, ⟨hl, hlive⟩, rfl⟩ := hc
-      refine ⟨l, ⟨⟨l, hl, ?_⟩, ?_⟩, rfl⟩
-      · simp [hlive, List.contains_iff_mem.mpr he]
-      · exact hlive
-    · right
-      refine ⟨⟨e.1, e.2, true⟩, ⟨⟨e, ⟨he, ?_⟩, rfl⟩, rfl⟩, rfl⟩
-      simpa [Manifest.current] using hc
+    by_cases hc : e ∈ M.current
+    · obtain ⟨l₀, hl₀, hlive, rfl⟩ := (mem_current M e).mp hc
+      obtain ⟨hk, hcl, hlv⟩ := unlinkIfGone_spec emitted l₀
+      exact ⟨_, Or.inl ⟨l₀, hl₀, rfl⟩, hlv.mpr ⟨hlive, he⟩, by rw [hk, hcl]⟩
+    · exact ⟨⟨e.1, e.2, true⟩, Or.inr ⟨e, ⟨he, by simpa [List.contains_iff_mem] using hc⟩, rfl⟩,
+        rfl, rfl⟩
 
 /-- **An object a later compile no longer emits is no longer current.** -/
 theorem not_current_after_unemit (M : Manifest C) (emitted : List (List C.KeyPart × C.ClaimId))
@@ -256,16 +271,15 @@ a compile (live or unlinked), with the same key and cell. -/
 theorem history_kept (M : Manifest C) (emitted : List (List C.KeyPart × C.ClaimId))
     (l : ManifestLink C) (hl : l ∈ M.links) :
     ∃ l' ∈ (M.compile emitted).links, l'.key = l.key ∧ l'.cell = l.cell := by
-  refine ⟨if l.live && !(emitted.contains (l.key, l.cell)) then { l with live := false } else l,
-    List.mem_append_left _ (List.mem_map_of_mem hl), ?_⟩
-  split <;> simp
+  obtain ⟨hk, hc, -⟩ := unlinkIfGone_spec emitted l
+  exact ⟨_, List.mem_append_left _ (List.mem_map_of_mem hl), hk, hc⟩
 
 /-! ## `ekos/conflict/v1` -/
 
 /-- The conflict header atom. -/
 structure ConflictHeader (C : Carriers) where
   subject : C.ClaimId
-  attribute : C.Digest
+  attr : C.Digest
   conflictType : C.Digest
   signature : C.Digest
   deriving DecidableEq
@@ -289,7 +303,7 @@ structure ConflictDoc (C : Carriers) where
 /-- What a conflict is. -/
 structure Conflict (C : Carriers) where
   subject : C.ClaimId
-  attribute : C.Digest
+  attr : C.Digest
   conflictType : C.Digest
   members : List (ConflictMember C)
   deriving DecidableEq
@@ -300,13 +314,13 @@ variable (sigOf : C.Digest → List (C.Digest × C.SourceId) → C.Digest)
 /-- The signature: of the attribute and each member's (value, source). Like
 EKOS's `signature` (`conflicts.rs:162-171`), lines are left out. -/
 def Conflict.signature (k : Conflict C) : C.Digest :=
-  sigOf k.attribute (k.members.map fun m => (m.value, m.pin.source))
+  sigOf k.attr (k.members.map fun m => (m.value, m.pin.source))
 
 def encodeConflict (k : Conflict C) : ConflictDoc C :=
-  ⟨⟨k.subject, k.attribute, k.conflictType, k.signature sigOf⟩, k.members, k.subject⟩
+  ⟨⟨k.subject, k.attr, k.conflictType, k.signature sigOf⟩, k.members, k.subject⟩
 
 def decodeConflict (D : ConflictDoc C) : Conflict C :=
-  ⟨D.header.subject, D.header.attribute, D.header.conflictType, D.members⟩
+  ⟨D.header.subject, D.header.attr, D.header.conflictType, D.members⟩
 
 /-- The derived fields agree: the signature is the members' signature and
 `Disputes` points at the subject. -/
@@ -326,7 +340,7 @@ theorem encode_decodeConflict (D : ConflictDoc C) (h : D.Consistent sigOf) :
   obtain ⟨h1, h2⟩ := h
   simp only at h1 h2
   simp only [encodeConflict, decodeConflict, ConflictDoc.mk.injEq, ConflictHeader.mk.injEq,
-    true_and, and_true]
+    true_and]
   exact ⟨h1.symm, h2.symm⟩
 
 /-- The atom pins of a conflict document: every member's statement pin. -/
@@ -395,7 +409,9 @@ theorem decode_encodeReview (reviewed : C.ClaimId) (es : List (ReviewEntry C)) :
   simp only [decodeReview, encodeReview]
   induction es with
   | nil => rfl
-  | cons e es ih => simp [List.mapM_cons, toEntry_toContainer] at ih ⊢; exact ih
+  | cons e es ih =>
+    simp only [List.map_cons, List.mapM_cons, toEntry_toContainer] at ih ⊢
+    rw [ih]; rfl
 
 /-- **A review document whose every pin names one atom is exactly the
 encoding of its entries.** -/
@@ -414,18 +430,14 @@ theorem encode_decodeReview (D : ReviewDoc C) (es : List (ReviewEntry C))
       cases hr : dcs.mapM DecisionContainer.toEntry with
       | none => simp [hdc, hr] at h
       | some es' =>
-        simp only [hdc, hr, Option.bind_eq_bind, Option.bind_some, Option.pure_def,
-          Option.some.injEq] at h
+        simp [hdc, hr] at h
         subst h
         have hdc' : e.toContainer = dc := by
           obtain ⟨d, ⟨src, atoms⟩⟩ := dc
           simp only [DecisionContainer.toEntry] at hdc
           split at hdc
-          · rename_i a hat
-            simp only [Option.some.injEq] at hdc
+          · simp only [Option.some.injEq] at hdc
             subst hdc
-            simp only at hat
-            subst hat
             rfl
           · cases hdc
         simp [hdc', ih es' hr]
