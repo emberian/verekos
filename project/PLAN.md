@@ -113,6 +113,17 @@ Attribution rule from R1: commits name the model that wrote them (Opus 5.5, GLM 
 | B″ | `check/` | lane B, resumed | **done, verified by the root** (build green; `run.py` exit 0 under my hands: scope.decision 59/59, conflicts.unit 16/16, scope.regression 7/7, conflicts.unit through `--clash` 16/16, the 26 conflict probes 26/26 through `--clash` vs 22/26 on the default path, five laws runs exiting as their table says; six `CheckProofs/DetectBy` theorems on standard axioms): world re-pinned to `12e5543`; `verekos-check conflicts --clash` runs the model's `labelClash` for `EnumMeaning` and `≠` elsewhere; all four label probes agree with EKOS, the fourth having been the old mapper's keying rather than the model |
 | B′ | `check/` | lane B, resumed | **done, verified by the root**: the untrusted scope parser refuses duplicate keys (compared after unescaping) as `parse`, matching `ReadScope::from_json`; 7 regression inputs with EKOS's own answers, 7/7; panels unchanged; exit codes documented in `check/README.md`; a failed law now always exits 1. New EKOS finding (held, not filed): `ReadScope::from_value` (scope.rs:101, the MCP per-call path) receives already-parsed JSON that kept the last duplicate, so the same scope text is refused on the file path and accepted on the MCP path |
 
+## Build wave 6: delete the twins (launched 2026-10-19 night)
+
+ember: "we have mirrors and twins! we should never have that." The ATLAS rule applies: a `rfl` against a hand-written twin is evidence only while the twin exists; cashing it means deleting the twin. Inventory tonight: check/'s Mathlib-free copies of `detectList`/`detectListBy`/`admissible`/`AdmLog`/`rstep`/`rankMap` (proved equal to World's); `slice1/mapper.py` (a Python mirror of `World/Document.lean` and `Shapes.lean`, and the thing that actually produced the hbox cells); `laws/*.json` (hand-written where the design says laws are Lean `Pred` values rendered); `check/slice1_log.py` (a Python mirror of `Receipt`). The receipt for every deletion is byte-identity of the Lean's output with the twin's before the twin goes.
+
+| Lane | Owns | Model | Deliverable |
+|---|---|---|---|
+| W23 | `world/` | the Opus veteran | split into `WorldCore` (Mathlib-free: the list-based definitions the runner needs) and `World`, with an import-boundary script; no signature changes to pinned names |
+| W24 | `map/` (new), `var/w24/`, `notes/W24-lean-mapper.md` | Opus | `verekos-map`: the Lean shapes produce slice 1's request files byte-identical to `mapper.py`'s (SHA-256 bcd84c64… and 2d0da4d2…), and the four laws rendered from Lean `Pred` values byte-identical to `laws/*.json`; deprecation banners, deletion list for the root |
+| B‴ (after W23) | `check/` | lane B | import `WorldCore`, delete the copies and the equality proofs that only existed because of them |
+| root (after W24 and lane A) | `slice1/mapper.py`, `laws/*.json` as sources, `check/slice1_log.py` | — | delete the twins; the generated JSON stays only as a build artifact |
+
 ## Rules
 
 - No `sorry`, `oops`, `skip_proof`, new axioms. Read theorem statements; a
