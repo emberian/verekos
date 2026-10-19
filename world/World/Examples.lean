@@ -22,6 +22,8 @@ import World.Traverse
 import World.Identity
 import World.Admission
 import World.Document
+import World.Shapes
+import World.CarryForward
 import Mathlib.Data.Prod.Lex
 
 namespace World.Example
@@ -400,5 +402,45 @@ example (g : Nat → Bool) :
     simp only [cW, List.mem_singleton] at hp
     subst hp
     exact ⟨fileA, none, rfl, by decide⟩)
+
+end World.Example
+
+/-! ### Shapes, the manifest, and carry-forward -/
+
+namespace World.Example
+
+/-- Atom ids in the example: the structural key itself. -/
+def atomOf₀ : List C₀.KeyPart → List Nat := id
+
+def hdr₀ : SourceHeader C₀ := ⟨[fileA], (0 : Nat), (0 : Nat), (0 : Nat), (0 : Nat)⟩
+def stA : Statement C₀ := ⟨[customers], (11 : Nat)⟩
+def stO : Statement C₀ := ⟨[orders], (12 : Nat)⟩
+def srcA : SourceDoc C₀ (List Nat) := importSource atomOf₀ hdr₀ [stA, stO] 1
+
+/-- Re-importing the unchanged file changes nothing. -/
+example : reimport atomOf₀ srcA [stA, stO] 2 = srcA := by decide
+/-- Editing `orders` moves only its atom to the new revision. -/
+example : (reimport atomOf₀ srcA [stA, ⟨[orders], (13 : Nat)⟩] 2).atomPins =
+    [([customers], 1), ([orders], 2)] := by decide
+
+/-- A compile that stops emitting `orders` unlinks it; history stays. -/
+def man₀ : Manifest C₀ :=
+  Manifest.ofCurrent [([customers], cA.id d₀), ([orders], cO.id d₀)]
+example : (man₀.compile [([customers], cA.id d₀)]).current = [([customers], cA.id d₀)] := by
+  decide
+example : (man₀.compile [([customers], cA.id d₀)]).links.length = 2 := by decide
+
+/-- Signatures as numbers: A = 1, B = 2. A review at A, then compiles. -/
+def h₀ : HeaderAtom C₀ := ⟨5, (1 : Nat)⟩
+def e₀ : EConflict C₀ := ⟨.isOpen, none, (1 : Nat)⟩
+
+-- unchanged: the pin shows the same bytes and EKOS keeps the review
+example : renderHeaderPin 5 (compileAll h₀ [(1 : Nat), (1 : Nat)]) = .sameBytes := by decide
+example : (ekosAll (ekosReview e₀ .resolved) [(1 : Nat), (1 : Nat)]).status =
+    .decided .resolved := by decide
+-- A → B → A: moved, and EKOS stays open
+example : renderHeaderPin 5 (compileAll h₀ [(2 : Nat), (1 : Nat)]) = .moved := by decide
+example : (ekosAll (ekosReview e₀ .resolved) [(2 : Nat), (1 : Nat)]).status = .isOpen := by
+  decide
 
 end World.Example
