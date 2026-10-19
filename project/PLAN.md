@@ -110,7 +110,7 @@ Then M1a, the reader-local compile, against the world W17 leaves on hbox.
 Attribution rule from R1: commits name the model that wrote them (Opus 5.5, GLM 5.3, Grok 4.7, Fable 5.1), so git shows who did what.
 
 | W22 | `world/` | the Opus veteran | `Schema.clash`: a per-schema comparator generalizing `≠` on stated values so EKOS's label-mismatch rule (disjoint sources ∧ disjoint word sets) is expressible; existing theorems re-proved over it (lane B's F1) |
-| B′ | `check/` | lane B, resumed | F4 duplicate-key refusal in the parser; documented exit codes |
+| B′ | `check/` | lane B, resumed | **done, verified by the root**: the untrusted scope parser refuses duplicate keys (compared after unescaping) as `parse`, matching `ReadScope::from_json`; 7 regression inputs with EKOS's own answers, 7/7; panels unchanged; exit codes documented in `check/README.md`; a failed law now always exits 1. New EKOS finding (held, not filed): `ReadScope::from_value` (scope.rs:101, the MCP per-call path) receives already-parsed JSON that kept the last duplicate, so the same scope text is refused on the file path and accepted on the MCP path |
 
 ## Rules
 

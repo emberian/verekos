@@ -138,3 +138,5 @@ From `docs/design/explorations/02-the-claim-primitive.md` §3, read-only finding
 6. **The compile never writes a validity window**: `ckm_rel_to_kir` hard-codes `None, None` (`commit.rs:918-921`).
 
 Also from lane 04: persisting `merge_branch` divergences as conflict objects (a proposal, not a defect).
+
+From lane B′ (2026-10-19 night, `notes/B-check.md`): EKOS refuses a scope JSON with a duplicate key only through `ReadScope::from_json` (`ledger/src/scope.rs:94`); `from_value` (`:101`), which the MCP per-call `_meta["ekos/readScope"]` path uses, receives already-parsed JSON that kept the last value, so the same text parses on one path and is refused on the other. Minor; held.
