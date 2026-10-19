@@ -232,7 +232,7 @@ def tableSchema : Schema C₀ Cols Sch.table where
 /-- The review schema's own registry entry: reviews are observed facts that
 nobody reviews. -/
 def reviewEntry : Schema C₀ Cols Sch.review where
-  core := fun _ => 0
+  core := fun _ => (0 : Nat)
   structural := true
   initial := .observed
   isFact := fun _ => true
