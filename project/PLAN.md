@@ -63,13 +63,25 @@ earlier Grok lanes died with "Prompt is too long" before Claude Code compacted.
 
 | Lane | Owns | Model | Deliverable |
 |---|---|---|---|
-| W7 | hbox `~/verekos-runs/w7/`, local `var/w7/`, `notes/W7-hbox-transclusion.md` | GLM | run K12T / JDV against the tipbin binaries on hbox with a fresh run root; per-step PASS/FAIL and the transclusion receipt rows |
+| W7 | hbox `~/verekos-runs/w7/`, local `var/w7/`, `notes/W7-hbox-transclusion.md` | GLM | **done, verified by the root**: K12T PASS (24/24 transclusion rows; refusals `sourceNotCovered`, `staleOpening`, no-grant placeholders, `moved` for a late joiner), JDV PASS (143/143), J12W FAIL at setup (tipbin `mini` is newer than kn-gate's journey.d: `enroll plan` wants pre-rotation args; unrelated to transclusion). Checksums verified first; run roots 14+29 MB; hbox disk 30 GB free before and after; every W7 PID file dead afterwards. **Slice-1 step 0 is green; the §4 fallback is not needed** |
 | W8 | `world/` | the W1 Opus veteran, resumed | **done, verified by the root 2026-10-19**: `lake build` green (2,973 jobs), statements read, axioms standard. `World/WellFormed.lean` (canonical keys: equal iff same schema, subject and source *set*; well-formed log gives well-formed state; acyclicity as a rank, `visible` stabilizes above the rank and `visibleR` is rank-independent; `reviewSurvives_put_acyclic` drops the ad hoc hypothesis), `World/Traverse.lean` (a pending edge is never crossed; an unreviewed hypothesis-initial edge or node is not crossed, which EKOS's missing-status default violates; hop bound monotone; a confirming review only adds under fresh id + pinned at current core + fact-valued decision), `World/Identity.lean` (`Same` is an equivalence; canonical = least of the class, order-free; fuzzy candidates make no link; a compiler-confirmed exact merge takes effect and retracting it restores the old classes, under stated freshness hypotheses). Still open: the rules are hypotheses, not types; no theorem keeps the pin graph acyclic across a write (needs an admission law); rank is a witness, not computed |
-| W9 | `tools/scoreboard/`, `controls/`, `docs/parity/`, `notes/W9-scoreboard-machinery.md` | GLM | `score.py` with the classified-differences manifest, `board.py` → `docs/parity/BOARD.md`, `regen_controls.py` completing `controls/MANIFEST.json`, the leak-suite family decision or dump |
-| W11 | `panels/impact/`, `notes/W11-impact-panels.md` | Grok (bounded) | Runtime traversal tests as panel items + controls + drift |
+| W9 | `tools/scoreboard/`, `controls/`, `docs/parity/`, `notes/W9-scoreboard-machinery.md` | GLM | **done, verified by the root** (`regen_controls.py --ekos` all green: three controls reproducible and identical to committed, five drift checkers 0 drifted, manifest written; `score.py` self-scores 59/16/8 with 0 unexplained and an altered line reported as unexplained; `board.py` renders `docs/parity/BOARD.md`): `score.py` + `controls/classified.jsonl`, `board.py` + `panels/LABELS.json`, `regen_controls.py`, and the `scope.store` dump (ScopedStore over a real temp SQLite ledger, 8 items) built after deciding the leak suite itself is a black box over the binary |
+| W11 | `panels/impact/`, `notes/W11-impact-panels.md` | Grok (bounded) | **done, verified by the root** (drift 15 functions, 0 drifted): 26 items from the Runtime traversal tests with fixed ids and `expect_from_test` |
 | (W3, W6) | `panels/identity/`, `panels/branch/` | GLM-flash, Grok | done (see wave 1) |
 
-Next after W7: slice 1 proper (exploration 01 §5) on hbox with the tipbin binaries, as a Lean/Rust mapper from `ekos graph export` ndjson to `mini` commands; and M1a, the reader-local compile.
+## Build wave 3 (launched 2026-10-19 night)
+
+| Lane | Owns | Model | Deliverable |
+|---|---|---|---|
+| root | `var/ekos-build/` | — | one `cargo build -p ekos --release` of EKOS at 8e3c178 (the slice-1 and fixture lanes both need the binary; one build, not two) |
+| W12 | `tools/scoreboard/control-dump/src/{identity,branch,impact}_dump.rs`, the matching `controls/*.control.jsonl`, `notes/W12-dumps.md` | GLM | controls for the four panels that have none (identity 58, branch 3, impact 26), through EKOS's real functions; regen and board updated |
+| W14 | `world/` | the Opus veteran, resumed again | an admission law keeping the pin graph acyclic across a write; a computed rank; the `Claim → ekos/object/v1` document shape as Lean data with a theorem tying visibility to the per-cell audience rule |
+| W15 | `panels/redact/`, `notes/W15-redact-panels.md` | Grok (bounded) | redaction unit tests as panel items + controls + drift |
+| W16 | `panels/ekl/`, `notes/W16-ekl-panels.md` | Grok (bounded) | EKL parser/interpreter tests as panel items + controls + drift |
+| W17 (after the binary) | `slice1/`, hbox `~/verekos-runs/slice1/` | Opus | **slice 1** (exploration 01 §5): import the two fixtures, compile with the real `ekos`, map the ndjson to `mini` commands, install the four laws, collect the seven receipts |
+| W18 (after the binary) | `tools/scoreboard/run_fixture.py`, `panels/ledger/`, `controls/ledger.*` | GLM | the fixture pipeline and the ledger dump (ecommerce, northwind) |
+
+Then M1a, the reader-local compile, against the JDV documents W7 left on hbox.
 
 ## Rules
 
