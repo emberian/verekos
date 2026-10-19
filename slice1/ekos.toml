@@ -1,0 +1,16 @@
+[workspace]
+root = "."
+log-level = "info"
+log-format = "pretty"
+
+[observe]
+paths = ["."]
+ignore-patterns = [".ekos", ".git", "target", "node_modules"]
+
+[[sources]]
+name = "shop"
+path = "src/shop"
+
+[[sources]]
+name = "legacy"
+path = "src/legacy"

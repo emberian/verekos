@@ -4,7 +4,7 @@
 . "$(dirname "$0")/world-lib.sh"
 TAG=$1; STEP=$2; C=$(dirname "$0")
 D=$RUN/import-$TAG; mkdir -p "$D"
-for spec in shop:src-shop:ecommerce.sql:$C/inputs/ecommerce.sql legacy:src-legacy:legacy_customers.sql:$C/fixtures/legacy_customers.sql; do
+for spec in shop:src-shop:ecommerce.sql:$C/inputs/ecommerce.sql legacy:src-legacy:legacy_customers.sql:${LEGACY_FILE:-$C/fixtures/legacy_customers.sql}; do
   IFS=: read -r key cell path file <<<"$spec"
   t0=$(now)
   read_to "$D/$cell-before.json" importer "$cell"

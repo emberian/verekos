@@ -8,7 +8,7 @@ RCDIR=/home/hbox/kn-gate/src/native/resource-client
 MINI=$TIP/mini; HOST=$TIP/minidregg-host; STORE=$TIP/minidregg-link-sqlite-store
 VERIFIER=$TIP/minidregg-credential-signature-verifier
 BASE=/home/hbox/verekos-runs/slice1
-RUN=${RUN:-$BASE/run-1}
+RUN=${RUN:-$BASE/${RUNID:-run-1}}
 W=$RUN/world
 SOCKET=$RUN/w.sock
 CONFIG=$W/deployment/pinned-config.json
@@ -93,3 +93,26 @@ read_to() {
   run "$n" "$MINI" workspace --action read --dir "$(ws_of "$2")" --name "$3"; ok "$n"
   jq --arg t "$(jq -r .target "$(ws_of "$2")/refs/$3.json")" '. + {target:$t}' "$L/$n.out" >"$1"
 }
+# renders OUT WHO CELL: `workspace --action transclusions` as WHO (the client's final view, after
+# its `at` re-read of each snapshot) -> OUT.client.json, and the Host's own current render, the
+# first `view-document` the client asked for in that call -> OUT.host.json
+renders() {
+  local out=$1 who=$2 cell=$3 ws mark n
+  ws=$(ws_of "$who"); mark=$(mktemp -p "$RUN" mark.XXXXXX); n=tr-$who-$cell-$(date +%s%N)
+  sleep 0.01; run "$n" "$MINI" workspace --action transclusions --dir "$ws" --name "$cell"
+  cp "$L/$n.out" "$out.client.json"; cp "$L/$n.err" "$out.client.err"
+  python3 -I - "$ws/attempts" "$mark" "$out.host.json" <<'PY'
+import json, os, sys, pathlib
+base, mark, out = pathlib.Path(sys.argv[1]), os.path.getmtime(sys.argv[2]), sys.argv[3]
+cands = sorted((p.stat().st_mtime_ns, p) for p in base.glob("*/transclusions.json") if p.stat().st_mtime > mark)
+for _, p in cands:
+    inp = json.loads((p.parent / "transclusions-in.json").read_text())
+    if inp.get("sources") and not any("at" in s for s in inp["sources"]):
+        pathlib.Path(out).write_text(p.read_text()); break
+else:
+    pathlib.Path(out).write_text(json.dumps({"transclusions": [], "note": "no current render with readable sources"}))
+PY
+  rm -f "$mark"
+}
+# view_of FILE ID -> "<host view>" of one transclusion in a renders file
+view_of() { jq -r --arg id "$2" '[.transclusions[] | select(.id == $id) | .render.view] | first // "absent"' "$1"; }

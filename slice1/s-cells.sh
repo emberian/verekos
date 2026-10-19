@@ -24,5 +24,5 @@ for c in src-shop src-legacy; do
 done
 for f in "$SPONSOR_WS"/refs/*.json; do n=$(basename "$f" .json); printf '%s\t%s\n' "$n" "$(jq -r .target "$f")"; done \
   | jq -R 'split("\t") | {(.[0]):.[1]}' | jq -s add >"$RUN/cells.json"
-row S2 compiled-cells "$(( $(jq length "$PLAN") + 1 )) born" "$(jq --slurpfile p "$PLAN" '. as $c | [$p[0][].cell, "obj-r2"] | map(select($c[.] != null)) | length' "$RUN/cells.json") born" "$(since "$t0")" \
+row "${STEP:-S2}" compiled-cells "$(( $(jq length "$PLAN") + 1 )) born" "$(jq --slurpfile p "$PLAN" '. as $c | [$p[0][].cell, "obj-r2"] | map(select($c[.] != null)) | length' "$RUN/cells.json") born" "$(since "$t0")" \
   "rooms: $(jq -r '[.[] | "\(.cell)=\(.room // "none")"] | join(" ")' "$PLAN")"
