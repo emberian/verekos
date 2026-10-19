@@ -98,6 +98,17 @@ Then M1a, the reader-local compile, against the world W17 leaves on hbox.
 |---|---|---|---|
 | R1 | everything outside the live lanes (design, explorations, README, PLAN, notes, laws, panels, the python scoreboard tools, docs/parity, `.gitignore`) | Opus | `notes/R1-review.md` (ranked findings), `CLAUDE.md`, `docs/design/explorations/05-next-lanes.md` (briefs for the reader-local compile, a `verekos check` runner, the remaining controls and the layout consolidation); fixes applied to what it owns, each commit named in the memo |
 
+## Build wave 5 (launched 2026-10-19 night, from the reviewer's briefs in exploration 05)
+
+| Lane | Owns | Model | Deliverable |
+|---|---|---|---|
+| B | `check/`, `var/check/`, a candidate column in `board.py`, a conflicts key projection, `notes/B-check.md` | Opus (fresh) | **`verekos check`**: the Lean model answers `scope.decision` through `World.visible` and `conflicts.unit` through `detectList`; every difference classified; a planted mutant scores worse; `verekos check laws` over a slice-1 run root (synthetic if W17's is not there yet). Root decisions: `check/` may link Mathlib; the allowed-id rule stays (RFC 0181); authorship from the signer |
+| C | redact and EKL dumps, `controls/redact.*`, `controls/ekl.*`, regen + run_fixture (S3: regenerate workspaces when `var/` is missing), the one-layout migration, LABELS, README, board render, `notes/C-controls-layout.md` | GLM (compaction set) | controls for the last two panels; a clone can regenerate every control; one panel layout |
+| W21 | `world/` | the Opus veteran | `TxMonotone` and its prefix/segment theorems (R1 finding M9, additive only) |
+| A | (held) | — | M1a, the reader-local compile, after W17 leaves its world on hbox |
+
+Attribution rule from R1: commits name the model that wrote them (Opus 5.5, GLM 5.3, Grok 4.7, Fable 5.1), so git shows who did what.
+
 ## Rules
 
 - No `sorry`, `oops`, `skip_proof`, new axioms. Read theorem statements; a
