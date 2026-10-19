@@ -844,3 +844,303 @@ theorem keyCode_injective : Function.Injective keyCode
 'World.Example.same_empty' depends on axioms: [propext, Classical.choice, Quot.sound]
 'World.Example.ranked₀' depends on axioms: [propext, Quot.sound]
 ```
+
+---
+
+## 2026-10-19, third quest: admission, computed rank, the document shape
+
+All four items are done, built and pushed to `origin/dev`. A clean build of
+`World` takes **13 s** (`var/w1/build-clean-world-q3.log`). minidregg is
+untouched (no modified tracked files). `#print axioms` on all 30 new
+theorems (output below) shows only `propext`, `Classical.choice` and
+`Quot.sound`, or no axioms. There is no `sorry`, `admit` or `native_decide`.
+
+### 1. The admission law (`World/Admission.lean`)
+
+A put of `c` is `admissible` against the log before it when:
+- every claim pin of `c` names an id that is present in the state and is not
+  `c`'s own id; and
+- if `c`'s id has a recorded rank `k`, then `c`'s computed rank is `≤ k`.
+
+The computed rank (`newRank`) is `1 +` the largest recorded rank among the
+pinned ids, or 0 with no claim pins. The recorded ranks (`rankMap`) are
+replayed from the log like the state: a put records its claim's rank, a
+retract keeps the record.
+
+**Why the second condition, which the coordinator's version did not have.**
+"Every claim pin names a present id of lower rank" is not enough. A claim `x`
+pins `i`. Then `i` is retracted (so `x`'s pin dangles), and `i` is re-put
+pinning `x`. Every pin of the new `i` names a present id, yet `i → x → i` is a
+cycle. Keeping the record across the retraction, and forbidding the rank at an
+id to rise, closes that. The cost is that a claim cannot be re-put under its
+own id with deeper premises. The README states this limit; the fuller law
+would re-rank dependents.
+
+Theorems:
+- `AdmLog L` (every receipt admissible against its prefix) is decidable, with
+  an instance, and `admLog_snoc` splits it at the last receipt.
+- `ranked_of_admLog`: an admissible log yields `Ranked (latest d L) (rankN d L)`.
+  The proof keeps an invariant `RankInv` through each write (`rankInv_snoc`):
+  - every claim in the state has a recorded rank at least its computed rank;
+  - every claim pin of a claim in the state names an id with a recorded rank.
+- `rankOf_some_of_admLog`: `rankOf` (which is `none` exactly when a claim pins
+  an id the log never put) gives `some (rankN d L c)` for every claim in the
+  state.
+- `not_admissible_self_pin`, `not_admissible_absent_pin`: the two refusals.
+
+### 2. A computed rank
+
+`rankN`/`rankOf` are computed by **structural recursion over the log**, not
+over fuel equal to "the state's size". A state here is a function, which has
+no size; the log is what makes it finite, and the replay is the bounded
+recursion. In `World/Examples.lean` the example state is now the replay of a
+two-receipt log, and the hand-written rank `rank₀` is gone:
+- `admLσ : AdmLog d₀ Lσ` is checked by `decide`;
+- `ranked₀ : Ranked σ₀ (rankN d₀ Lσ)` comes from `ranked_of_admLog`;
+- `visibleR` uses the computed rank, and the computed ranks are 0 for tables
+  and 1 for the conflict;
+- two refusals, by `decide`: a claim pinning not-yet-present ids, and file A's
+  table re-put pinning file B's (its rank would rise);
+- one acceptance, by `decide`.
+
+Every earlier example still passes.
+
+### 3. The document shape (`World/Document.lean`)
+
+`Cell` holds:
+- `header`: the key;
+- `properties`: the payload;
+- `window`;
+- `evidence`: a list of `Evidence`, each an `EvidenceMeta` (weight per mille,
+  range) plus a `SnapshotPin` (source document, atoms with revisions);
+- `premises`: a list of `PremiseLink` (target id, core read, weight).
+
+`ObjectDocument` is an object `Cell` plus `EdgeContainer`s, each holding the
+edge's cell and its `link`. Premise links are our addition to exploration
+01 §2.1: objects there pin only sources, but reviews, conflicts and edges pin
+claims. A pin of the wrong shape is refused by `encode`. A field originally
+named `meta` was renamed `info` because `meta` is a Lean keyword.
+
+Round trips:
+- `decode_encode`: the claim comes back with the same key, payload and window,
+  and its pins permuted (source pins first).
+- `encode_decode`: the cell comes back **exactly**.
+- `cellAtomPins_encode` and `claimAtomPins_decode`: the (source document,
+  atom revision) pins are kept both ways.
+- `toDocument_atomPins` and `fromDocument_atomPins` say the same for whole
+  documents with their outgoing edges.
+
+Live names from K12T: `TranscludeRefusal.sourceNotCovered` and `.staleOpening`
+(`admitEvidence_none` characterizes admission), and
+`PinView.noGrant n` (the placeholder), `.moved` and `.sameBytes`.
+- `viewEvidence_noGrant`: a reader without a grant gets only the placeholder.
+- `viewEvidence_sameBytes`: with a grant, the same bytes exactly when every
+  atom is at its pinned revision, otherwise `moved`.
+
+The view takes grants and current revisions as functions; it does not model
+heights, so K12T's `moved:27:live` (moved *since height 27*) appears here as
+plain `moved`.
+
+**Audience.**
+- `readerScope readable` allows exactly the origins in the readable sources,
+  denies nothing, and allows no id outright.
+- `visibleR_iff_readable`: for a claim with at least one pin, all of them
+  source pins, `visibleR` under the reader's scope is true exactly when every
+  evidence container's source is readable.
+- `visibleR_iff_room`: with sources assigned to rooms and readability "holds
+  the room's grant", a claim pinned only into room `ρ` is visible exactly when
+  the reader holds `ρ`'s grant.
+- Both need two hypotheses, stated in the docstring:
+  - **at least one pin**: otherwise the claim is hidden while "every source is
+    readable" holds vacuously;
+  - **source pins only**: a claim pin adds the premise's visibility, which the
+    claim's own evidence containers do not show.
+- The example file applies `visibleR_iff_room` to a table pinned to two atoms
+  of file A, in room 1.
+
+### What I could not do
+
+- **Only the object cell is modelled.** The source, manifest, conflict,
+  review and compile-run documents of exploration 01 §2.1 are not.
+- **Grants, heights and audience rosters are abstracted** to functions. The
+  audience theorem is about the scope a grant induces, not about minidregg's
+  `audienceEpoch`/`audienceRoster`.
+- **A field-for-field equality with minidregg's `TransclusionRecord` is not
+  stated.** `SnapshotPin` instantiated in `World.Minidregg` is
+  `DocumentId × List (AtomId × OperationId)`, the same shape as
+  `TranscludeRequest.pins`.
+
+### Follow-ups
+
+1. A re-ranking admission law (allow a rank to rise when no present claim pins
+   the id), with `ranked_of_admLog` re-proved.
+2. `encode` into minidregg's own records: a `World.Minidregg` function from
+   `Cell` to `DocumentRecord`, `AtomRecord` and `TransclusionRecord` values,
+   with the atom-pin theorem against `TranscludeRequest.pins`.
+3. Audience for claims with claim pins (conflicts and reviews), via
+   `visibleR` recursion on the rank. Exploration 01 §2.5 says a conflict is
+   visible only if every alternative's origin is visible, which
+   `conflict_hidden_of_alternative_denied` already gives in one direction.
+
+### Every new theorem statement, quoted from the source
+
+
+#### `World/Admission.lean`
+
+```lean
+theorem lt_maxPinRank (m : RankMap C) (ps : List (Pin C)) (p : Pin C) (hp : p ∈ ps)
+    (j : C.ClaimId) (ht : p.target = .claim j) : (m j).getD 0 < maxPinRank m ps
+
+theorem maxPinRank_mono (m m' : RankMap C) (ps : List (Pin C))
+    (h : ∀ p ∈ ps, ∀ j, p.target = .claim j → (m' j).getD 0 ≤ (m j).getD 0) :
+    maxPinRank m' ps ≤ maxPinRank m ps
+
+theorem maxPinRank_congr (m m' : RankMap C) (ps : List (Pin C))
+    (h : ∀ p ∈ ps, ∀ j, p.target = .claim j → m' j = m j) :
+    maxPinRank m' ps = maxPinRank m ps
+
+theorem admLog_snoc (L : List (Receipt C P)) (r : Receipt C P) :
+    AdmLog d (L ++ [r]) ↔ AdmLog d L ∧ admissible d L r = true
+
+theorem rankMap_snoc (L : List (Receipt C P)) (r : Receipt C P) :
+    rankMap d (L ++ [r]) = rstep d (rankMap d L) r
+
+theorem latest_snoc' (L : List (Receipt C P)) (r : Receipt C P) :
+    latest d (L ++ [r]) = apply d (latest d L) r
+
+theorem rankInv_snoc (L : List (Receipt C P)) (r : Receipt C P) (hinv : RankInv d L)
+    (hadm : admissible d L r = true) : RankInv d (L ++ [r])
+
+theorem rankInv_of_admLog : ∀ (L : List (Receipt C P)), AdmLog d L → RankInv d L
+
+theorem ranked_of_admLog (L : List (Receipt C P)) (h : AdmLog d L) :
+    Ranked (latest d L) (rankN d L)
+
+theorem rankOf_some_of_admLog (L : List (Receipt C P)) (h : AdmLog d L)
+    (i : C.ClaimId) (c : Claim C P) (hc : latest d L i = some c) :
+    rankOf d L c = some (rankN d L c)
+
+theorem not_admissible_self_pin (L : List (Receipt C P)) (r : Receipt C P) (c : Claim C P)
+    (hop : r.op = .put c) (p : Pin C) (hp : p ∈ c.pins) (ht : p.target = .claim (c.id d)) :
+    admissible d L r = false
+
+theorem not_admissible_absent_pin (L : List (Receipt C P)) (r : Receipt C P) (c : Claim C P)
+    (hop : r.op = .put c) (p : Pin C) (hp : p ∈ c.pins) (j : C.ClaimId)
+    (ht : p.target = .claim j) (habs : latest d L j = none) :
+    admissible d L r = false
+
+```
+
+#### `World/Document.lean`
+
+```lean
+theorem toEvidence_map (p : Pin C) (h : p.wellTyped = true) :
+    (p.toEvidence).map Evidence.toPin = if p.isSource then some p else none
+
+theorem toPremise_map (p : Pin C) (h : p.wellTyped = true) :
+    (p.toPremise).map PremiseLink.toPin = if p.isSource then none else some p
+
+theorem filterMap_map_eq_filter {α β : Type} (f : α → Option β) (g : β → α) (q : α → Bool)
+    (l : List α) (h : ∀ a ∈ l, (f a).map g = if q a then some a else none) :
+    (l.filterMap f).map g = l.filter q
+
+theorem decode_encode (c : Claim C P) (cell : Cell C P) (h : encode c = some cell) :
+    ∃ ps, decode cell = { c with pins
+
+theorem encode_decode (cell : Cell C P) : encode (decode cell) = some cell
+
+theorem claimAtomPins_perm (c c' : Claim C P) (h : c'.pins.Perm c.pins) (x : C.SourceId × C.AtomRev) :
+    x ∈ claimAtomPins c' ↔ x ∈ claimAtomPins c
+
+theorem claimAtomPins_decode (cell : Cell C P) (x : C.SourceId × C.AtomRev) :
+    x ∈ claimAtomPins (decode cell) ↔ x ∈ cellAtomPins cell
+
+theorem cellAtomPins_encode (c : Claim C P) (cell : Cell C P) (h : encode c = some cell)
+    (x : C.SourceId × C.AtomRev) : x ∈ cellAtomPins cell ↔ x ∈ claimAtomPins c
+
+theorem encodeEdges_atomPins (from_ : C.ClaimId) :
+    ∀ (es : List (Claim C P)) (ecs : List (EdgeContainer C P)),
+    encodeEdges E from_ es = some ecs → ∀ x,
+    x ∈ ecs.flatMap (fun ec => cellAtomPins ec.edge) ↔ ∃ e ∈ es, x ∈ claimAtomPins e
+
+theorem toDocument_atomPins (c : Claim C P) (outgoing : List (Claim C P))
+    (D : ObjectDocument C P) (h : toDocument d E c outgoing = some D)
+    (x : C.SourceId × C.AtomRev) :
+    x ∈ docAtomPins D ↔ x ∈ claimAtomPins c ∨ ∃ e ∈ outgoing, x ∈ claimAtomPins e
+
+theorem fromDocument_atomPins (D : ObjectDocument C P) (x : C.SourceId × C.AtomRev) :
+    x ∈ docAtomPins D ↔
+    x ∈ claimAtomPins (fromDocument D).1 ∨ ∃ e ∈ (fromDocument D).2, x ∈ claimAtomPins e
+
+theorem viewEvidence_noGrant (readable : C.SourceId → Bool)
+    (current : C.SourceId → C.AtomRev → Bool) (e : Evidence C) :
+    readable e.pin.source = false ↔ viewEvidence readable current e = .noGrant e.pin.atoms.length
+
+theorem viewEvidence_sameBytes (readable : C.SourceId → Bool)
+    (current : C.SourceId → C.AtomRev → Bool) (e : Evidence C)
+    (hr : readable e.pin.source = true) :
+    viewEvidence readable current e = .sameBytes ↔ ∀ a ∈ e.pin.atoms, current e.pin.source a = true
+
+theorem admitEvidence_none (writerReads : C.SourceId → Bool)
+    (held : C.SourceId → C.AtomRev → Bool) (e : Evidence C) :
+    admitEvidence writerReads held e = none ↔
+    writerReads e.pin.source = true ∧ ∀ a ∈ e.pin.atoms, held e.pin.source a = true
+
+theorem visibleR_iff_readable (rank : Claim C P → Nat) (readable : C.SourceId → Bool)
+    (c : Claim C P) (cell : Cell C P) (hc : encode c = some cell)
+    (hne : c.PinsNonempty) (hsrc : ∀ p ∈ c.pins, ∃ doc r, p.target = .source doc r) :
+    visibleR d σ (readerScope readable) rank c = true ↔
+    ∀ e ∈ cell.evidence, readable e.pin.source = true
+
+theorem visibleR_iff_room {Room : Type} (rank : Claim C P → Nat) (roomOf : C.SourceId → Room)
+    (grants : Room → Bool) (ρ : Room) (c : Claim C P) (cell : Cell C P)
+    (hc : encode c = some cell) (hne : c.PinsNonempty)
+    (hroom : ∀ p ∈ c.pins, ∃ doc r, p.target = .source doc r ∧ roomOf doc = ρ) :
+    visibleR d σ (readerScope fun doc => grants (roomOf doc)) rank c = true ↔
+    grants ρ = true
+
+```
+
+#### `World/Examples.lean` (new and changed theorems)
+
+```lean
+theorem admLσ : AdmLog d₀ Lσ
+
+theorem ranked₀ : Ranked σ₀ (rankN d₀ Lσ)
+
+```
+
+### `#print axioms`, verbatim
+
+```
+'World.lt_maxPinRank' depends on axioms: [propext, Quot.sound]
+'World.maxPinRank_mono' depends on axioms: [propext, Quot.sound]
+'World.maxPinRank_congr' depends on axioms: [propext, Quot.sound]
+'World.admLog_snoc' depends on axioms: [propext, Quot.sound]
+'World.rankMap_snoc' depends on axioms: [propext, Quot.sound]
+'World.latest_snoc'' depends on axioms: [propext, Quot.sound]
+'World.rankInv_snoc' depends on axioms: [propext, Quot.sound]
+'World.rankInv_of_admLog' depends on axioms: [propext, Quot.sound]
+'World.ranked_of_admLog' depends on axioms: [propext, Quot.sound]
+'World.rankOf_some_of_admLog' depends on axioms: [propext, Quot.sound]
+'World.not_admissible_self_pin' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.not_admissible_absent_pin' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.toEvidence_map' depends on axioms: [propext]
+'World.toPremise_map' depends on axioms: [propext]
+'World.filterMap_map_eq_filter' depends on axioms: [propext]
+'World.decode_encode' depends on axioms: [propext, Quot.sound]
+'World.encode_decode' depends on axioms: [propext, Quot.sound]
+'World.claimAtomPins_perm' depends on axioms: [propext, Quot.sound]
+'World.claimAtomPins_decode' depends on axioms: [propext, Quot.sound]
+'World.cellAtomPins_encode' depends on axioms: [propext, Quot.sound]
+'World.encodeEdges_atomPins' depends on axioms: [propext, Quot.sound]
+'World.toDocument_atomPins' depends on axioms: [propext, Quot.sound]
+'World.fromDocument_atomPins' depends on axioms: [propext, Quot.sound]
+'World.viewEvidence_noGrant' depends on axioms: [propext]
+'World.viewEvidence_sameBytes' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.admitEvidence_none' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.visibleR_iff_readable' depends on axioms: [propext, Quot.sound]
+'World.visibleR_iff_room' depends on axioms: [propext, Quot.sound]
+'World.Example.admLσ' does not depend on any axioms
+'World.Example.ranked₀' depends on axioms: [propext, Quot.sound]
+```
