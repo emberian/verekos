@@ -36,6 +36,25 @@ breadth; intersperse Sonnet and Opus (and the root's own reading) so the project
 does not drift into a lower-intelligence basin. Upstream is quiet for now; the
 focus is our own creation, inspired by and integrated with EKOS and minidregg.
 
+## Build wave 1 (launched 2026-10-19 evening)
+
+The Isabelle layer is dropped (ember, 2026-10-19: not a good idea for this project; the
+root agreed: the world already has a Lean spine, and the one AFP entry that mattered
+turned out to be a one-liner from `ObserverLens.locality`). All kernels are Lean
+definitions and theorems in `world/`.
+
+| Lane | Owns | Model | Deliverable |
+|---|---|---|---|
+| W1 | `world/` | Opus | the Lake project pinned to minidregg by path reusing its built packages; `World/{Claim,Log,Status,Conflicts,Visible,Minidregg}.lean` with real theorems (append-only, state-is-fold, idempotent put, diff-is-footprint, CompilerCannotDecide, ReviewSurvives, NeedsReviewOnCoreChange, coverage, deny-wins); `notes/W1-world-build.md` |
+| W2 | `var/w2/`, `notes/W2-transclusion-and-laws.md` | GLM | does `transclude` work on a scratch Store with the HEAD host binary (JDV / J12W); how a custom Pred law is installed from the client |
+| W3 | `panels/identity/`, `notes/W3-identity-panels.md` | Grok | EKOS identity tests as panel items + controls + drift checker |
+| W4 | `laws/`, `notes/W4-pred-laws.md` | Grok | L-src/L-obj/L-rev/L-run as client Pred JSON with a checker against the real constructors and slots |
+| W5 | `tools/scoreboard/`, `panels/scope/` (+ conflicts if time), `notes/W5-control-dump.md` | GLM | the `control-dump` Cargo workspace with path deps on EKOS at 8e3c178; the scope dump and panels; drift checker |
+
+Grok lanes run with `CLAUDE_CODE_MAX_CONTEXT_TOKENS=120000` and
+`CLAUDE_CODE_AUTO_COMPACT_WINDOW=90000` (set in `~/.local/bin/claude-grok`), because two
+earlier Grok lanes died with "Prompt is too long" before Claude Code compacted.
+
 ## Rules
 
 - No `sorry`, `oops`, `skip_proof`, new axioms. Read theorem statements; a
