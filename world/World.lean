@@ -5,3 +5,4 @@ import World.Conflicts
 import World.Visible
 import World.Minidregg
 import World.Examples
+import World.WellFormed
