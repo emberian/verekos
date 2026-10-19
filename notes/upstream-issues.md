@@ -123,3 +123,18 @@ issue number once opened. Items from lane D2 are appended when it reports.
 - When two definitions share an id, the surviving object is the last member read (`semantic/src/conflicts.rs:310-323`); RFC 0172 says path order, so this is deterministic when the caller sorts, and a model's side condition rather than a bug.
 - `merge_branch` prints its conflicts and does not persist them, and re-appends merged objects at merge time (`ledger/src/lib.rs:1621-1663`); RFC 0011 describes this as divergence detection, so it is a design limit to raise as a proposal, not a defect.
 - An object a later compile no longer emits stays current; nothing retracts at object level. By design given append-only; the freshness manifest (RFC 0171) is the only signal. A proposal, not a defect.
+
+---
+
+## Found by reading, not filed (2026-10-19, after ember asked to quiet upstream)
+
+From `docs/design/explorations/02-the-claim-primitive.md` §3, read-only findings the root has not yet verified line by line. Each needs a test to decide before anything is filed; keep them here for the scoreboard's diff classifier.
+
+1. **Backends disagree on A→B→A.** SQLite dedups on `(id, sig)` over all history (`ledger/src/lib.rs:520-531`), so a return to A repoints `current_objects` to A's old row (`:594-597`) while `object_at(now)` orders by `written_at` and returns B (`:789-794`). The fact backend compares only the current signature (`fact_ledger.rs:722-725`) and appends a third version.
+2. **Merged edges keep stale ids.** `apply_merges` rewrites `from`/`to` (`semantic/src/lib.rs:201-208`) but keeps the v5 id that `deterministic` seeded with the pre-merge endpoint (`kir/src/lib.rs:439-441`).
+3. **Probable: a confirmed same-source `SameAs` resets to `unconfirmed` on the next commit.** The compile re-emits it with `status: "unconfirmed"` and a v4 evidence (`semantic/src/lib.rs:248-269`); `write_relationships` has no review carry-forward (`commit.rs:67-87`). Unchecked whether `resolve` skips pairs already confirmed.
+4. **Scope origins are a cross product** of sources × evidence paths (`ledger/src/scope.rs:290-311`): a two-source object is judged on pairings that never occurred. Fails closed today.
+5. **Edge visibility ignores the edge's own evidence** (`scope.rs:446-452`).
+6. **The compile never writes a validity window**: `ckm_rel_to_kir` hard-codes `None, None` (`commit.rs:918-921`).
+
+Also from lane 04: persisting `merge_branch` divergences as conflict objects (a proposal, not a defect).
