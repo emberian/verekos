@@ -424,7 +424,7 @@ fn check_conflict(conflicts: &Value, want: &Value, failures: &mut Vec<String>) -
                     .unwrap_or_default();
                 paths == want_str_list(value)
             }
-            "claims_count" => first["claims"].as_array().map(|a| a.len()) == want.as_u64().map(|n| n as usize),
+            "claims_count" => first["claims"].as_array().map(|a| a.len()) == value.as_u64().map(|n| n as usize),
             "evidence_count" => first["evidence_count"].as_u64() == value.as_u64(),
             other => first.get(other) == Some(value),
         };

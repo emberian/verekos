@@ -1,0 +1,16 @@
+{"item":"type_aliases_are_one_type#1","assert":{"same":true}}
+{"item":"type_aliases_are_one_type#2","assert":{"same":true}}
+{"item":"type_aliases_are_one_type#3","assert":{"same":true}}
+{"item":"type_aliases_are_one_type#4","assert":{"same":true}}
+{"item":"type_aliases_are_one_type#5","assert":{"same":true}}
+{"item":"type_aliases_are_one_type#6","assert":{"same":true}}
+{"item":"type_aliases_are_one_type#7","assert":{"same":false}}
+{"item":"type_aliases_are_one_type#8","assert":{"same":false}}
+{"item":"a_table_defined_twice_differently_is_a_conflict_and_collapses_to_the_last#1","assert":{"remaining_count":1,"remaining_columns_contain":"user_id","conflicts_count":1,"first_conflict":{"name":"user_preference.columns","attribute":"columns","conflict_type":"duplicate_definition","status":"open","claims_paths":["sql/Pg-database.sql","sql/changes/1.9/transpose_user_prefs.sql"],"evidence_count":2},"disputes_to_first_remaining":true}}
+{"item":"identical_duplicates_collapse_silently#1","assert":{"remaining_count":1,"conflicts_count":0}}
+{"item":"a_column_type_disagreement_is_its_own_conflict#1","assert":{"conflicts_count":1,"first_conflict":{"attribute":"columns.amount.data_type","chosen":"numeric(10,2)"}}}
+{"item":"detection_is_independent_of_input_order_and_ids_are_stable#1","assert":{"conflicts_count":1,"first_conflict":{"attribute":"columns.x.data_type"},"permuted_stable":true}}
+{"item":"merge_groups_report_what_the_merge_would_drop#1","assert":{"conflicts_count":1,"first_conflict":{"attribute":"columns.total.data_type","conflict_type":"merge_loss","chosen":"int"}}}
+{"item":"merge_groups_report_what_the_merge_would_drop#2","assert":{"conflicts_count":0}}
+{"item":"labels_from_different_sources_that_share_no_word_conflict#1","assert":{"conflicts_count":1,"first_conflict":{"attribute":"label","conflict_type":"label_mismatch","claims_count":2}}}
+{"item":"spellings_of_one_label_and_same_source_variants_do_not#1","assert":{"conflicts_count":0}}

@@ -1,0 +1,38 @@
+{
+  "ekos_commit": "8e3c178fc45741c7e2b1576e936646e0c461e75c",
+  "recorded": "2026-10-19",
+  "functions": {
+    "type_aliases_are_one_type": {
+      "file": "ekos/crates/semantic/src/conflicts.rs",
+      "sha256": "b0de5c2a71cf5b9ec93bbe294e0593dbe9b9ccffc1281b2da99b6dea6b2941cf"
+    },
+    "a_table_defined_twice_differently_is_a_conflict_and_collapses_to_the_last": {
+      "file": "ekos/crates/semantic/src/conflicts.rs",
+      "sha256": "0f28d65109a7fc19f94c6fee6766828afcce19dcd6faa69440be0fe182c53844"
+    },
+    "identical_duplicates_collapse_silently": {
+      "file": "ekos/crates/semantic/src/conflicts.rs",
+      "sha256": "ebe17cea9d4d2d7af3cfefbbd7efbc86a816a9c0e37737acd11766fd4dddd78c"
+    },
+    "a_column_type_disagreement_is_its_own_conflict": {
+      "file": "ekos/crates/semantic/src/conflicts.rs",
+      "sha256": "a59f076901e14ae07fb4c090ee79025f74c0f6f80f91f90e050c14d9d2affe78"
+    },
+    "detection_is_independent_of_input_order_and_ids_are_stable": {
+      "file": "ekos/crates/semantic/src/conflicts.rs",
+      "sha256": "f32ced6a9a52fb0cbbb55bd94e49ec7c1853019eb1ad5ffe129cf9de7b9971d5"
+    },
+    "merge_groups_report_what_the_merge_would_drop": {
+      "file": "ekos/crates/semantic/src/conflicts.rs",
+      "sha256": "7c24321a17de6e8216b8ab6ef043546dd90161025870229ad76a78d21f9a3fcd"
+    },
+    "labels_from_different_sources_that_share_no_word_conflict": {
+      "file": "ekos/crates/semantic/src/conflicts.rs",
+      "sha256": "bebf534b7b2e4dc6bb7bec5f672dd055eb4b56f6592ab5f02435ec446d6fdc22"
+    },
+    "spellings_of_one_label_and_same_source_variants_do_not": {
+      "file": "ekos/crates/semantic/src/conflicts.rs",
+      "sha256": "dc560892784e9b9b6ecc3018c3db79ffcff7d2c425da894c68fcad9e66f1e6bd"
+    }
+  }
+}
