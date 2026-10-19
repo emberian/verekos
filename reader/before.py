@@ -89,6 +89,7 @@ def answer(name):
     for n in members:
         c = sync["cells"].get(cell_of[n])
         stale[n] = [p for p in (c["pins"] if c else []) if rootpin and p["atom"] == rootpin["atom"]]
+    already = sum(1 for v in stale.values() for p in v if rootpin and p["rev"] != rootpin["rev"])
     total_stale = sum(len(v) for c in sync["cells"].values() for v in [[p for p in c["pins"] if rootpin and p["atom"] == rootpin["atom"]]])
     readable_targets = {c["target"] for c in sync["cells"].values()}
     blind = sum(1 for c in sync["cells"].values() for p in c["pins"] if p["source"] not in readable_targets)
@@ -103,7 +104,7 @@ def answer(name):
                 mentions[s["key"]] += 1
     return {"sync": sync, "root": name, "ring1": ring1, "ring2": ring2, "control": control, "node_side": node_side,
             "node_equal": node_equal, "members": members, "stale": stale, "total_stale": total_stale,
-            "via": via, "label": label, "blind": blind, "mentions": mentions, "cell_of": cell_of}
+            "via": via, "label": label, "blind": blind, "already": already, "mentions": mentions, "cell_of": cell_of}
 
 
 def main():
@@ -137,7 +138,7 @@ def main():
     for n in r["ring2"]:
         line(n, f"  via {r['via'][n]}: {r['label'][(n, r['via'][n])]}")
     ms = ", ".join(f"{k} x{v}" for k, v in sorted(r["mentions"].items())) or "none"
-    print(f"  if {a.name}'s statement were rewritten: {r['total_stale']} pin(s) in the {len(sync['cells'])} cells I can read would go `moved`; "
+    print(f"  if {a.name}'s statement were rewritten: {r['total_stale']} pin(s) in the {len(sync['cells'])} cells I can read would go `moved` ({r['already']} of them already do, against the source as I read it: the compiled document was made from an earlier revision); "
           f"{r['blind']} more pin(s) in those cells point into documents I cannot read, so I cannot check them; "
           f"statements that also mention it in plain text (a grep, not EKOS): {ms}")
     print(f"  control, EKOS vs EKOS on the same copies: `query neighbourhood --depth 2` rings "
