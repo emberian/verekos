@@ -9,6 +9,7 @@
     "tx_monotone": true,
     "receipts": 13,
     "pins_nonempty": true,
+    "laws_hold": true,
     "first_inadmissible_tx": null,
     "expectations_met": true,
     "conflicts": [
@@ -71,8 +72,8 @@
   },
   "stderr": "",
   "check_build": {
-    "exe_sha256": "fac1926915b761350e6f1f70e039a54f4faa361d6e58cba071f124ec6dc38825",
-    "check_tree": "27adffff588902af3974e40aa00c4bb2dcac5f69",
+    "exe_sha256": "0a95ab0cd3db01a1911cad36beb1e209b979090ff6fce9fa2e7dc025e9310b50",
+    "check_tree": "caac7ae8bc07fbf2abc4a767fb1586b85d86cf7e",
     "check_dirty": false,
     "world_rev": "a8bb023fba8340b05eab8f6a32d6798233aa703c",
     "toolchain": "leanprover/lean4:v4.30.0"

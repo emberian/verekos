@@ -1,0 +1,27 @@
+{
+  "kernel": "scope",
+  "panel": "scope.decision",
+  "items": 7,
+  "agree": 7,
+  "mismatch": 0,
+  "missing": 0,
+  "extra": 0,
+  "classified": 0,
+  "verekos_defect": 0,
+  "unexplained": 0,
+  "panel_sha256": "cfc652007de82dace037dee4346d4ab1ac09466d0e954a6caddab9e19e2c50b0",
+  "control_sha256": "297e00326bedd80a5b19a3d23efe298a288a4d39c053205517da6993baf282c0",
+  "candidate_sha256": "297e00326bedd80a5b19a3d23efe298a288a4d39c053205517da6993baf282c0",
+  "classified_sha256": "71c578daf600e9a321d5f0bcb9406271fc8e37c75861070bb3643c2be037c3d0",
+  "recorded": "2026-10-19T20:29:28Z",
+  "control": "check/probes/scope.regression.control.jsonl",
+  "candidate": "controls/check/scope.regression.candidate.jsonl",
+  "score_exit": 0,
+  "check_build": {
+    "exe_sha256": "0a95ab0cd3db01a1911cad36beb1e209b979090ff6fce9fa2e7dc025e9310b50",
+    "check_tree": "caac7ae8bc07fbf2abc4a767fb1586b85d86cf7e",
+    "check_dirty": false,
+    "world_rev": "a8bb023fba8340b05eab8f6a32d6798233aa703c",
+    "toolchain": "leanprover/lean4:v4.30.0"
+  }
+}

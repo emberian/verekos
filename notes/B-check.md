@@ -190,6 +190,30 @@ VerEKOS defect of the untrusted parser. A fix would need a custom JSON reader.
 All 31 glob patterns agree (62 items: visibility and parse for each), including `[!…]`, `**` placement errors, `[]]` and a
 leading `./`.
 
+**F4 fixed, 2026-10-19 (root's follow-up).** The parser now scans the raw
+text for a key repeated in any JSON object (compared after unescaping) and
+refuses it as `parse`, before `Json.parse` runs (`check/Check/Scope.lean`,
+`hasDuplicateKey`). Seven regression inputs, `check/probes/scope.regression.jsonl`,
+have EKOS's answers committed beside them (from `control-dump scope`: 5
+refused, 2 parsed), and `check/run.py` scores them; the result is 7/7, 0
+unexplained (`controls/check/scope.regression.verdict.json`). The 93-item
+scope probe now differs on 1 item (empty origins), down from 2. One more thing
+read on the way: EKOS refuses duplicates only through `ReadScope::from_json`
+(serde's derived deserializer, scope.rs:94). `from_value` (scope.rs:101),
+which MCP's per-call scope uses, receives an already-parsed
+`serde_json::Value` whose map has kept the last value, so on that path EKOS
+accepts the same text. That is two behaviours for one scope, depending on
+the entry point; the panel tests only `from_json`.
+
+**Exit codes documented, 2026-10-19 (root's follow-up).** `check/README.md`
+gives, for each `verekos-check` subcommand and for `run.py`, what exits 0, 1
+and 2, and which exit `run.py` expects of each laws run. The committed runs'
+exits were already right. While writing it, one gap was closed:
+`verekos-check laws` could exit 0 with a failed law if the run's
+`expect.json` said that law should fail. Now a failed law always exits 1, the
+report carries `laws_hold`, and `expect.json` can only add requirements. No
+committed run changed its exit.
+
 ## What could not be verified
 
 - **The mapper and the converter have no theorem.** The board label is
