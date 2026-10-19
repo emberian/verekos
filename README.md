@@ -24,27 +24,46 @@ its scoreboard and its untrusted front ends.
 Design, dated 2026-10-19: [`docs/design/VEREKOS-DESIGN-2026-10-19.md`](docs/design/VEREKOS-DESIGN-2026-10-19.md).
 Plan and lanes: [`project/PLAN.md`](project/PLAN.md).
 
-## Honest state
+## Honest state (2026-10-19, night)
 
-Nothing is built. This repository holds a design and the scout memos it was
-written from (`notes/`). No theory has been checked, no binary exported, no
-fixture run. A claim about behaviour will come with a number or will not be made.
+Built, with numbers:
+
+- **A Lean model** in `world/`: claims, receipts, status computed from reviews,
+  visibility with deny-wins, conflicts with coverage, identity as an overlay,
+  traversal that crosses only facts, an admission law that keeps the pin graph
+  acyclic, and the seven document shapes of exploration 01. It builds; no
+  `sorry` or new axiom. It is a model of VerEKOS's own design: nothing yet
+  connects it to minidregg's kernel theorems beyond shared carrier types, and
+  nothing yet runs it on a panel. `world/README.md` says what each file proves
+  and what it does not.
+- **A scoreboard** (`tools/scoreboard/`, `panels/`, `controls/`,
+  `docs/parity/BOARD.md`): EKOS's own library functions answer 170 items
+  transcribed from its own tests (scope, conflicts, identity, branch, impact),
+  each reproducing the test's assertions; two fixtures go through the real
+  `ekos` binary with EKOS's stated counts reproduced; EKOS#10 is reproduced and
+  classified. 109 more items (redaction, EKL) have expected outcomes but no
+  control yet. **No VerEKOS candidate is scored yet**: every "agree" on the
+  board is EKOS against itself.
+- **Slice 1** (in progress, `slice1/`): EKOS output landed as minidregg cells on
+  hbox under four laws (`laws/`); transclusion itself was shown working on a
+  current host (24/24 and 143/143 journey rows, `notes/W7-hbox-transclusion.md`).
+
+A claim about behaviour comes with a number or is not made.
 
 ## The shape, in one paragraph
 
-Two layers, two different kinds of guarantee. **The ledger is a world**: objects,
-relationships and evidence are documents, links and pinned transclusions of source
-ranges; a commit is a proposed change that a kernel admits or refuses against
-laws (evidence required, redaction, determinism by re-execution, review by a
-human-held capability); a reader sees an authorized view and nothing else. This is
-exactly the contract [minidregg](../minidregg/README.md) already provides for
-documents and hosted applications, so the first question the design answers is
-whether EKOS is a natural minidregg world rather than a new kernel. **The
-compiler's decisions are kernels**: identity merging, conflict detection, the
-read-scope decision, impact closure, point-in-time reconstruction and the query
-language are small pure functions with theorems, written in Isabelle/HOL where
-the Archive of Formal Proofs already has the pieces (information-flow security,
-stratified Datalog, transitive closure, interval calculus, canonical JSON), and
-exported to Standard ML binaries that run beside EKOS on the same inputs. What
-turns text into typed input (SQL parsing, document extraction, any model call) is
+Two layers. **The ledger is a world**: objects, relationships and evidence are
+documents, links and pinned transclusions of source ranges; a commit is a
+proposed change that minidregg admits or refuses against laws (evidence
+required, only the compiler writes compiled cells, only named reviewers write
+reviews); a reader sees an authorized view and nothing else. This is the
+contract [minidregg](../minidregg/README.md) already provides for documents,
+so the design's first question was whether EKOS is a natural minidregg world
+rather than a new kernel (so far: yes, with no kernel change). **The
+compiler's decisions are small pure functions with theorems**: status, read
+scope, identity, conflicts, impact, written in Lean in `world/` (an Isabelle
+layer was planned and dropped on 2026-10-19). What turns text into typed input
+(SQL parsing, document extraction, any model call, the slice-1 mapper) is
 untrusted and says so, as in veri7vn.
+
+Lanes and rules for agents: [`CLAUDE.md`](CLAUDE.md).
