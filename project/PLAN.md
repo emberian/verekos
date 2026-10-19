@@ -1,4 +1,4 @@
-# VerEKOS plan (revision 2, 2026-10-19)
+# VerEKOS plan (revision 2, 2026-10-19) — **paused the same night; see `CLOSEOUT-2026-10-19.md`**
 
 Read `../CLAUDE.md` (layout and rules), then `../docs/design/VEREKOS-DESIGN-2026-10-19.md` (revision 3.1), then `../docs/design/explorations/00` to `05`. This file names the
 lanes, what each owns, and their status. The milestone table below is the

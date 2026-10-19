@@ -1,5 +1,7 @@
 # VerEKOS
 
+> **Paused 2026-10-19.** A one-day study; the parts that carry over to minidregg, and the parts that stay here, are in [`project/CLOSEOUT-2026-10-19.md`](project/CLOSEOUT-2026-10-19.md).
+
 **EKOS's sibling, with a proof spine.**
 
 [EKOS](https://github.com/alexeyban/EKOS) compiles what an organisation already has
