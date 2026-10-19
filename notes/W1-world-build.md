@@ -402,3 +402,445 @@ theorem Sch.code_injective : Function.Injective Sch.code
 theorem d₀_injective : Function.Injective d₀.claimId
 
 ```
+
+---
+
+## 2026-10-19, second quest: well-formedness, traversal, identity
+
+All four steps are done, built and pushed to `origin/dev`. Nothing written into
+minidregg (re-checked: no modified tracked files). A clean build of `World`
+now takes **18 s** (`var/w1/build-clean-world-q2.log`). The slowest modules
+are `World.Minidregg` (10 s), `World.Conflicts` (7.7 s), `World.WellFormed`
+(6.4 s) and `World.Identity` (5.0 s); the Mathlib imports dominate. All 45 new
+theorems were checked with `#print axioms` (full output below). Each uses at
+most `propext`, `Classical.choice` and `Quot.sound`; six use no axioms at all.
+
+### Step 1: the three rules (`World/WellFormed.lean`)
+
+- **Pins nonempty** is `Claim.PinsNonempty`. It is used by
+  `visible_iff_sourcePins`: a claim pinned only to sources is visible exactly
+  when every origin is allowed and none is denied. Without the rule, the "if"
+  direction would hold vacuously for an unpinned claim.
+- **Sources sorted and deduplicated** is `ClaimKey.Canonical` (strictly
+  increasing sources under a `LinearOrder` on source ids).
+  `ClaimKey.normalize` sorts and deduplicates. `eq_iff_of_canonical` says
+  canonical keys are equal iff schema, subject and source *set* agree.
+  `normalize_eq_iff` says normalization identifies exactly the keys with the
+  same source set. `Claim.WellFormed` combines the two rules.
+  `latest_wellFormed` says a log that puts only well-formed claims has only
+  well-formed claims in its state.
+- **No pin cycles** is `Ranked σ rank`: a number per claim that strictly drops
+  from every claim to each claim it pins in state `σ`. `Ranked.wellFounded`
+  says the premise relation is well founded. I used a rank rather than bare
+  well-foundedness because the brief asked for the bounded `visible` to
+  stabilize "at or below the pin-graph depth". A rank *is* a depth bound,
+  while well-foundedness alone gives no finite bound.
+  - `visible_stable`: every bound above a claim's rank gives the same answer.
+  - `visibleR` is visibility at rank + 1, and `visible_eq_visibleR` shows it is
+    the limit.
+  - `visibleR_rank_irrelevant`: two ranks for the same state give the same
+    `visibleR`, so the unbounded visibility is well defined.
+- **Self-review hypothesis removed.** `reviewSurvives_put_acyclic` replaces
+  "`c'` is not a review of itself" with "the state after the put has a rank".
+  A review of itself would pin its own id, which `latest_append_put` shows is
+  present after the put, so it would be its own premise, which a rank forbids.
+  The old `reviewSurvives_put` is kept: it is still true and is the weaker
+  special case.
+- `ranked₀` gives a concrete rank for the example state, and `visibleR` is
+  evaluated with it.
+
+### Step 2: traversal over facts (`World/Traverse.lean`)
+
+`Reach L n x z`: `z` is reachable from seed `x` within `n` hops. A hop
+crosses edge `e` from `a` to `b` (`Crosses`) only when:
+- `e` is the current claim under its id;
+- its schema is one of the requested types `T`;
+- `EdgeView.ends e = some (a, b)`;
+- the edge's status is a fact for its schema;
+- both endpoints hold claims whose status is a fact.
+
+The EKOS lines are confirmed by reading, as cited in the module docstring:
+`is_pending_review` returns `false` for a missing status
+(`kir/src/lib.rs:480-485`), and `tool_dependents` checks only the edge
+(`mcp.rs:1933-1961`).
+
+The theorems:
+- `pending_edge_never_crossed`, and its global form
+  `reach_trivial_of_all_pending`: if every edge of the requested types is
+  pending, only the seed is reachable.
+- `unreviewed_hypothesis_edge_not_crossed`: the statement the coordinator
+  asked for. An edge whose schema's initial status is not a fact, with no
+  admitted review, is not crossed.
+- `unreviewed_hypothesis_node_blocks`: the same for endpoints, which EKOS does
+  not check.
+- **`reach_mono_confirm` is not "any confirming review only adds".** That
+  statement is false of the model, so it carries three hypotheses, each
+  explained in its docstring:
+  - the review is put under a **fresh id**, because putting it over an existing
+    claim replaces that claim in the state;
+  - it is pinned at the target's **current core**, because a review at an old
+    core turns the status into `needsReview`;
+  - its decision is a **fact** for the target's schema.
+
+  The conclusion is the full one: every `Reach` before is a `Reach` after.
+  The proof needed `latest_id` (the state stores each claim under its own
+  id), proved by induction over the replay.
+- `reach_mono_hops` and `reach_mono_hops_le`: a larger hop bound only adds.
+
+### Step 3: identity as an overlay (`World/Identity.lean`)
+
+- `Same ls` is the equivalence closure (`Relation.EqvGen`) of a finite link
+  set. `same_equivalence` says it is an equivalence relation.
+- `classOf` and `canonical` (the least member of the class, under a
+  `LinearOrder`) are **noncomputable**, because the class is a classical filter
+  of the links' support.
+  - `mem_classOf` is the exact characterization.
+  - `canonical_eq_iff`: two keys share a canonical key iff they are `Same`.
+  - `canonical_congr`: the canonical key depends only on the equivalence. Any
+    two link sets with the same classes give the same canonical key, whatever
+    links realized them and in whatever order. That is the order-independence
+    content; `links_list_congr` adds that the order of candidate claims does
+    not matter.
+- `linkOf` gives a `SameAs` claim's link when it is current, its status is
+  `confirmed`, and both pinned claims are present (as the pair of their keys).
+  `links` is the union over a finite candidate set.
+- `fuzzy_no_link` and `fuzzy_not_crossed`: an unconfirmed-initial `SameAs`
+  with no admitted review makes no link, and traversal does not cross it.
+- `merge_takes_effect`: an exact merge (a `SameAs` of a schema admitting the
+  compiler, plus a compiler review confirming it at its core) links the two
+  keys.
+- **`merge_reversible`**: put the merge, put its review, retract the merge, and
+  the link set is *equal* to the one before, so every class and canonical key
+  is restored (`merge_reversible_canonical`). This needed hypotheses I had not
+  foreseen, each stated and justified in the docstring:
+  - fresh, distinct ids for the merge and its review;
+  - the review targets the merge's id;
+  - the merge is not itself a review;
+  - the review is not a `SameAs` claim and is not pinned by any candidate.
+
+  The review stays in the log. It just has no claim left to decide.
+- Concrete run (`World/Examples.lean`, extended `Sch` with `fk`, `sameAs`,
+  `sameAsExact`):
+  - no links before;
+  - `{(A, C)}` after the compiler's exact merge, with A's key canonical for C;
+  - the same empty link set after retraction, with C its own canonical key;
+  - `¬ Same A C` after retraction;
+  - the fuzzy A–B candidate is not crossed after a compiler "confirmation", and
+    is crossed after a human one.
+
+### What I could not do in this round
+
+- **The rules are predicates, not types.** Making `Claim` carry proofs would
+  push obligations into every constructor and every `decide` example. I kept
+  them as hypotheses that the theorems use.
+- **No theorem preserves `Ranked` across a write.** A put can pin anything, so
+  acyclicity has to be a law checked at admission (an L-obj style law in
+  minidregg).
+- **No function computes a rank from a finite acyclic state.** The rank is a
+  supplied witness.
+- **`canonical` is noncomputable.** A computable class (iterate the closure up
+  to the support's size) with a proof of agreement is a follow-up.
+
+### Follow-ups (in order)
+
+1. An admission law: a put is accepted only if the resulting state stays
+   ranked. Prove that a rank extends (new claim's rank = 1 + the maximum of its
+   premises' ranks).
+2. A computable `canonical`, proved equal to the classical one.
+3. Identity combined with traversal: read edges through the class view, so an
+   edge to a merged-away key reaches the class. That is design §3's "edges
+   keep their original endpoint keys and are read through the class".
+4. Claim-pin staleness as a separate checkable predicate, tied to
+   `needsReview`.
+
+### Every new theorem statement, quoted from the source
+
+
+#### `World/WellFormed.lean`
+
+```lean
+theorem ClaimKey.normalize_canonical (k : ClaimKey C) : k.normalize.Canonical
+
+theorem ClaimKey.mem_normalize (k : ClaimKey C) (s : C.SourceId) :
+    s ∈ k.normalize.sources ↔ s ∈ k.sources
+
+theorem ClaimKey.eq_iff_of_canonical (k₁ k₂ : ClaimKey C) (h₁ : k₁.Canonical)
+    (h₂ : k₂.Canonical) :
+    k₁ = k₂ ↔ k₁.schema = k₂.schema ∧ k₁.subject = k₂.subject ∧
+    ∀ s, s ∈ k₁.sources ↔ s ∈ k₂.sources
+
+theorem ClaimKey.normalize_eq_iff (k₁ k₂ : ClaimKey C) :
+    k₁.normalize = k₂.normalize ↔ k₁.schema = k₂.schema ∧ k₁.subject = k₂.subject ∧
+    ∀ s, s ∈ k₁.sources ↔ s ∈ k₂.sources
+
+theorem ClaimKey.normalize_of_canonical (k : ClaimKey C) (h : k.Canonical) :
+    k.normalize = k
+
+theorem foldl_apply_wellFormed (d : ClaimIdDerivation C) :
+    ∀ (L : List (Receipt C P)) (s : View C P),
+    (∀ i c, s i = some c → c.WellFormed) → LogWellFormed L →
+    ∀ i c, (L.foldl (apply d) s) i = some c → c.WellFormed
+
+theorem latest_wellFormed (d : ClaimIdDerivation C) (L : List (Receipt C P))
+    (h : LogWellFormed L) (i : C.ClaimId) (c : Claim C P)
+    (hc : latest d L i = some c) : c.WellFormed
+
+theorem Ranked.wellFounded {σ : C.ClaimId → Option (Claim C P)} {rank : Claim C P → Nat}
+    (hr : Ranked σ rank) : WellFounded (PremiseOf σ)
+
+theorem Ranked.not_self {σ : C.ClaimId → Option (Claim C P)} {rank : Claim C P → Nat}
+    (hr : Ranked σ rank) (c : Claim C P) : ¬ PremiseOf σ c c
+
+theorem any_congr_mem {α : Type} (l : List α) (f g : α → Bool)
+    (h : ∀ a ∈ l, f a = g a) : l.any f = l.any g
+
+theorem all_congr_mem {α : Type} (l : List α) (f g : α → Bool)
+    (h : ∀ a ∈ l, f a = g a) : l.all f = l.all g
+
+theorem denied_stable (hr : Ranked σ rank) :
+    ∀ (n m : Nat) (c : Claim C P), rank c < n → rank c < m →
+    denied d σ S n c = denied d σ S m c
+
+theorem allowed_stable (hr : Ranked σ rank) :
+    ∀ (n m : Nat) (c : Claim C P), rank c < n → rank c < m →
+    allowed d σ S n c = allowed d σ S m c
+
+theorem visible_stable (hr : Ranked σ rank) (n m : Nat) (c : Claim C P)
+    (hn : rank c < n) (hm : rank c < m) : visible d σ S n c = visible d σ S m c
+
+theorem visible_eq_visibleR (hr : Ranked σ rank) (n : Nat) (c : Claim C P)
+    (hn : rank c < n) : visible d σ S n c = visibleR d σ S rank c
+
+theorem visibleR_rank_irrelevant {rank' : Claim C P → Nat} (hr : Ranked σ rank)
+    (hr' : Ranked σ rank') (c : Claim C P) :
+    visibleR d σ S rank c = visibleR d σ S rank' c
+
+theorem visible_iff_sourcePins (n : Nat) (c : Claim C P) (hne : c.PinsNonempty)
+    (hsrc : ∀ p ∈ c.pins, ∃ doc r, p.target = .source doc r)
+    (hid : S.allowsId (c.id d) = false) (hdid : S.deniesId (c.id d) = false) :
+    visible d σ S (n + 1) c = true ↔
+    ∀ p ∈ c.pins, ∀ doc r, p.target = .source doc r →
+    S.allowsOrigin doc r = true ∧ S.deniesOrigin doc r = false
+
+theorem asReview_pins (c : Claim C P) (i : C.ClaimId) (dg : C.Digest) (s : Status)
+    (h : asReview R c = some (i, dg, s)) : ∃ w, c.pins = [⟨.claim i, .core dg, w⟩]
+
+theorem latest_append_put (L : List (Receipt C P)) (r : Receipt C P) (c : Claim C P)
+    (hop : r.op = .put c) : latest d (L ++ [r]) (c.id d) = some c
+
+theorem reviewSurvives_put_acyclic [∀ s, DecidableEq (P s)]
+    (hinj : Function.Injective d.claimId)
+    (L : List (Receipt C P)) (c c' : Claim C P) (r : Receipt C P) (hop : r.op = .put c')
+    {rank : Claim C P → Nat} (hacyc : Ranked (latest d (L ++ [r])) rank)
+    (hid : c.id d = c'.id d) (hcore : c.core reg = c'.core reg) :
+    status R reg d (L ++ [r]) c' = status R reg d L c
+
+```
+
+#### `World/Traverse.lean`
+
+```lean
+theorem pending_edge_never_crossed (L : List (Receipt C P)) (e : Claim C P)
+    (a b : C.ClaimId) (h : (reg e.key.schema).isFact (status R reg d L e) = false) :
+    ¬ Crosses R reg d E T L e a b
+
+theorem reach_trivial_of_all_pending (L : List (Receipt C P))
+    (hall : ∀ e, T e.key.schema = true → E.ends e ≠ none →
+    (reg e.key.schema).isFact (status R reg d L e) = false)
+    {n : Nat} {x z : C.ClaimId} (h : Reach R reg d E T L n x z) : x = z
+
+theorem status_of_no_reviews (L : List (Receipt C P)) (c : Claim C P)
+    (h : admittedReviews R reg d L c.key = []) :
+    status R reg d L c = (reg c.key.schema).initial
+
+theorem unreviewed_hypothesis_edge_not_crossed (L : List (Receipt C P)) (e : Claim C P)
+    (a b : C.ClaimId)
+    (hinit : (reg e.key.schema).isFact (reg e.key.schema).initial = false)
+    (hnone : admittedReviews R reg d L e.key = []) :
+    ¬ Crosses R reg d E T L e a b
+
+theorem unreviewed_hypothesis_node_blocks (L : List (Receipt C P)) (e c : Claim C P)
+    (a b : C.ClaimId) (hb : latest d L b = some c)
+    (hinit : (reg c.key.schema).isFact (reg c.key.schema).initial = false)
+    (hnone : admittedReviews R reg d L c.key = []) :
+    ¬ Crosses R reg d E T L e a b
+
+theorem reach_mono_hops (L : List (Receipt C P)) {n : Nat} {x z : C.ClaimId}
+    (h : Reach R reg d E T L n x z) : Reach R reg d E T L (n + 1) x z
+
+theorem reach_mono_hops_le (L : List (Receipt C P)) {n m : Nat} (hnm : n ≤ m)
+    {x z : C.ClaimId} (h : Reach R reg d E T L n x z) : Reach R reg d E T L m x z
+
+theorem foldl_apply_id : ∀ (L : List (Receipt C P)) (s : View C P),
+    (∀ i c, s i = some c → c.id d = i) →
+    ∀ i c, (L.foldl (apply d) s) i = some c → c.id d = i
+
+theorem latest_id (L : List (Receipt C P)) (i : C.ClaimId) (c : Claim C P)
+    (h : latest d L i = some c) : c.id d = i
+
+theorem latest_append_fresh (L : List (Receipt C P)) (r : Receipt C P) (rv : Claim C P)
+    (hop : r.op = .put rv) (j : C.ClaimId) (hj : j ≠ rv.id d) :
+    latest d (L ++ [r]) j = latest d L j
+
+theorem reach_mono_confirm (L : List (Receipt C P)) (r : Receipt C P) (rv t : Claim C P)
+    (s : Status) (hop : r.op = .put rv) (hfresh : latest d L (rv.id d) = none)
+    (ht : latest d L (t.id d) = some t)
+    (hrev : reviewOf R reg d t.key r = some (t.core reg, s))
+    (hfact : (reg t.key.schema).isFact s = true)
+    {n : Nat} {x z : C.ClaimId} (h : Reach R reg d E T L n x z) :
+    Reach R reg d E T (L ++ [r]) n x z
+
+```
+
+#### `World/Identity.lean`
+
+```lean
+theorem same_equivalence (ls : Finset (α × α)) : Equivalence (Same ls)
+
+theorem same_eq_or_support (ls : Finset (α × α)) {x y : α} (h : Same ls x y) :
+    x = y ∨ (x ∈ support ls ∧ y ∈ support ls)
+
+theorem mem_classOf (ls : Finset (α × α)) (x y : α) : y ∈ classOf ls x ↔ Same ls x y
+
+theorem classOf_nonempty (ls : Finset (α × α)) (x : α) : (classOf ls x).Nonempty
+
+theorem same_canonical (ls : Finset (α × α)) (x : α) : Same ls x (canonical ls x)
+
+theorem canonical_le (ls : Finset (α × α)) (x y : α) (h : Same ls x y) :
+    canonical ls x ≤ y
+
+theorem classOf_eq_of_same (ls : Finset (α × α)) (x y : α) (h : Same ls x y) :
+    classOf ls x = classOf ls y
+
+theorem canonical_eq_iff (ls : Finset (α × α)) (x y : α) :
+    canonical ls x = canonical ls y ↔ Same ls x y
+
+theorem canonical_congr (l₁ l₂ : Finset (α × α)) (h : ∀ a b, Same l₁ a b ↔ Same l₂ a b)
+    (x : α) : canonical l₁ x = canonical l₂ x
+
+theorem links_congr (L L' : List (Receipt C P)) (cands : Finset (Claim C P))
+    (h : ∀ c ∈ cands, linkOf R reg d V L c = linkOf R reg d V L' c) :
+    links R reg d V L cands = links R reg d V L' cands
+
+theorem links_list_congr (L : List (Receipt C P)) (l₁ l₂ : List (Claim C P))
+    (h : ∀ c, c ∈ l₁ ↔ c ∈ l₂) :
+    links R reg d V L l₁.toFinset = links R reg d V L l₂.toFinset
+
+theorem fuzzy_no_link (L : List (Receipt C P)) (c : Claim C P)
+    (hinit : (reg c.key.schema).initial ≠ .confirmed)
+    (hnone : admittedReviews R reg d L c.key = []) : linkOf R reg d V L c = none
+
+theorem fuzzy_not_crossed (T : C.SchemaId → Bool) (L : List (Receipt C P)) (c : Claim C P)
+    (a b : C.ClaimId)
+    (hinit : (reg c.key.schema).isFact (reg c.key.schema).initial = false)
+    (hnone : admittedReviews R reg d L c.key = []) :
+    ¬ Crosses R reg d (sameAsEdges V) T L c a b
+
+theorem latest_snoc (L : List (Receipt C P)) (r : Receipt C P) :
+    latest d (L ++ [r]) = apply d (latest d L) r
+
+theorem merge_takes_effect (L : List (Receipt C P)) (cands : Finset (Claim C P))
+    (m rv ca cb : Claim C P) (a b : C.ClaimId) (r₁ r₂ : Receipt C P)
+    (hm : m ∈ cands) (h₁ : r₁.op = .put m) (h₂ : r₂.op = .put rv)
+    (hends : asSameAs V m = some (a, b))
+    (hrev : reviewOf R reg d m.key r₂ = some (m.core reg, .confirmed))
+    (hne : rv.id d ≠ m.id d)
+    (ha : latest d L a = some ca) (hb : latest d L b = some cb)
+    (ha' : a ≠ m.id d ∧ a ≠ rv.id d) (hb' : b ≠ m.id d ∧ b ≠ rv.id d) :
+    (ca.key, cb.key) ∈ links R reg d V (L ++ [r₁, r₂]) cands ∧
+    Same (links R reg d V (L ++ [r₁, r₂]) cands) ca.key cb.key
+
+theorem merge_reversible (L : List (Receipt C P)) (cands : Finset (Claim C P))
+    (m rv : Claim C P) (r₁ r₂ r₃ : Receipt C P)
+    (h₁ : r₁.op = .put m) (h₂ : r₂.op = .put rv) (h₃ : r₃.op = .retract (m.id d))
+    (hmFresh : latest d L (m.id d) = none) (hrvFresh : latest d L (rv.id d) = none)
+    (hne : rv.id d ≠ m.id d)
+    (hmNotRev : asReview R m = none)
+    (hrvOf : ∃ dg s, asReview R rv = some (m.id d, dg, s))
+    (hrvNotSameAs : asSameAs V rv = none)
+    (hends : ∀ c ∈ cands, ∀ a b, asSameAs V c = some (a, b) → a ≠ rv.id d ∧ b ≠ rv.id d) :
+    links R reg d V (L ++ [r₁, r₂, r₃]) cands = links R reg d V L cands
+
+theorem merge_reversible_canonical [LinearOrder (ClaimKey C)]
+    (L : List (Receipt C P)) (cands : Finset (Claim C P))
+    (m rv : Claim C P) (r₁ r₂ r₃ : Receipt C P)
+    (h₁ : r₁.op = .put m) (h₂ : r₂.op = .put rv) (h₃ : r₃.op = .retract (m.id d))
+    (hmFresh : latest d L (m.id d) = none) (hrvFresh : latest d L (rv.id d) = none)
+    (hne : rv.id d ≠ m.id d)
+    (hmNotRev : asReview R m = none)
+    (hrvOf : ∃ dg s, asReview R rv = some (m.id d, dg, s))
+    (hrvNotSameAs : asSameAs V rv = none)
+    (hends : ∀ c ∈ cands, ∀ a b, asSameAs V c = some (a, b) → a ≠ rv.id d ∧ b ≠ rv.id d)
+    (k : ClaimKey C) :
+    canonical (links R reg d V (L ++ [r₁, r₂, r₃]) cands) k =
+    canonical (links R reg d V L cands) k
+
+```
+
+#### `World/Examples.lean` (new theorems)
+
+```lean
+theorem ranked₀ : Ranked σ₀ rank₀
+
+theorem same_empty {α : Type} [DecidableEq α] (x y : α) (h : Same (∅ : Finset (α × α)) x y) :
+    x = y
+
+theorem keyCode_injective : Function.Injective keyCode
+
+```
+
+### `#print axioms`, verbatim
+
+```
+'World.ClaimKey.normalize_canonical' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.ClaimKey.mem_normalize' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.ClaimKey.eq_iff_of_canonical' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.ClaimKey.normalize_eq_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.ClaimKey.normalize_of_canonical' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.foldl_apply_wellFormed' depends on axioms: [propext]
+'World.latest_wellFormed' depends on axioms: [propext]
+'World.Ranked.wellFounded' does not depend on any axioms
+'World.Ranked.not_self' does not depend on any axioms
+'World.any_congr_mem' does not depend on any axioms
+'World.all_congr_mem' does not depend on any axioms
+'World.denied_stable' depends on axioms: [propext, Quot.sound]
+'World.allowed_stable' depends on axioms: [propext, Quot.sound]
+'World.visible_stable' depends on axioms: [propext, Quot.sound]
+'World.visible_eq_visibleR' depends on axioms: [propext, Quot.sound]
+'World.visibleR_rank_irrelevant' depends on axioms: [propext, Quot.sound]
+'World.visible_iff_sourcePins' depends on axioms: [propext, Quot.sound]
+'World.asReview_pins' depends on axioms: [propext]
+'World.latest_append_put' depends on axioms: [propext, Quot.sound]
+'World.reviewSurvives_put_acyclic' depends on axioms: [propext, Quot.sound]
+'World.pending_edge_never_crossed' depends on axioms: [propext]
+'World.reach_trivial_of_all_pending' depends on axioms: [propext]
+'World.status_of_no_reviews' depends on axioms: [propext]
+'World.unreviewed_hypothesis_edge_not_crossed' depends on axioms: [propext]
+'World.unreviewed_hypothesis_node_blocks' depends on axioms: [propext]
+'World.reach_mono_hops' depends on axioms: [propext]
+'World.reach_mono_hops_le' depends on axioms: [propext]
+'World.foldl_apply_id' does not depend on any axioms
+'World.latest_id' does not depend on any axioms
+'World.latest_append_fresh' depends on axioms: [propext, Quot.sound]
+'World.reach_mono_confirm' depends on axioms: [propext, Quot.sound]
+'World.same_equivalence' depends on axioms: [propext, Quot.sound]
+'World.same_eq_or_support' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.mem_classOf' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.classOf_nonempty' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.same_canonical' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.canonical_le' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.classOf_eq_of_same' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.canonical_eq_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.canonical_congr' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.links_congr' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.links_list_congr' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.fuzzy_no_link' depends on axioms: [propext]
+'World.fuzzy_not_crossed' depends on axioms: [propext]
+'World.latest_snoc' depends on axioms: [propext, Quot.sound]
+'World.merge_takes_effect' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.merge_reversible' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.merge_reversible_canonical' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.Example.keyCode_injective' depends on axioms: [propext, Quot.sound]
+'World.Example.same_empty' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.Example.ranked₀' depends on axioms: [propext, Quot.sound]
+```
