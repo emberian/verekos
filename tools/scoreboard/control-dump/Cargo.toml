@@ -18,12 +18,18 @@ publish = false
 
 [dependencies]
 chrono = "0.4"
+# ekos-artifact: the ledger dump's local content_signature recomputation uses
+# EKOS's own exported canonical-JSON hash (ArtifactId::compute) — the same
+# function ekos-ledger's pub(crate) content_signature calls.
+ekos-artifact = { path = "/Users/ember/dev/EKOS/ekos/crates/artifact" }
 ekos-common = { path = "/Users/ember/dev/EKOS/ekos/crates/common" }
 ekos-identity = { path = "/Users/ember/dev/EKOS/ekos/crates/identity" }
 ekos-kir = { path = "/Users/ember/dev/EKOS/ekos/crates/kir" }
 ekos-ledger = { path = "/Users/ember/dev/EKOS/ekos/crates/ledger" }
 ekos-runtime = { path = "/Users/ember/dev/EKOS/ekos/crates/runtime" }
 ekos-semantic = { path = "/Users/ember/dev/EKOS/ekos/crates/semantic" }
+hex = "0.4"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+sha2 = "0.10"
 uuid = { version = "1", features = ["v5"] }

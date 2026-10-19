@@ -10,6 +10,7 @@
 //!
 //!   control-dump scope     <panel.jsonl> [--expected <expected.jsonl>]
 //!   control-dump conflicts <panel.jsonl> [--expected <expected.jsonl>]
+//!   control-dump ledger    <workspace-dir> [--panel <panel.jsonl>]
 //!   control-dump selftest
 //!
 //! `--expected` reads the transcription of the EKOS unit-test assertions
@@ -26,6 +27,7 @@ mod branch_dump;
 mod conflicts_dump;
 mod identity_dump;
 mod impact_dump;
+mod ledger_dump;
 mod scope_dump;
 mod scope_store_dump;
 
@@ -180,17 +182,20 @@ fn run_panel(
     Ok(report)
 }
 
-fn parse_args() -> Result<(String, PathBuf, Option<PathBuf>), String> {
+fn parse_args() -> Result<(String, PathBuf, Option<PathBuf>, Option<PathBuf>), String> {
     let args: Vec<String> = std::env::args().collect();
     if args.len() < 3 {
         return Err(format!(
-            "usage: {} <scope|conflicts|store|identity|branch|impact> <panel.jsonl> [--expected <expected.jsonl>] | selftest",
+            "usage: {} <scope|conflicts|store|identity|branch|impact> <panel.jsonl> \
+             [--expected <expected.jsonl>] | ledger <workspace-dir> [--panel <panel.jsonl>] \
+             | selftest",
             args.first().map(String::as_str).unwrap_or("control-dump")
         ));
     }
     let sub = args[1].clone();
     let mut panel: Option<PathBuf> = None;
     let mut expected: Option<PathBuf> = None;
+    let mut panel_flag: Option<PathBuf> = None;
     let mut i = 2;
     while i < args.len() {
         match args[i].as_str() {
@@ -199,6 +204,15 @@ fn parse_args() -> Result<(String, PathBuf, Option<PathBuf>), String> {
                 expected = Some(
                     args.get(i)
                         .ok_or("--expected needs a path")?
+                        .clone()
+                        .into(),
+                );
+            }
+            "--panel" => {
+                i += 1;
+                panel_flag = Some(
+                    args.get(i)
+                        .ok_or("--panel needs a path")?
                         .clone()
                         .into(),
                 );
@@ -216,6 +230,7 @@ fn parse_args() -> Result<(String, PathBuf, Option<PathBuf>), String> {
         sub,
         panel.ok_or("no panel file given")?,
         expected,
+        panel_flag,
     ))
 }
 
@@ -225,11 +240,11 @@ fn main() {
     let sub = args.next().unwrap_or_default();
     if sub == "selftest" {
         println!(
-            "{{\"kernel\":\"control-dump\",\"ekos_pin\":\"{EKOS_PIN}\",\"panels\":[\"scope.decision\",\"conflicts.unit\",\"scope.store\",\"identity.unit\",\"branch.unit\",\"impact.unit\"],\"oracles\":0}}"
+            "{{\"kernel\":\"control-dump\",\"ekos_pin\":\"{EKOS_PIN}\",\"panels\":[\"scope.decision\",\"conflicts.unit\",\"scope.store\",\"identity.unit\",\"branch.unit\",\"impact.unit\",\"ledger.versions\"],\"oracles\":0}}"
         );
         return;
     }
-    let (sub, panel, expected) = match parse_args() {
+    let (sub, panel, expected, panel_flag) = match parse_args() {
         Ok(x) => x,
         Err(e) => {
             eprintln!("{me}: {e}");
@@ -237,6 +252,20 @@ fn main() {
         }
     };
     let result = match sub.as_str() {
+        // The ledger control takes a workspace directory, not a panel file:
+        // the workspace IS the input (a real W18 fixture build); --panel only
+        // supplies the fixture-sha provenance check.
+        "ledger" => {
+            if expected.is_some() {
+                eprintln!("{me}: ledger takes --panel, not --expected (no transcribed assertions)");
+                std::process::exit(2);
+            }
+            ledger_dump::run(&panel, panel_flag.as_deref())
+        }
+        _ if panel_flag.is_some() => {
+            eprintln!("{me}: --panel is a ledger-subcommand option (did you mean a positional?)");
+            std::process::exit(2);
+        }
         "scope" => run_panel(
             &panel,
             expected.as_deref(),

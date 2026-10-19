@@ -213,14 +213,17 @@ name = "control-dump"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "ekos-artifact",
  "ekos-common",
  "ekos-identity",
  "ekos-kir",
  "ekos-ledger",
  "ekos-runtime",
  "ekos-semantic",
+ "hex",
  "serde",
  "serde_json",
+ "sha2",
  "uuid",
 ]
 
