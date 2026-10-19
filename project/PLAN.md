@@ -119,7 +119,7 @@ ember: "we have mirrors and twins! we should never have that." The ATLAS rule ap
 
 | Lane | Owns | Model | Deliverable |
 |---|---|---|---|
-| W23 | `world/` | the Opus veteran | split into `WorldCore` (Mathlib-free: the list-based definitions the runner needs) and `World`, with an import-boundary script; no signature changes to pinned names |
+| W23 | `world/` | the Opus veteran | **done, verified by the root**: `WorldCore` (14 modules, no Mathlib; clean build 16 jobs, 6 s) and `World` (2,984 jobs, 15 s) both green; `check-core-imports.sh` passes on the tree and fails on a planted Mathlib import (root's scratch copy); no escape hatches. `detectList`/`detectListBy` return `Finset` so they stay in `World`; `WorldCore` gains `detectL`/`detectLBy` with `detectL_toFinset`/`detectLBy_toFinset` in `World`; every pinned name keeps its signature. Lane B told to import WorldCore and delete its copies |
 | W24 | `map/` (new), `var/w24/`, `notes/W24-lean-mapper.md` | Opus | `verekos-map`: the Lean shapes produce slice 1's request files byte-identical to `mapper.py`'s (SHA-256 bcd84c64… and 2d0da4d2…), and the four laws rendered from Lean `Pred` values byte-identical to `laws/*.json`; deprecation banners, deletion list for the root |
 | B‴ (after W23) | `check/` | lane B | import `WorldCore`, delete the copies and the equality proofs that only existed because of them |
 | root (after W24 and lane A) | `slice1/mapper.py`, `laws/*.json` as sources, `check/slice1_log.py` | — | delete the twins; the generated JSON stays only as a build artifact |
