@@ -27,3 +27,7 @@ Refused: a mutate by anyone outside `[91004]`; a mutate that edits an atom or wr
 - That the subject is a human. `[91004]` is a list of integers. A compiler principal placed in that list passes.
 - That an installPolicy on this cell is refused. It is not.
 - The text of a decision. The law sees counts (`content/atom-edits` at `ContentResource.lean:1801`, `content/tombstones` at `:1814`), not bytes.
+
+## Installing it
+
+Lane W2 (`notes/W2-transclusion-and-laws.md`) found two client paths that take arbitrary Pred JSON, no client change needed: `law ID REF @laws/L-rev.json` (`native/resource-client/src/shell.rs:79`, handler near `:2293`, builds `action:"install-policy"` and runs the op-150 satisfiability gate) and `doc new NAME @laws/L-rev.json` (the fourth word is the law; `shell.rs:1360-1372`, `law_argument` at `:1059`). Subject ids in this file are placeholders until the scratch world mints its principals.

@@ -26,3 +26,7 @@ Anything else is refused, because no branch of the `any` matches. That includes 
 - That the bytes were redacted, or that there is a single raw-content entry. `Pred` reads integer slots (`Pred/Core.lean:307-341`). P9 stays a client obligation.
 - That the importer set is the right set of people. `91001` is a name written as an integer.
 - installPolicy and revoke are `Verb .program`, not `Verb .object` (`Theory/TypedAuthorization.lean:87-91`). On a content object this clause may never be the one judged. See the memo.
+
+## Installing it
+
+Lane W2 (`notes/W2-transclusion-and-laws.md`) found two client paths that take arbitrary Pred JSON, no client change needed: `law ID REF @laws/L-src.json` (`native/resource-client/src/shell.rs:79`, handler near `:2293`, builds `action:"install-policy"` and runs the op-150 satisfiability gate) and `doc new NAME @laws/L-src.json` (the fourth word is the law; `shell.rs:1360-1372`, `law_argument` at `:1059`). Subject ids in this file are placeholders until the scratch world mints its principals.
