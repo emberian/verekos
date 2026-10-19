@@ -193,8 +193,8 @@ given.
 
 ## 5. What flows back
 
-Verified by the root at the cited lines on 2026-10-19 and ready to file as
-upstream issues (`notes/upstream-issues.md` holds the drafts):
+Verified by the root at the cited lines on 2026-10-19 and filed the same day as
+alexeyban/EKOS#10 to #16 (`notes/upstream-issues.md` has each link):
 
 1. Evidence ids are random, so a cache miss forks every touched object's version.
 2. `ekos_clickhouse_query` appends to the knowledge ledger.
