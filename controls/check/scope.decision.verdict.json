@@ -13,13 +13,13 @@
   "control_sha256": "6249610707a4ad763d39f1f93937ac52cb96fe206dd79b1f7a8a94ceccd58cf2",
   "candidate_sha256": "6249610707a4ad763d39f1f93937ac52cb96fe206dd79b1f7a8a94ceccd58cf2",
   "classified_sha256": "71c578daf600e9a321d5f0bcb9406271fc8e37c75861070bb3643c2be037c3d0",
-  "recorded": "2026-10-19T20:23:53Z",
+  "recorded": "2026-10-19T20:25:57Z",
   "control": "controls/scope.decision.control.jsonl",
   "candidate": "controls/check/scope.decision.candidate.jsonl",
   "score_exit": 0,
   "check_build": {
     "exe_sha256": "fac1926915b761350e6f1f70e039a54f4faa361d6e58cba071f124ec6dc38825",
-    "check_tree": "096b3bc2dada0cf2e48f129ff8bf8ead1fa65c66",
+    "check_tree": "27adffff588902af3974e40aa00c4bb2dcac5f69",
     "check_dirty": false,
     "world_rev": "a8bb023fba8340b05eab8f6a32d6798233aa703c",
     "toolchain": "leanprover/lean4:v4.30.0"

@@ -64,7 +64,7 @@
   "stderr": "",
   "check_build": {
     "exe_sha256": "fac1926915b761350e6f1f70e039a54f4faa361d6e58cba071f124ec6dc38825",
-    "check_tree": "096b3bc2dada0cf2e48f129ff8bf8ead1fa65c66",
+    "check_tree": "27adffff588902af3974e40aa00c4bb2dcac5f69",
     "check_dirty": false,
     "world_rev": "a8bb023fba8340b05eab8f6a32d6798233aa703c",
     "toolchain": "leanprover/lean4:v4.30.0"
