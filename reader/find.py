@@ -23,7 +23,7 @@ def answer(text, mode="lexical"):
     r = lib.ekos(ws, "query", "find", text, "--mode", mode)
     hits = lib.parse_find(r.stdout)
     for h in hits:
-        o = lib.parse_object(lib.ekos(ws, "query", "object", h["id"]).stdout)
+        o = lib.parse_object(lib.ekos(ws, "query", "object", h["id"], "--format", "json").stdout)
         h.update(o)
         h["pin"] = lib.pin_for_object(sync, o | {"name": h["name"]})
     return sync, hits

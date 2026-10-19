@@ -3,4 +3,4 @@
 mapper.py is W17's file, copied unchanged so the reader folder runs on its own. The reader uses
 it for three things only: `num` (the atom id of a statement from its structural key), `split` /
 `structural_key` (the statement boundaries), and `Doc` / `Source` (reading a signed read).
-`reader/check_vendor.py` compares this copy to slice1/mapper.py and says when they differ.
+Compare with `sha256sum slice1/mapper.py` to see whether W17's file has moved on.

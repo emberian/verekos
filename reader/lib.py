@@ -74,6 +74,7 @@ def read_cells(names, out_dir, tag):
     if tarred.returncode != 0:
         raise SystemExit("could not fetch the reads back: " + tarred.stderr.decode()[:300])
     subprocess.run(["tar", "xf", "-", "-C", str(out_dir)], input=tarred.stdout, check=True)
+    ssh(f"rm -rf -- {shlex.quote(remote)}", check=False)   # the reader's own scratch under remote_dir, made by this call
     rows = []
     for line in (out_dir / "reads.tsv").read_text().splitlines():
         n, rc, secs, size, why = (line.split("\t") + [""] * 5)[:5]
@@ -254,7 +255,10 @@ def recheck(pins, sync, who=None):
     for p in pins:
         st, val = fresh.get(p["cell"], ("refused", "not read"))
         if st != "ok":
-            verdicts.append({"pin": p, "verdict": "moved", "why": f"the cell can no longer be read: {val}"})
+            if str(val).startswith("refused:"):
+                verdicts.append({"pin": p, "verdict": "moved", "why": f"the cell can no longer be read by me: {str(val)[:90]}"})
+            else:
+                verdicts.append({"pin": p, "verdict": "unchecked", "why": f"the node did not answer, so I cannot say: {str(val)[:90]}"})
             continue
         d = M.Doc(val)
         if p["kind"] == "atom":
@@ -326,10 +330,13 @@ def parse_find(text):
 
 
 def parse_object(text):
-    kind = re.search(r"^Object: .*\((\w+)\)\s*$", text, re.M)
-    ev = re.findall(r'^\s+\[(\d+)%\]\s+(\S+)\s+—\s+"(.*)"\s*$', text, re.M)
-    return {"kind": kind.group(1) if kind else None,
-            "evidence": [{"pct": int(p), "path": a, "fragment": b} for p, a, b in ev]}
+    """`ekos query object ID --format json`: the kind and the evidence locations. EKOS's
+    evidence location has `line: null` and `column: null` for tables (it names the file only);
+    the fragment is the text `CREATE TABLE <name>`."""
+    d = json.loads(text)
+    return {"kind": d["object"]["kind"],
+            "evidence": [{"pct": round(e["confidence"] * 100), "path": e["location"]["path"], "fragment": e["fragment"],
+                          "line": e["location"].get("line")} for e in d["evidence"]]}
 
 
 def pin_for_object(sync, obj):
