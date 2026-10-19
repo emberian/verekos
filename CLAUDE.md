@@ -71,11 +71,17 @@ The EKOS pin is `/Users/ember/dev/EKOS` at `8e3c178`; the minidregg pin is
 - **Plain words**, for a reader who is not a software engineer: what it does,
   what it proves, what it cannot do yet. Cite `path:line`.
 
-## Panel conventions (target shape; the move list is lane C of `docs/design/explorations/05-next-lanes.md`)
+## Panel conventions
 
-A panel item is an input and nothing else. EKOS's answers go in
-`controls/<panel>.control.jsonl`; what the transcribed Rust test asserts goes
-in `controls/<panel>.expected.jsonl`; inputs in `panels/<family>/items.jsonl`;
-the drift record in `panels/<family>/drift.json`, checked by
-`panels/transcribed/drift_check.py`. New panels follow this shape; older ones
-are listed as exceptions in `tools/scoreboard/README.md`.
+A panel item is an input and nothing else. Panel `a.b` has exactly four
+files: inputs `panels/a/b.jsonl`, the transcribed test assertions
+`controls/a.b.expected.jsonl` (`{"item", "expect", "expect_from_test"}`),
+EKOS's answers `controls/a.b.control.jsonl`, and the drift record
+`panels/a/b.drift.json`, checked by `tools/scoreboard/drift_check.py
+--panel`. A new panel is one row in `PANELS` in
+`tools/scoreboard/regen_controls.py` plus those four files.
+
+**Shared index:** every lane works in one git index. Never leave anything
+staged: `git mv` or `git add` only in the same command as your `git commit`,
+or another lane's commit will sweep your staged files into theirs (this
+happened once, lane C into lane B's `f47a53c`).

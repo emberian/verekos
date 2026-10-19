@@ -182,6 +182,8 @@ receipts must take it from the signer, not from the payload.
 
 ## Lane C. The remaining controls and one panel layout
 
+> **Done** (2026-10-19, `notes/C-controls-layout.md`). The final layout differs from the table below: inputs are `panels/<a>/<b>.jsonl` (so the two files lane B reads did not move), drift records `panels/<a>/<b>.drift.json`.
+
 **Two halves, one owner**, because both touch `control-dump` and
 `regen_controls.py` and should not race.
 
