@@ -1,0 +1,28 @@
+name = "check"
+defaultTargets = ["verekos-check", "CheckProofs"]
+
+# The model, pinned to one commit of this repository and cloned under
+# .lake/packages/world (subDir world). Not a path dependency: a path
+# dependency builds inside world/, which the world lane owns and edits live.
+# Its dependencies (minidregg and the Mathlib family) are symlinks under
+# .lake/packages to the same checkouts world/ uses; nothing is downloaded.
+[[require]]
+name = "world"
+git = "/Users/ember/dev/verekos"
+rev = "a8bb023fba8340b05eab8f6a32d6798233aa703c"
+subDir = "world"
+
+# The runner: Mathlib-free (imports only World.Claim, World.Log,
+# World.Status, World.Visible and Lean's JSON reader), so the executable
+# never compiles or links Mathlib.
+[[lean_lib]]
+name = "Check"
+
+# Proofs that the runner's Mathlib-free copies equal the model's
+# definitions (detect, admissible, pins nonempty). Built, never linked.
+[[lean_lib]]
+name = "CheckProofs"
+
+[[lean_exe]]
+name = "verekos-check"
+root = "Main"
