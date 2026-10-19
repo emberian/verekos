@@ -1,7 +1,9 @@
 # VerEKOS plan (revision 2, 2026-10-19)
 
-Read `../docs/design/VEREKOS-DESIGN-2026-10-19.md` (revision 3) first, then `../docs/design/explorations/00` to `04`. This file names the
-lanes, what each owns, and the rules.
+Read `../CLAUDE.md` (layout and rules), then `../docs/design/VEREKOS-DESIGN-2026-10-19.md` (revision 3.1), then `../docs/design/explorations/00` to `05`. This file names the
+lanes, what each owns, and their status. The milestone table below is the
+original plan; the wave tables after it are the running log and win where
+they disagree.
 
 ## Scoreboard
 
@@ -20,13 +22,13 @@ numbers or states that it has none yet; a green theory is not a number.
 | E. veri7vn lessons | `notes/E-veri7vn-lessons.md`: the sibling pattern distilled as rules | notes only | harvested (claude-glm, glm-5.3-flash) |
 | F. Revision system | `notes/F-revision-system.md`: what breadstuffs built, what minidregg kept, what it means here | notes only | harvested (Opus scout) |
 | Explorations | `docs/design/explorations/00-04`: the root's vision note; EKOS inside the docworld (Opus); the claim primitive (Opus); the scoreboard design (Sonnet); the amplification catalogue (Sonnet) | design notes only | all five harvested and folded into design revision 3 |
-| M0.5. Scoreboard | per `docs/design/explorations/03-scoreboard.md`: panels under `panels/`, a `scoreboard-dump` binary (new, its own Cargo workspace with path deps on a pinned EKOS checkout), the diff classifier with a signed manifest, `docs/parity/BOARD.md`. Root's answers to its §7: the dump binary lives here, not upstream; recompute `content_signature` and self-check against stored signatures rather than ask upstream to export it; events are "no control" for M0.5; the Branch control also runs on SQLite. The scoreboard compares EKOS objects with the claim model's **join view**, not with claims (02 §3 row L) | `tools/scoreboard/`, `panels/` | designed; not started |
-| M1a. Reader-local compile | exploration 04 §3-4: a client that reads a friend's own documents with their signed reads, runs EKOS over the copies, answers find / two-hop impact / disagreements with pins that re-check as `same bytes` or `moved`. No node or kernel change | `~/dev/verekos/reader/` (new) | not started; after M0.5 |
-| M1b. Slice 1 step 0 | does `transclude` work on a current minidregg Host build (exploration 01 §4, §5 step 0) | one recorded run | not started; can run beside M0.5 |
-| M2. Slice 1 | exploration 01 §5: two fixtures, five principals, two rooms, four laws, seven receipts, on a scratch world; lives in `~/dev/verekos/world/` (new Lean project, minidregg as a pinned Lake dependency) | `world/` | not started; after M1b |
-| M3. Ledger + Branch kernels | `src/isabelle/ledger/`: `Ledger.thy`, `Branch.thy`, `Ledger_Export.thy`, `ROOT`; a binary reading an EKOS ledger dump. Control dump: `ekos graph export --format ndjson [--as-of <rfc3339>]` (`~/dev/EKOS/ekos/crates/cli/src/commands/graph.rs`), objects and relationships only; evidence records need `ekos ledger audit`/a second path. No `ekos` binary is built in `~/dev/EKOS` yet (`cargo build -p ekos --release` first) | not started | after A, C |
-| M4. Scope kernel | `src/isabelle/scope/` plus `scope_noninterference` in `world/` | not started | after M3 |
-| M5. Review, Identity, Conflicts kernels | the `Review` kernel is new in revision 3 (status as a fold over authorized reviews) | not started | after M4 |
+| M0.5. Scoreboard | **built by W5, W9, W12, W18, W20; panels by W3, W6, W11, W15, W16** (six panels with controls, 170 items; two fixtures; redact and EKL without controls; no candidate scored). Originally: per `docs/design/explorations/03-scoreboard.md`: panels under `panels/`, a `scoreboard-dump` binary (new, its own Cargo workspace with path deps on a pinned EKOS checkout), the diff classifier with a signed manifest, `docs/parity/BOARD.md`. Root's answers to its §7: the dump binary lives here, not upstream; recompute `content_signature` and self-check against stored signatures rather than ask upstream to export it; events are "no control" for M0.5; the Branch control also runs on SQLite. The scoreboard compares EKOS objects with the claim model's **join view**, not with claims (02 §3 row L) | `tools/scoreboard/`, `panels/`, `controls/` | built; no candidate |
+| M1a. Reader-local compile | exploration 04 §3-4: a client that reads a friend's own documents with their signed reads, runs EKOS over the copies, answers find / two-hop impact / disagreements with pins that re-check as `same bytes` or `moved`. No node or kernel change | `~/dev/verekos/reader/` (new) | not started; brief in `docs/design/explorations/05-next-lanes.md` lane A |
+| M1b. Slice 1 step 0 | does `transclude` work on a current minidregg Host build (exploration 01 §4, §5 step 0) | one recorded run | **done by W7** (hbox, K12T 24/24, JDV 143/143) |
+| M2. Slice 1 | exploration 01 §5: two fixtures, five principals, two rooms, four laws, seven receipts, on a scratch world; the driver lives in `slice1/` at the repo root (not `world/slice1/`), the model in `world/` | `slice1/` | in progress (W17) |
+| M3. Ledger + Branch kernels | **Isabelle plan dropped; `Ledger` is `world/World/Log.lean`, no `Branch` model, no runner.** Originally: `src/isabelle/ledger/`: `Ledger.thy`, `Branch.thy`, `Ledger_Export.thy`, `ROOT`; a binary reading an EKOS ledger dump. Control dump: `ekos graph export --format ndjson [--as-of <rfc3339>]` (`~/dev/EKOS/ekos/crates/cli/src/commands/graph.rs`), objects and relationships only; evidence records need `ekos ledger audit`/a second path. The release binary was built at `8e3c178` on 2026-10-19 | Lean theorems exist; no runner | the runner is lane B of exploration 05 |
+| M4. Scope kernel | `world/World/Visible.lean` (built: deny wins, rank-independent visibility, audience rules); `scope_noninterference` not stated | partly built | runner: exploration 05 lane B |
+| M5. Review, Identity, Conflicts kernels | `World/Status.lean`, `CarryForward.lean`, `Identity.lean`, `Conflicts.lean` (built) | theorems built; no runner | runner: exploration 05 lane B |
 
 Scouts (A-F) ran as detached `claude-glm` / `claude-grok` print-mode subprocesses
 (claude-fleet was unavailable on 2026-10-19) plus one Opus agent; outputs are
@@ -50,12 +52,11 @@ definitions and theorems in `world/`.
 | W3 | `panels/identity/`, `notes/W3-identity-panels.md` | Grok, then GLM-flash after Grok died on context | **done**: 58 items from 45 identity tests, controls, drift checker (root reran it) | EKOS identity tests as panel items + controls + drift checker |
 | W4 | `laws/`, `notes/W4-pred-laws.md` | Grok (drafts), root (checker + memo) | **done**: four laws pass `laws/check.py`; install paths recorded. Originally: L-src/L-obj/L-rev/L-run as client Pred JSON with a checker against the real constructors and slots |
 | W5 | `tools/scoreboard/`, `panels/{scope,conflicts}/`, `controls/`, `notes/W5-control-dump.md` | GLM | **done, verified by the root 2026-10-19** (reran both controls: 59/59 and 16/16, byte-identical to the committed control files; both drift checks 0 drifted; a flipped visibility assertion is caught, exit 1, 58/1): `control-dump` workspace (163 crates, 5.4 min cold); scope panel 59 items from 17 tests, 59/59 agree; conflicts panel 16 items from 8 tests, 16/16 agree; drift checkers; partial `controls/MANIFEST.json`. Not built: `score.py`, `board.py`, `regen_controls.py`, the leak-suite family, identity and branch dumps |
+| W6 | `panels/branch/`, `notes/W6-branch-panels.md` | Grok (live test of the corrected wrapper: 250k window, 120k compaction, 16k output) | **done, and the wrapper fix held**: 3 items from the three `merge_branch_*` tests with fixed v5 ids, controls, drift checker (root reran it). Not measured: the relationship loop (no test appends one) |
 
 Grok lanes run with `CLAUDE_CODE_MAX_CONTEXT_TOKENS=120000` and
 `CLAUDE_CODE_AUTO_COMPACT_WINDOW=90000` (set in `~/.local/bin/claude-grok`), because two
 earlier Grok lanes died with "Prompt is too long" before Claude Code compacted.
-
-| W6 | `panels/branch/`, `notes/W6-branch-panels.md` | Grok (live test of the corrected wrapper: 250k window, 120k compaction, 16k output) | **done, and the wrapper fix held**: 3 items from the three `merge_branch_*` tests with fixed v5 ids, controls, drift checker (root reran it). Not measured: the relationship loop (no test appends one) |
 
 **Resolved 2026-10-19 evening (ember: "hbox is available, find the latest lane and reuse it"):** no build needed. On hbox, `~/kn-gate/fix/tipbin/` holds a checksummed binary set (host 162 MB, `mini`, verifier, link store, client consent) built from `d94a8817` (2026-10-05), which contains the `transclude` action (strings: transclude=76, authorityCellId=3, authorityCatalogueId=0). hbox root disk is at 94% with 30 GB free, so lanes write only small run roots there and never build or copy trees. `~/dev/minidregg` on hbox is stale (e1bb78d, 2026-08-07, 117 dirty files): not used.
 
@@ -91,16 +92,22 @@ earlier Grok lanes died with "Prompt is too long" before Claude Code compacted.
 
 Then M1a, the reader-local compile, against the world W17 leaves on hbox.
 
+## Review wave (2026-10-19 night)
+
+| Lane | Owns | Model | Deliverable |
+|---|---|---|---|
+| R1 | everything outside the live lanes (design, explorations, README, PLAN, notes, laws, panels, the python scoreboard tools, docs/parity, `.gitignore`) | Opus | `notes/R1-review.md` (ranked findings), `CLAUDE.md`, `docs/design/explorations/05-next-lanes.md` (briefs for the reader-local compile, a `verekos check` runner, the remaining controls and the layout consolidation); fixes applied to what it owns, each commit named in the memo |
+
 ## Rules
 
 - No `sorry`, `oops`, `skip_proof`, new axioms. Read theorem statements; a
   tautology is not progress.
 - A recognizer, parser, fetch or model call is untrusted by construction and
   says so.
-- One Isabelle: `/Applications/Isabelle2026-RC1.app`. The AFP snapshot is
-  `~/isabelle/afp-2026-05-29` and is not yet registered or checked against RC1.
-- Builds go through one lock, as in veri7vn (`tools/dev/check-native` there; copy
-  the pattern). On hbox, `swarm-build`.
+- No Isabelle (dropped 2026-10-19). Lean only, in `world/`.
+- Builds run one at a time under `nice -n 10`; no lock script exists here yet
+  (veri7vn's `tools/dev/check-native` is the pattern if one is needed). On
+  hbox, `swarm-build`. The full rule list for lanes is `../CLAUDE.md`.
 - Never kill by pattern; PID file or nothing. Never `git stash`, `git reset`,
   `git add -A`. Named files. Unsigned commits are fine.
 - Disk pressure: stop writing, report, wait.
