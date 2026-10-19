@@ -9,4 +9,5 @@ import World.Traverse
 import World.Identity
 import World.Admission
 import World.Document
+import World.Shapes
 import World.Examples
