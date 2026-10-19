@@ -102,6 +102,7 @@ instance (L : List (Receipt P)) : Decidable (AdmLog L) := by
 
 /-! ## Facts about ranks -/
 
+omit d in
 theorem lt_maxPinRank (m : RankMap) (ps : List (Pin)) (p : Pin) (hp : p ∈ ps)
     (j : C.ClaimId) (ht : p.target = .claim j) : (m j).getD 0 < maxPinRank m ps := by
   induction ps with
@@ -113,6 +114,7 @@ theorem lt_maxPinRank (m : RankMap) (ps : List (Pin)) (p : Pin) (hp : p ∈ ps)
       omega
     · have := ih hq; omega
 
+omit d in
 theorem maxPinRank_mono (m m' : RankMap) (ps : List (Pin))
     (h : ∀ p ∈ ps, ∀ j, p.target = .claim j → (m' j).getD 0 ≤ (m j).getD 0) :
     maxPinRank m' ps ≤ maxPinRank m ps := by
@@ -128,6 +130,7 @@ theorem maxPinRank_mono (m m' : RankMap) (ps : List (Pin))
     have := ih (fun p hp => h p (List.mem_cons_of_mem _ hp))
     omega
 
+omit d in
 theorem maxPinRank_congr (m m' : RankMap) (ps : List (Pin))
     (h : ∀ p ∈ ps, ∀ j, p.target = .claim j → m' j = m j) :
     maxPinRank m' ps = maxPinRank m ps :=

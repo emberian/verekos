@@ -87,6 +87,7 @@ theorem disagreeOnBy_differ (c₁ c₂ : Claim P) :
 def disjointB {α : Type} [DecidableEq α] (l₁ l₂ : List α) : Bool :=
   l₁.all fun a => !(l₂.contains a)
 
+omit C in
 theorem disjointB_iff {α : Type} [DecidableEq α] (l₁ l₂ : List α) :
     disjointB l₁ l₂ = true ↔ ∀ a ∈ l₁, a ∉ l₂ := by
   simp [disjointB, List.all_eq_true]

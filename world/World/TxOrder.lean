@@ -34,6 +34,7 @@ def TxMonotone (L : List (Receipt P)) : Prop := L.Pairwise fun r s => r.tx < s.t
 instance (L : List (Receipt P)) : Decidable (TxMonotone L) := by
   unfold TxMonotone; infer_instance
 
+omit d in
 /-- In a monotone log, every receipt is numbered at most the last one. -/
 theorem tx_le_last (L : List (Receipt P)) (h : TxMonotone L) (last : Receipt P)
     (hl : L.getLast? = some last) (r : Receipt P) (hr : r ∈ L) : r.tx ≤ last.tx := by
@@ -60,6 +61,7 @@ theorem txMonotone_write [∀ s, DecidableEq (P s)] (L : List (Receipt P)) (r : 
     | none => simp [List.getLast?_eq_none_iff.mp hlast] at hx
     | some last => exact Nat.lt_of_le_of_lt (tx_le_last L h last hlast x hx) (hr last hlast)
 
+omit d in
 /-- In a monotone log, the receipts numbered `t` or less are a prefix. -/
 theorem filter_eq_takeWhile (L : List (Receipt P)) (h : TxMonotone L) (t : Nat) :
     L.filter (fun r => decide (r.tx ≤ t)) = L.takeWhile (fun r => decide (r.tx ≤ t)) := by
@@ -85,6 +87,7 @@ theorem state_eq_replay_takeWhile (L : List (Receipt P)) (h : TxMonotone L) (t :
   unfold state
   rw [filter_eq_takeWhile L h t]
 
+omit d in
 /-- That prefix is a prefix. -/
 theorem takeWhile_prefix_log (L : List (Receipt P)) (t : Nat) :
     (L.takeWhile fun r => decide (r.tx ≤ t)) <+: L :=
@@ -95,6 +98,7 @@ up to `b`. -/
 def segment (L : List (Receipt P)) (a b : Nat) : List (Receipt P) :=
   (L.dropWhile fun r => decide (r.tx ≤ a)).takeWhile fun r => decide (r.tx ≤ b)
 
+omit d in
 /-- **The segment is contiguous:** the log is the prefix up to `a`, then the
 segment, then the rest. -/
 theorem segment_contiguous (L : List (Receipt P)) (a b : Nat) :
@@ -103,6 +107,7 @@ theorem segment_contiguous (L : List (Receipt P)) (a b : Nat) :
   unfold segment
   rw [List.append_assoc, List.takeWhile_append_dropWhile, List.takeWhile_append_dropWhile]
 
+omit d in
 theorem filter_window_eq_segment (L : List (Receipt P)) (h : TxMonotone L) (a b : Nat) :
     L.filter (fun r => decide (a < r.tx ∧ r.tx ≤ b)) = segment L a b := by
   induction L with

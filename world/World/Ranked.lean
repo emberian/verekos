@@ -54,6 +54,7 @@ theorem Ranked.not_self {σ : C.ClaimId → Option (Claim P)} {rank : Claim P �
     (hr : Ranked σ rank) (c : Claim P) : ¬ PremiseOf σ c c :=
   fun h => Nat.lt_irrefl _ (hr.lt c c h)
 
+omit C in
 theorem any_congr_mem {α : Type} (l : List α) (f g : α → Bool)
     (h : ∀ a ∈ l, f a = g a) : l.any f = l.any g := by
   induction l with
@@ -62,6 +63,7 @@ theorem any_congr_mem {α : Type} (l : List α) (f g : α → Bool)
     simp only [List.any_cons]
     rw [h a List.mem_cons_self, ih (fun b hb => h b (List.mem_cons_of_mem _ hb))]
 
+omit C in
 theorem all_congr_mem {α : Type} (l : List α) (f g : α → Bool)
     (h : ∀ a ∈ l, f a = g a) : l.all f = l.all g := by
   induction l with
@@ -177,6 +179,7 @@ end visible
 section status
 variable (R : ReviewSchema P) (reg : Registry P) [d : ClaimIdDerivation]
 
+omit d in
 /-- A review claim has exactly one pin: the claim pin at the core it read. -/
 theorem asReview_pins (c : Claim P) (i : C.ClaimId) (dg : C.Digest) (s : Status)
     (h : asReview R c = some (i, dg, s)) : ∃ w, c.pins = [⟨.claim i, .core dg, w⟩] := by

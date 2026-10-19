@@ -161,6 +161,7 @@ theorem toPremise_map (p : Pin) (h : p.wellTyped = true) :
   obtain ⟨t, r, w⟩ := p
   cases t <;> cases r <;> simp_all [Pin.wellTyped, Pin.toPremise, Pin.isSource, PremiseLink.toPin]
 
+omit C in
 theorem filterMap_map_eq_filter {α β : Type} (f : α → Option β) (g : β → α) (q : α → Bool)
     (l : List α) (h : ∀ a ∈ l, (f a).map g = if q a then some a else none) :
     (l.filterMap f).map g = l.filter q := by
@@ -292,6 +293,7 @@ def fromDocument (D : ObjectDocument P) : Claim P × List (Claim P) :=
 def docAtomPins (D : ObjectDocument P) : List (C.SourceId × C.AtomRev) :=
   cellAtomPins D.object ++ D.edges.flatMap fun ec => cellAtomPins ec.edge
 
+omit d in
 theorem encodeEdges_atomPins (from_ : C.ClaimId) :
     ∀ (es : List (Claim P)) (ecs : List (EdgeContainer P)),
       encodeEdges E from_ es = some ecs → ∀ x,
@@ -327,6 +329,7 @@ theorem toDocument_atomPins (c : Claim P) (outgoing : List (Claim P))
       encodeEdges_atomPins E (c.id) outgoing edges he x]
   · cases h
 
+omit d in
 /-- **Reading a document back keeps exactly its atom pins.** -/
 theorem fromDocument_atomPins (D : ObjectDocument P) (x : C.SourceId × C.AtomRev) :
     x ∈ docAtomPins D ↔
