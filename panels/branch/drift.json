@@ -1,0 +1,20 @@
+{
+  "ekos_commit": "8e3c178fc45741c7e2b1576e936646e0c461e75c",
+  "recorded": "2026-10-19",
+  "file": "ekos/crates/ledger/src/lib.rs",
+  "span": "#[test] through the closing brace at the same indentation",
+  "functions": {
+    "merge_branch_adds_new_objects_from_branch": {
+      "file": "ekos/crates/ledger/src/lib.rs",
+      "sha256": "d15145bd52ca6c77139647521eaba37ddfa495abd78eb3a092df927c80d8d5d6"
+    },
+    "merge_branch_flags_diverged_objects_as_conflicts": {
+      "file": "ekos/crates/ledger/src/lib.rs",
+      "sha256": "cbc9dd16c0469c014ec785bdbf2eb37af6293ec1c4a80d4eb07ee60c6f63f998"
+    },
+    "merge_branch_is_noop_for_identical_objects": {
+      "file": "ekos/crates/ledger/src/lib.rs",
+      "sha256": "19635a010a436b138d3e5ada920f38edf1ed8a4c129939d352e7a1468fec8e3d"
+    }
+  }
+}
