@@ -17,12 +17,12 @@
 | compile-2, 3 request files concatenated | `2d0da4d2a60b05f81338847039871a3c527c8142d09085c7fa3e09f2c5a048a9` |
 | replay-1, 9 request files concatenated | `bcd84c6407873338f39a80edc4eacadd836dca7ec48f8c1f40909b8d43778443` |
 | compile-1 `commands.json` / compile-2 `commands.json` | `fcc58020…` / `7e6fa87d…` |
-| compile-1 / compile-2 `compile-run.req.json` | `295bbfa1…` / `e9219ec1…` |
+| compile-1 / compile-2 `compile-run.req.json` | `3b010e6d…` / `7412f55f…` |
 | import-1 shop / legacy, import-3 legacy | `e25fea4b…` / `f3d6ee2f…` / `791b920a…` |
 | `attest.req.json` / `review.req.json` | `9ba32906…` / `ee9fd1ff…` |
 | `plan.json` (both compiles) | `99406f39…` |
 | installed `L-obj`, `L-rev`, `L-run-compiler`, `L-run-verifier`, `L-src` | `8e1fb895…`, `1b167ec8…`, `9b8af3f8…`, `cbae1f5c…`, `03eee917…` |
-| `laws/L-obj.json`, `L-rev`, `L-run`, `L-src` | `14a679ee…`, `60160b57…`, `3c549b56…`, `ac9f58cd…` |
+| `laws/L-obj.json`, `L-rev`, `L-run`, `L-src` | `3670e540…`, `60160b57…`, `3c549b56…`, `ac9f58cd…` |
 
 Also identical: every individual request file, both `commands.sha256`, the stdout line of every command, the six rendered source files, import-2 (both "nothing to submit") and import-3 shop.
 
