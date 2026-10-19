@@ -103,15 +103,22 @@ theorem reviewOf_eq_some (k : ClaimKey C) (r : Receipt C P) (dg : C.Digest) (s :
     | none => simp
     | some v =>
       obtain ⟨i, dg', s'⟩ := v
-      simp only [Option.some.injEq, Prod.mk.injEq]
+      dsimp only
       by_cases hc : i = d.claimId k ∧ (reg k.schema).mayDecide r.author.1 s' = true
-      · simp only [hc, and_self, if_true, Option.some.injEq, Prod.mk.injEq]
+      · rw [if_pos hc]
         constructor
-        · rintro ⟨rfl, rfl⟩; exact ⟨⟨hc.1, rfl, rfl⟩, hc.2⟩
-        · rintro ⟨⟨_, h2, h3⟩, _⟩; exact ⟨h2, h3⟩
-      · simp only [hc, if_false, reduceCtorEq, false_iff]
-        rintro ⟨⟨h1, _, h3⟩, h4⟩
-        subst h3
+        · intro h
+          simp only [Option.some.injEq, Prod.mk.injEq] at h
+          obtain ⟨rfl, rfl⟩ := h
+          exact ⟨by rw [hc.1], hc.2⟩
+        · rintro ⟨h1, _⟩
+          simp only [Option.some.injEq, Prod.mk.injEq] at h1 ⊢
+          exact ⟨h1.2.1, h1.2.2⟩
+      · rw [if_neg hc]
+        simp only [reduceCtorEq, false_iff]
+        rintro ⟨h1, h4⟩
+        simp only [Option.some.injEq, Prod.mk.injEq] at h1
+        obtain ⟨h1, _, rfl⟩ := h1
         exact hc ⟨h1, h4⟩
 
 /-! ## The status theorems -/
@@ -152,10 +159,12 @@ theorem decision_has_author (L : List (Receipt C P)) (c : Claim C P) (s : Status
     ∃ r ∈ L, ∃ c', r.op = .put c' ∧ asReview R c' = some (c.id d, c.core reg, s) ∧
       (reg c.key.schema).mayDecide r.author.1 s = true := by
   unfold status statusAt at hs
-  split at hs
-  · rename_i x hlast
+  cases hlast : ((admittedReviews R reg d L c.key).filter
+      (fun x => decide (x.1 = c.core reg))).getLast? with
+  | some x =>
+    rw [hlast] at hs
     obtain ⟨dg, s'⟩ := x
-    simp only at hs
+    dsimp only at hs
     subst hs
     have hmem := List.mem_of_getLast? hlast
     rw [List.mem_filter, admittedReviews, List.mem_filterMap] at hmem
@@ -164,7 +173,10 @@ theorem decision_has_author (L : List (Receipt C P)) (c : Claim C P) (s : Status
     subst hdg
     obtain ⟨c', hop, has, hmay⟩ := (reviewOf_eq_some R reg d c.key r _ _).mp hrev
     exact ⟨r, hr, c', hop, has, hmay⟩
-  · split at hs
+  | none =>
+    rw [hlast] at hs
+    dsimp only at hs
+    split at hs
     · exact absurd hs.symm hinit
     · exact absurd hs.symm hnr
 
