@@ -6,13 +6,18 @@ candidate output file (one JSON line per panel item, the same shape the
 control-dump writes: `{"item": ..., <answer fields>}`) against the committed
 control, classifies every difference against `controls/classified.jsonl`, and
 prints the counts plus the UNEXPLAINED list. Exit status is 1 when anything is
-unexplained, 2 on malformed input.
+unexplained or classified as `verekos_defect`, 2 on malformed input.
 
 A classification is keyed by the sha256 of the canonical
 (panel, item, control, candidate) tuple — the whole answer values, not a field
 path — so changing the control, the candidate or the item id changes the hash
 and the difference counts as unexplained again until re-classified
 (exploration 03 §3.4). Classes: `ekos_defect`, `verekos_defect`, `non_goal`.
+
+Only `ekos_defect` and `non_goal` explain a difference. A `verekos_defect`
+entry names a known fault in our own candidate: it is reported and counted,
+but it stays red (exit 1) until the candidate is fixed (exploration 03 §3.3,
+docs/parity/README.md).
 
 Run with python3 -I; every path is an argument:
 
@@ -138,16 +143,20 @@ def score(kernel, panel_path, control_path, candidate_path, classified):
             unexplained.append((item, kind, want, got, did))
         else:
             out.append((item, kind, entry, did))
+    red = [r for r in out if r[2]["class"] == "verekos_defect"]
 
     return {
         "kernel": kernel,
-        "panel": panel_path.stem,
+        # the envelope's panel name(s), not the file stem: several panels
+        # keep their inputs in a file called items.jsonl
+        "panel": ",".join(sorted(set(names.values()))) or panel_path.stem,
         "items": len(control),
         "agree": agree,
         "mismatch": sum(1 for r in rows if r[1] == "mismatch"),
         "missing": sum(1 for r in rows if r[1] == "missing"),
         "extra": sum(1 for r in rows if r[1] == "extra"),
         "classified": len(out),
+        "verekos_defect": len(red),
         "unexplained": len(unexplained),
         "_rows": rows,
         "_classified": out,
@@ -196,7 +205,7 @@ def main() -> int:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(json.dumps(verdict, indent=2) + "\n")
 
-    return 1 if r["unexplained"] else 0
+    return 1 if (r["unexplained"] or r["verekos_defect"]) else 0
 
 
 if __name__ == "__main__":
