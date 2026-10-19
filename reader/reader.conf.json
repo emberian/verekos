@@ -1,0 +1,9 @@
+{
+  "ssh": "hbox",
+  "mini": "/home/hbox/kn-gate/fix/tipbin/mini",
+  "reader_workspace": "/home/hbox/verekos-runs/slice1/run-2/world/reader-shop-workspace",
+  "remote_dir": "/home/hbox/verekos-runs/reader",
+  "probe_cell": "shop",
+  "ekos": "/Users/ember/dev/EKOS/ekos/target/release/ekos",
+  "who": "reader-shop"
+}
