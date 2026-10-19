@@ -159,13 +159,20 @@ a list of (column, type) codes. `stated` normalizes the type, so `text` and
 
 namespace Example
 
-/-- The one schema of the example. -/
+/-- The schemas of the example: tables, and reviews (used in
+`World.Examples`). -/
 inductive Sch where
   | table
+  | review
   deriving DecidableEq, Repr
 
-/-- Carriers for the example. A claim id is (subject, sources); with one
-schema that pair determines the key. -/
+/-- A number for each schema, so a claim id can name it. -/
+def Sch.code : Sch → Nat
+  | .table => 0
+  | .review => 1
+
+/-- Carriers for the example. A claim id is (schema code, subject, sources),
+which determines the key. -/
 def C₀ : Carriers where
   SchemaId := Sch
   SourceId := Nat
@@ -177,7 +184,7 @@ def C₀ : Carriers where
   KeyPart := Nat
   AtomRev := Nat
   Name := Nat
-  ClaimId := List Nat × List Nat
+  ClaimId := Nat × List Nat × List Nat
   decSchemaId := inferInstanceAs (DecidableEq Sch)
   decSourceId := inferInstanceAs (DecidableEq Nat)
   decRange := inferInstanceAs (DecidableEq Nat)
@@ -186,9 +193,10 @@ def C₀ : Carriers where
   decKeyPart := inferInstanceAs (DecidableEq Nat)
   decAtomRev := inferInstanceAs (DecidableEq Nat)
   decName := inferInstanceAs (DecidableEq Nat)
-  decClaimId := inferInstanceAs (DecidableEq (List Nat × List Nat))
+  decClaimId := inferInstanceAs (DecidableEq (Nat × List Nat × List Nat))
 
-/-- A table payload: (column, type) pairs. -/
+/-- A payload: (column, type) pairs for a table; for a review, one pair whose
+second number is the decision code (1 = confirmed, otherwise rejected). -/
 abbrev Cols : C₀.SchemaId → Type := fun _ => List (Nat × Nat)
 
 instance (s : C₀.SchemaId) : DecidableEq (Cols s) :=
@@ -221,7 +229,19 @@ def tableSchema : Schema C₀ Cols Sch.table where
   mayDecide := fun k _ => k == .human
   stated := fun cols => cols.map fun ct => (ct.1, normType ct.2)
 
-def reg₀ : Registry C₀ Cols := fun | .table => tableSchema
+/-- The review schema's own registry entry: reviews are observed facts that
+nobody reviews. -/
+def reviewEntry : Schema C₀ Cols Sch.review where
+  core := fun _ => 0
+  structural := true
+  initial := .observed
+  isFact := fun _ => true
+  mayDecide := fun _ _ => false
+  stated := fun _ => []
+
+def reg₀ : Registry C₀ Cols := fun
+  | .table => tableSchema
+  | .review => reviewEntry
 
 /-- A table claim about `customers` from one source file. -/
 def tableClaim (file : Nat) (cols : List (Nat × Nat)) : Claim C₀ Cols where
