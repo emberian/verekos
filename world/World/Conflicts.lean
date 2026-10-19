@@ -164,12 +164,18 @@ namespace Example
 inductive Sch where
   | table
   | review
+  | fk
+  | sameAs
+  | sameAsExact
   deriving DecidableEq, Repr
 
 /-- A number for each schema, so a claim id can name it. -/
 def Sch.code : Sch → Nat
   | .table => 0
   | .review => 1
+  | .fk => 2
+  | .sameAs => 3
+  | .sameAsExact => 4
 
 /-- Carriers for the example. A claim id is (schema code, subject, sources),
 which determines the key. -/
@@ -239,9 +245,29 @@ def reviewEntry : Schema C₀ Cols Sch.review where
   mayDecide := fun _ _ => false
   stated := fun _ => []
 
+/-- An edge-like schema with no stated attributes (used in `World.Examples`). -/
+def edgeEntry (s : Sch) (init : Status) (fact : Status → Bool)
+    (may : PrincipalKind → Status → Bool) : Schema C₀ Cols s where
+  core := fun _ => (0 : Nat)
+  structural := true
+  initial := init
+  isFact := fact
+  mayDecide := may
+  stated := fun _ => []
+
 def reg₀ : Registry C₀ Cols := fun
   | .table => tableSchema
   | .review => reviewEntry
+  -- a foreign key: observed, a fact unless rejected; humans decide
+  | .fk => edgeEntry .fk .observed (fun s => s == .observed || s == .confirmed)
+      (fun k _ => k == .human)
+  -- a fuzzy identity candidate: unconfirmed, a fact only once confirmed;
+  -- agents and humans decide, never the compiler
+  | .sameAs => edgeEntry .sameAs .unconfirmed (fun s => s == .confirmed)
+      (fun k _ => k != .compiler)
+  -- an exact merge: the compiler is admitted to confirm it
+  | .sameAsExact => edgeEntry .sameAsExact .unconfirmed (fun s => s == .confirmed)
+      (fun _ _ => true)
 
 /-- A table claim about `customers` from one source file. -/
 def tableClaim (file : Nat) (cols : List (Nat × Nat)) : Claim C₀ Cols where

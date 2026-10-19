@@ -52,6 +52,9 @@ variable (R : ReviewSchema C P) (reg : Registry C P) (d : ClaimIdDerivation C)
 def IsFactNow (L : List (Receipt C P)) (c : Claim C P) : Prop :=
   (reg c.key.schema).isFact (status R reg d L c) = true
 
+instance (L : List (Receipt C P)) (c : Claim C P) : Decidable (IsFactNow R reg d L c) := by
+  unfold IsFactNow; infer_instance
+
 /-- The id holds a claim whose current status is a fact. -/
 def NodeFact (L : List (Receipt C P)) (i : C.ClaimId) : Prop :=
   ∃ c, latest d L i = some c ∧ IsFactNow R reg d L c

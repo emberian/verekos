@@ -18,6 +18,9 @@ import World.Status
 import World.Conflicts
 import World.Visible
 import World.WellFormed
+import World.Traverse
+import World.Identity
+import Mathlib.Data.Prod.Lex
 
 namespace World.Example
 
@@ -166,5 +169,175 @@ theorem ranked₀ : Ranked σ₀ rank₀ := ⟨by
 /-- With the rank, visibility needs no chosen bound. -/
 example : visibleR d₀ σ₀ allFiles rank₀ conflictAB = true := by decide
 example : visibleR d₀ σ₀ notB rank₀ conflictAB = false := by decide
+
+end World.Example
+
+/-! ### Traversal and identity -/
+
+namespace World.Example
+
+def orders : Nat := 2
+
+/-- File A's `orders` table. -/
+def cO : Claim C₀ Cols where
+  key := ⟨Sch.table, [orders], [fileA]⟩
+  payload := [(colId, tInt)]
+  pins := [⟨.source fileA none, .atoms [], 1000⟩]
+  valid := ⟨none, none⟩
+
+/-- A claim of schema `s` pinning two claims at their cores. -/
+def pair (s : Sch) (subj : List Nat) (srcs : List Nat) (a b : Claim C₀ Cols) : Claim C₀ Cols where
+  key := ⟨s, subj, srcs⟩
+  payload := []
+  pins := [⟨.claim (a.id d₀), .core (a.core reg₀), 1000⟩,
+           ⟨.claim (b.id d₀), .core (b.core reg₀), 1000⟩]
+  valid := ⟨none, none⟩
+
+/-- `orders` references `customers`. -/
+def fkOC : Claim C₀ Cols := pair .fk [orders, customers] [fileA] cO cA
+/-- A fuzzy candidate: A's and B's `customers` may be one table. -/
+def saAB : Claim C₀ Cols := pair .sameAs [customers] [fileA, fileB] cA cB
+/-- An exact merge: A's and C's `customers` are one table. -/
+def mxAC : Claim C₀ Cols := pair .sameAsExact [customers] [fileA, fileC] cA cC
+
+/-- Every two-claim-pin claim is an edge. -/
+def E₀ : EdgeView C₀ Cols := ⟨fun c =>
+  match c.pins with
+  | [⟨.claim a, _, _⟩, ⟨.claim b, _, _⟩] => some (a, b)
+  | _ => none⟩
+
+def T₀ : C₀.SchemaId → Bool := fun _ => true
+
+def Lt : List (Receipt C₀ Cols) :=
+  [rcpt 1 (.put cA) .compiler, rcpt 2 (.put cB) .compiler, rcpt 3 (.put cO) .compiler,
+   rcpt 4 (.put fkOC) .compiler, rcpt 5 (.put saAB) .compiler]
+
+/-- `customers` is reached from `orders` over the foreign key. -/
+example : Reach R₀ reg₀ d₀ E₀ T₀ Lt 1 (cO.id d₀) (cA.id d₀) :=
+  .hop fkOC (.here 0 _)
+    ⟨by decide, rfl, by decide, by decide, ⟨cO, by decide, by decide⟩, ⟨cA, by decide, by decide⟩⟩
+
+/-- The unreviewed fuzzy candidate is not crossed. -/
+example : ¬ Crosses R₀ reg₀ d₀ E₀ T₀ Lt saAB (cA.id d₀) (cB.id d₀) :=
+  unreviewed_hypothesis_edge_not_crossed R₀ reg₀ d₀ E₀ T₀ Lt saAB _ _ (by decide) (by decide)
+
+/-- A human confirms the candidate; now it is crossed. -/
+def Lt' : List (Receipt C₀ Cols) := Lt ++ [rcpt 6 (.put (reviewClaim 42 saAB decConfirm)) .human]
+
+example : Crosses R₀ reg₀ d₀ E₀ T₀ Lt' saAB (cA.id d₀) (cB.id d₀) :=
+  ⟨by decide, rfl, by decide, by decide, ⟨cA, by decide, by decide⟩, ⟨cB, by decide, by decide⟩⟩
+
+/-- An agent's confirmation would count too; the compiler's does not. -/
+example : ¬ Crosses R₀ reg₀ d₀ E₀ T₀
+    (Lt ++ [rcpt 6 (.put (reviewClaim 42 saAB decConfirm)) .compiler]) saAB
+    (cA.id d₀) (cB.id d₀) :=
+  unreviewed_hypothesis_edge_not_crossed R₀ reg₀ d₀ E₀ T₀ _ saAB _ _ (by decide) (by decide)
+
+/-- `SameAs` schemas. -/
+def V₀ : SameAsView C₀ := ⟨fun s => s == Sch.sameAs || s == Sch.sameAsExact⟩
+
+def cands₀ : Finset (Claim C₀ Cols) := {saAB, mxAC}
+
+def L₀ : List (Receipt C₀ Cols) :=
+  [rcpt 1 (.put cA) .compiler, rcpt 2 (.put cB) .compiler, rcpt 3 (.put cC) .compiler,
+   rcpt 4 (.put saAB) .compiler]
+
+/-- The compiler's confirming review of the exact merge. -/
+def rvMx : Claim C₀ Cols := reviewClaim 7 mxAC decConfirm
+
+def r₁ : Receipt C₀ Cols := rcpt 5 (.put mxAC) .compiler
+def r₂ : Receipt C₀ Cols := rcpt 6 (.put rvMx) .compiler
+def r₃ : Receipt C₀ Cols := rcpt 7 (.retract (mxAC.id d₀)) .compiler
+
+/-- Before the merge: no links (the fuzzy candidate is unconfirmed). -/
+example : links R₀ reg₀ d₀ V₀ L₀ cands₀ = ∅ := by decide
+
+/-- After the compiler's exact merge: A's and C's `customers` are linked. -/
+example : links R₀ reg₀ d₀ V₀ (L₀ ++ [r₁, r₂]) cands₀ = {(cA.key, cC.key)} := by decide
+
+/-- The merge theorem's hypotheses hold here. -/
+example : Same (links R₀ reg₀ d₀ V₀ (L₀ ++ [r₁, r₂]) cands₀) cA.key cC.key :=
+  (merge_takes_effect R₀ reg₀ d₀ V₀ L₀ cands₀ mxAC rvMx cA cC (cA.id d₀) (cC.id d₀) r₁ r₂
+    (by decide) rfl rfl (by decide) (by decide) (by decide) (by decide) (by decide)
+    (by decide) (by decide)).2
+
+/-- The reversibility theorem's hypotheses hold here: retracting the merge
+gives back exactly the links before it. -/
+example : links R₀ reg₀ d₀ V₀ (L₀ ++ [r₁, r₂, r₃]) cands₀ = links R₀ reg₀ d₀ V₀ L₀ cands₀ :=
+  merge_reversible R₀ reg₀ d₀ V₀ L₀ cands₀ mxAC rvMx r₁ r₂ r₃ rfl rfl rfl
+    (by decide) (by decide) (by decide) (by decide) ⟨(0 : Nat), .confirmed, by decide⟩ (by decide)
+    (by
+      intro c hc a b h
+      simp only [cands₀, Finset.mem_insert, Finset.mem_singleton] at hc
+      rcases hc with rfl | rfl
+      · have : asSameAs V₀ saAB = some (cA.id d₀, cB.id d₀) := by decide
+        rw [this] at h; injection h with h; injection h with ha hb; subst ha hb
+        exact ⟨by decide, by decide⟩
+      · have : asSameAs V₀ mxAC = some (cA.id d₀, cC.id d₀) := by decide
+        rw [this] at h; injection h with h; injection h with ha hb; subst ha hb
+        exact ⟨by decide, by decide⟩)
+
+/-- With no links, `Same` is equality. -/
+theorem same_empty {α : Type} [DecidableEq α] (x y : α) (h : Same (∅ : Finset (α × α)) x y) :
+    x = y := by
+  rcases same_eq_or_support ∅ h with h | h
+  · exact h
+  · simp [support] at h
+
+/-- After the retraction, A's and C's `customers` are separate again. -/
+example : ¬ Same (links R₀ reg₀ d₀ V₀ (L₀ ++ [r₁, r₂, r₃]) cands₀) cA.key cC.key := by
+  have : links R₀ reg₀ d₀ V₀ (L₀ ++ [r₁, r₂, r₃]) cands₀ = ∅ := by decide
+  rw [this]
+  intro h
+  exact absurd (same_empty _ _ h) (by decide)
+
+end World.Example
+
+/-! ### A total order on the example's keys, and canonical keys -/
+
+namespace World.Example
+
+/-- Keys as (schema code, subject, sources), compared lexicographically. -/
+def keyCode (k : ClaimKey C₀) : Lex (Nat × Lex (List Nat × List Nat)) :=
+  toLex ((show Sch from k.schema).code, toLex (k.subject, k.sources))
+
+theorem keyCode_injective : Function.Injective keyCode := by
+  rintro ⟨s₁, sub₁, src₁⟩ ⟨s₂, sub₂, src₂⟩ h
+  change ((Sch.code s₁, (sub₁, src₁)) : Nat × (List Nat × List Nat)) =
+    (Sch.code s₂, (sub₂, src₂)) at h
+  have hs : Sch.code s₁ = Sch.code s₂ := congrArg Prod.fst h
+  have hsub : sub₁ = sub₂ := congrArg (fun x : Nat × (List Nat × List Nat) => x.2.1) h
+  have hsrc : src₁ = src₂ := congrArg (fun x : Nat × (List Nat × List Nat) => x.2.2) h
+  have : s₁ = s₂ := Sch.code_injective hs
+  subst this hsub hsrc
+  rfl
+
+instance : LinearOrder (ClaimKey C₀) := LinearOrder.lift' keyCode keyCode_injective
+
+/-- After the exact merge, C's `customers` has A's key as its canonical key
+(file A's key is the smaller), and after the retraction it is its own again. -/
+example : canonical (links R₀ reg₀ d₀ V₀ (L₀ ++ [r₁, r₂]) cands₀) cC.key = cA.key := by
+  have hle : cA.key ≤ cC.key := by show keyCode _ ≤ keyCode _; decide
+  apply le_antisymm
+  · exact canonical_le _ _ _
+      ((same_equivalence _).symm (merge_takes_effect R₀ reg₀ d₀ V₀ L₀ cands₀ mxAC rvMx cA cC
+        (cA.id d₀) (cC.id d₀) r₁ r₂ (by decide) rfl rfl (by decide) (by decide) (by decide)
+        (by decide) (by decide) (by decide) (by decide)).2)
+  · have hs := same_canonical (links R₀ reg₀ d₀ V₀ (L₀ ++ [r₁, r₂]) cands₀) cC.key
+    have hl : links R₀ reg₀ d₀ V₀ (L₀ ++ [r₁, r₂]) cands₀ = {(cA.key, cC.key)} := by decide
+    rw [hl] at hs ⊢
+    generalize canonical ({(cA.key, cC.key)} : Finset _) cC.key = k at hs ⊢
+    rcases same_eq_or_support _ hs with h | ⟨-, h⟩
+    · rw [← h]; exact hle
+    · simp only [support, Finset.image_singleton, Finset.mem_union,
+        Finset.mem_singleton] at h
+      rcases h with h | h <;> rw [h]
+      · exact hle
+
+example : canonical (links R₀ reg₀ d₀ V₀ (L₀ ++ [r₁, r₂, r₃]) cands₀) cC.key = cC.key := by
+  have hl : links R₀ reg₀ d₀ V₀ (L₀ ++ [r₁, r₂, r₃]) cands₀ = ∅ := by decide
+  have hs := same_canonical (links R₀ reg₀ d₀ V₀ (L₀ ++ [r₁, r₂, r₃]) cands₀) cC.key
+  rw [hl] at hs ⊢
+  exact (same_empty _ _ hs).symm
 
 end World.Example

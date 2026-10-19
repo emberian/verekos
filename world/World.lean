@@ -4,7 +4,7 @@ import World.Status
 import World.Conflicts
 import World.Visible
 import World.Minidregg
-import World.Examples
 import World.WellFormed
 import World.Traverse
 import World.Identity
+import World.Examples
