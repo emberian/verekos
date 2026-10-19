@@ -1449,3 +1449,73 @@ theorem core_sig_diverges (L : List (Receipt C P)) (k : ClaimKey C) (a b : C.Dig
 'World.status_core_rev_agrees' depends on axioms: [propext, Quot.sound]
 'World.core_sig_diverges' depends on axioms: [propext, Classical.choice, Quot.sound]
 ```
+
+---
+
+## 2026-10-19, fifth quest: transaction order (review R1, finding M9)
+
+`World/TxOrder.lean` is additive: no existing definition or theorem changed
+signature. `TxMonotone L` (strictly increasing `tx`, as `List.Pairwise`) is
+decidable.
+- `txMonotone_write`: `write` keeps it when the new receipt is numbered after
+  the last one.
+- `state_eq_replay_takeWhile`: under `TxMonotone`, `state L t` is the replay
+  of the longest prefix (`takeWhile`) numbered `t` or less, so the state is
+  prefix-closed.
+- `diff_eq_segment`: `diff a b` is exactly the ids of the segment `(a, b]`.
+- `segment_contiguous`: the log splits as prefix up to `a`, then the segment,
+  then the rest.
+
+Examples (`decide`) in `World/Examples.lean`:
+- the traversal log is monotone, and an out-of-order log is not;
+- the state at 3 is the replay of the first three receipts;
+- `diff 2 4` is the ids of receipts 3 and 4.
+
+The build is green (2978 jobs).
+
+```lean
+def TxMonotone (L : List (Receipt C P)) : Prop := L.Pairwise fun r s => r.tx < s.tx
+
+theorem tx_le_last (L : List (Receipt C P)) (h : TxMonotone L) (last : Receipt C P)
+    (hl : L.getLast? = some last) (r : Receipt C P) (hr : r ∈ L) : r.tx ≤ last.tx
+
+theorem txMonotone_write [∀ s, DecidableEq (P s)] (L : List (Receipt C P)) (r : Receipt C P)
+    (h : TxMonotone L) (hr : ∀ last, L.getLast? = some last → last.tx < r.tx) :
+    TxMonotone (write d L r)
+
+theorem filter_eq_takeWhile (L : List (Receipt C P)) (h : TxMonotone L) (t : Nat) :
+    L.filter (fun r => decide (r.tx ≤ t)) = L.takeWhile (fun r => decide (r.tx ≤ t))
+
+theorem state_eq_replay_takeWhile (L : List (Receipt C P)) (h : TxMonotone L) (t : Nat) :
+    state d L t = replay d (L.takeWhile fun r => decide (r.tx ≤ t))
+
+theorem takeWhile_prefix_log (L : List (Receipt C P)) (t : Nat) :
+    (L.takeWhile fun r => decide (r.tx ≤ t)) <+: L
+
+def segment (L : List (Receipt C P)) (a b : Nat) : List (Receipt C P) :=
+    (L.dropWhile fun r => decide (r.tx ≤ a)).takeWhile fun r => decide (r.tx ≤ b)
+
+theorem segment_contiguous (L : List (Receipt C P)) (a b : Nat) :
+    L = (L.takeWhile fun r => decide (r.tx ≤ a)) ++ segment L a b ++
+    ((L.dropWhile fun r => decide (r.tx ≤ a)).dropWhile fun r => decide (r.tx ≤ b))
+
+theorem filter_window_eq_segment (L : List (Receipt C P)) (h : TxMonotone L) (a b : Nat) :
+    L.filter (fun r => decide (a < r.tx ∧ r.tx ≤ b)) = segment L a b
+
+theorem diff_eq_segment (L : List (Receipt C P)) (h : TxMonotone L) (a b : Nat) :
+    diff d L a b = (segment L a b).map fun r => r.op.id d
+
+```
+
+`#print axioms`, verbatim:
+
+```
+'World.tx_le_last' depends on axioms: [propext, Quot.sound]
+'World.txMonotone_write' depends on axioms: [propext, Quot.sound]
+'World.filter_eq_takeWhile' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.state_eq_replay_takeWhile' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.takeWhile_prefix_log' depends on axioms: [propext]
+'World.segment_contiguous' depends on axioms: [propext]
+'World.filter_window_eq_segment' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.diff_eq_segment' depends on axioms: [propext, Classical.choice, Quot.sound]
+```

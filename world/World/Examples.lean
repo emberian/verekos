@@ -24,6 +24,7 @@ import World.Admission
 import World.Document
 import World.Shapes
 import World.CarryForward
+import World.TxOrder
 import Mathlib.Data.Prod.Lex
 
 namespace World.Example
@@ -442,5 +443,24 @@ example : (ekosAll (ekosReview e₀ .resolved) [(1 : Nat), (1 : Nat)]).status =
 example : renderHeaderPin 5 (compileAll h₀ [(2 : Nat), (1 : Nat)]) = .moved := by decide
 example : (ekosAll (ekosReview e₀ .resolved) [(2 : Nat), (1 : Nat)]).status = .isOpen := by
   decide
+
+end World.Example
+
+/-! ### Transaction order -/
+
+namespace World.Example
+
+/-- The traversal log is numbered 1 to 5 in order. -/
+example : TxMonotone Lt := by decide
+/-- Out of order: refused. -/
+example : ¬ TxMonotone [rcpt 2 (.put cA) .compiler, rcpt 1 (.put cB) .compiler] := by decide
+/-- The state at 3 is the replay of the first three receipts. -/
+example : (Lt.takeWhile fun r => decide (r.tx ≤ 3)).length = 3 := by decide
+example : state d₀ Lt 3 (cO.id d₀) = replay d₀ (Lt.take 3) (cO.id d₀) := by
+  rw [state_eq_replay_takeWhile d₀ Lt (by decide) 3]; decide
+/-- `diff 2 4` is the ids of receipts 3 and 4, the contiguous segment. -/
+example : (segment Lt 2 4).map (·.tx) = [3, 4] := by decide
+example : diff d₀ Lt 2 4 = [cO.id d₀, fkOC.id d₀] := by
+  rw [diff_eq_segment d₀ Lt (by decide) 2 4]; decide
 
 end World.Example
