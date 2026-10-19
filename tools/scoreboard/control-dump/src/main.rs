@@ -22,6 +22,7 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+mod branch_dump;
 mod conflicts_dump;
 mod identity_dump;
 mod scope_dump;
@@ -262,6 +263,13 @@ fn main() {
             "identity.unit",
             identity_dump::control_for,
             identity_dump::check_assert,
+        ),
+        "branch" => run_panel(
+            &panel,
+            expected.as_deref(),
+            "branch.unit",
+            branch_dump::control_for,
+            branch_dump::check_assert,
         ),
         other => {
             eprintln!("{me}: unknown subcommand {other}");
