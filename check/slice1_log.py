@@ -4,7 +4,7 @@
 Reads a copy of a slice-1 run root (lane W17's `var/w17/<run>`, fetched from
 hbox by `slice1/run.sh`) and writes `<out>/principals.json`, `<out>/log.jsonl`
 and `<out>/expect.json`. Nothing here is proved; it is a reading of the
-mapper's document shapes (`slice1/mapper.py`) and minidregg's cell-read JSON.
+mapper's document shapes (`slice1/the slice-1 mapper (now `verekos-map`, Lean; the Python twin was deleted 2026-10-19)`) and minidregg's cell-read JSON.
 
 What becomes a claim (one log line per installed write, in `receipts.tsv`
 order):
