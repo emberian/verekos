@@ -27,13 +27,17 @@ def d₀ : ClaimIdDerivation C₀ where
   claimId k := ((show Sch from k.schema).code, k.subject, k.sources)
 
 theorem Sch.code_injective : Function.Injective Sch.code := by
-  intro a b h; cases a <;> cases b <;> simp_all [Sch.code]
+  intro a b h
+  cases a <;> cases b <;> first | rfl | (simp [Sch.code] at h)
 
 /-- The injectivity premise holds for the example's ids. -/
 theorem d₀_injective : Function.Injective d₀.claimId := by
   rintro ⟨s₁, sub₁, src₁⟩ ⟨s₂, sub₂, src₂⟩ h
-  simp only [d₀, Prod.mk.injEq] at h
-  obtain ⟨hs, hsub, hsrc⟩ := h
+  change ((Sch.code s₁, sub₁, src₁) : Nat × List Nat × List Nat) =
+    (Sch.code s₂, sub₂, src₂) at h
+  have hs : Sch.code s₁ = Sch.code s₂ := congrArg Prod.fst h
+  have hsub : sub₁ = sub₂ := congrArg (fun x : Nat × List Nat × List Nat => x.2.1) h
+  have hsrc : src₁ = src₂ := congrArg (fun x : Nat × List Nat × List Nat => x.2.2) h
   have : s₁ = s₂ := Sch.code_injective hs
   subst this hsub hsrc
   rfl
@@ -58,7 +62,7 @@ def reviewClaim (who : Nat) (c : Claim C₀ Cols) (code : Nat) : Claim C₀ Cols
 
 /-- A receipt. -/
 def rcpt (tx : Nat) (op : Op C₀ Cols) (k : PrincipalKind) : Receipt C₀ Cols :=
-  ⟨tx, op, (k, 7), 0, 0⟩
+  ⟨tx, op, (k, (7 : Nat)), (0 : Nat), (0 : Nat)⟩
 
 /-- File A's table, after an edit that drops the `id` column (its core changes). -/
 def cA' : Claim C₀ Cols := tableClaim fileA [(colEmail, tVarchar)]
