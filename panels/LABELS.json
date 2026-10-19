@@ -1,7 +1,7 @@
 {
   "note": "The scoreboard board generator (tools/scoreboard/board.py) reads this file: the assurance label and the two mandatory prose cells per panel (exploration 03 §3.6, §4). A panel with a control_file gets real numbers; one without is a placeholder row. Both prose cells are mandatory — the generator fails when either is empty.",
   "assurance_labels": {
-    "design target": "no theorem about this kernel yet; the row exists to say the panel is measured by the control only",
+    "design target": "no Lean definition answers this panel yet (theorems about the kernel may exist in world/); the panel is measured by the control only",
     "executable property": "a property checked by running a Lean definition on the panel (#eval or a compiled reader), with no theorem behind it",
     "conditional": "a Lean theorem about the kernel with an explicit premise (for example injective ids, or a coverage premise), and the panel is scored by running that same definition",
     "proved": "a Lean theorem about the kernel with no premise beyond the model's own definitions, and the panel is scored by running that same definition (hash-tied to the build)",
