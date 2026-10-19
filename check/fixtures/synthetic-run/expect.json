@@ -1,0 +1,35 @@
+{
+ "adm_log": true,
+ "pins_nonempty": true,
+ "tx_monotone": true,
+ "conflicts": [
+  {
+   "subject": [
+    "sql-analyzer-table:customers",
+    "columns.email.data_type"
+   ],
+   "status": "needsReview",
+   "timeline": [
+    [
+     4,
+     "open"
+    ],
+    [
+     6,
+     "confirmed"
+    ],
+    [
+     10,
+     "needsReview"
+    ]
+   ]
+  },
+  {
+   "subject": [
+    "sql-analyzer-table:orders",
+    "columns.total.data_type"
+   ],
+   "status": "dismissed"
+  }
+ ]
+}

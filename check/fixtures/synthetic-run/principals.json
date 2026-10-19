@@ -1,0 +1,8 @@
+{
+ "owner": "subj-owner",
+ "importer": "subj-importer",
+ "compiler": "subj-compiler",
+ "reviewer": "subj-reviewer",
+ "verifier": "subj-verifier",
+ "reader-shop": "subj-reader-shop"
+}

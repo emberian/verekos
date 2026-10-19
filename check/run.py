@@ -10,6 +10,12 @@ control (for `conflicts.unit`, against the join-view projection made by
     <panel>.candidate.jsonl   the model's answers
     <panel>.verdict.json      score.py's verdict plus `check_build`
 
+It runs `verekos-check laws` on the synthetic run roots in
+`check/fixtures/` (expected exit 0 for `synthetic-run`, 1 for
+`synthetic-run-bad` and for the `author-from-payload` mutant) and writes
+`laws.<root>[.<mutant>].json`. These are synthetic: slice 1's real run root
+is not wired in yet (notes/B-check.md).
+
 It also runs the planted mutant (`scope --mutant deny-ignored`) and writes
 `scope.decision.mutant-deny-ignored.verdict.json`; the run fails if the
 mutant does not score worse than the faithful mapping.
@@ -116,6 +122,20 @@ def main() -> int:
         v = run_one(*row, a.classified, info)
         faithful[row[0]] = v
         worst = max(worst, v["score_exit"])
+    for root, mutant, want in [("synthetic-run", None, 0), ("synthetic-run-bad", None, 1),
+                               ("synthetic-run", "author-from-payload", 1)]:
+        args = ["laws"] + (["--mutant", mutant] if mutant else []) + [
+            str(ROOT / "check/fixtures" / root)]
+        r = subprocess.run([str(EXE), *args], capture_output=True, text=True)
+        name = f"laws.{root}.{mutant}" if mutant else f"laws.{root}"
+        out = {"root": f"check/fixtures/{root}", "synthetic": True, "mutant": mutant,
+               "exit": r.returncode, "expected_exit": want,
+               "report": json.loads(r.stdout) if r.stdout.strip() else None,
+               "stderr": r.stderr.strip(), "check_build": info}
+        (OUT / f"{name}.json").write_text(json.dumps(out, indent=2) + "\n")
+        print(f"== {name}: exit {r.returncode} (expected {want})")
+        if r.returncode != want:
+            worst = max(worst, 1)
     m = run_one(*MUTANT, a.classified, info)
     if m["agree"] >= faithful["scope.decision"]["agree"]:
         print("the deny-ignored mutant does not score worse: the panel cannot see deny")

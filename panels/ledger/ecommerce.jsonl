@@ -1,0 +1,1 @@
+{"input": {"fixture": "/Users/ember/dev/EKOS/tests/fixtures/ecommerce.sql", "fixture_sha256": "accad143288923b4cb4d4e8fd8894a7afdacfa5db436ff9ab938600dfa1c0180"}, "item": "ecommerce", "origin": "fixture", "panel": "ledger.ecommerce", "source": "/Users/ember/dev/EKOS/tests/fixtures/ecommerce.sql@sha256:accad143288923b4cb4d4e8fd8894a7afdacfa5db436ff9ab938600dfa1c0180"}
