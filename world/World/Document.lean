@@ -75,7 +75,7 @@ structure SnapshotPin (C : Carriers) where
 
 /-- One evidence container. -/
 structure Evidence (C : Carriers) where
-  meta : EvidenceMeta C
+  info : EvidenceMeta C
   pin : SnapshotPin C
   deriving DecidableEq
 
@@ -128,7 +128,7 @@ def Pin.toPremise (p : Pin C) : Option (PremiseLink C) :=
 
 /-- An evidence container back as a pin. -/
 def Evidence.toPin (e : Evidence C) : Pin C :=
-  ⟨.source e.pin.source e.meta.range, .atoms e.pin.atoms, e.meta.weight⟩
+  ⟨.source e.pin.source e.info.range, .atoms e.pin.atoms, e.info.weight⟩
 
 /-- A premise link back as a pin. -/
 def PremiseLink.toPin (l : PremiseLink C) : Pin C := ⟨.claim l.target, .core l.core, l.weight⟩
@@ -176,14 +176,14 @@ theorem filterMap_map_eq_filter {α β : Type} (f : α → Option β) (g : β �
       split at ha
       · cases ha
       · rename_i hq
-        simp [List.filterMap_cons, hfa, List.filter_cons, hq, ih']
+        simp [hfa, hq, ih']
     | some b =>
       rw [hfa] at ha
       simp only [Option.map_some] at ha
       split at ha
       · rename_i hq
         injection ha with ha
-        simp [List.filterMap_cons, hfa, List.filter_cons, hq, ih', ha]
+        simp [hfa, hq, ih', ha]
       · cases ha
 
 /-- **Decoding an encoded claim gives back the same claim up to the order of
@@ -200,7 +200,7 @@ theorem decode_encode (c : Claim C P) (cell : Cell C P) (h : encode c = some cel
     refine ⟨_, rfl, ?_⟩
     rw [filterMap_map_eq_filter _ _ Pin.isSource c.pins (fun p hp => toEvidence_map p (hwt p hp)),
       filterMap_map_eq_filter _ _ (fun p => !p.isSource) c.pins
-        (fun p hp => by rw [toPremise_map p (hwt p hp)]; cases p.isSource <;> rfl)]
+        (fun p hp => by rw [toPremise_map p (hwt p hp)]; cases hs : p.isSource <;> simp [hs])]
     exact List.filter_append_perm _ _
   · cases h
 
@@ -213,17 +213,17 @@ theorem encode_decode (cell : Cell C P) : encode (decode cell) = some cell := by
   rw [if_pos hwt]
   simp only [List.filterMap_append, List.filterMap_map]
   have h1 : ev.filterMap (Pin.toEvidence ∘ Evidence.toPin) = ev := by
-    rw [List.filterMap_eq_map.mpr]
-    · simp
-    · intro e; simp [Pin.toEvidence, Evidence.toPin]
+    have : (Pin.toEvidence ∘ Evidence.toPin : Evidence C → Option (Evidence C)) = some := by
+      funext e; simp [Pin.toEvidence, Evidence.toPin]
+    rw [this, List.filterMap_some]
   have h2 : ev.filterMap (Pin.toPremise ∘ Evidence.toPin) = [] := by
-    simp [List.filterMap_eq_nil_iff, Pin.toPremise, Evidence.toPin]
+    simp [Pin.toPremise, Evidence.toPin]
   have h3 : pr.filterMap (Pin.toEvidence ∘ PremiseLink.toPin) = [] := by
-    simp [List.filterMap_eq_nil_iff, Pin.toEvidence, PremiseLink.toPin]
+    simp [Pin.toEvidence, PremiseLink.toPin]
   have h4 : pr.filterMap (Pin.toPremise ∘ PremiseLink.toPin) = pr := by
-    rw [List.filterMap_eq_map.mpr]
-    · simp
-    · intro l; simp [Pin.toPremise, PremiseLink.toPin]
+    have : (Pin.toPremise ∘ PremiseLink.toPin : PremiseLink C → Option (PremiseLink C)) = some := by
+      funext l; simp [Pin.toPremise, PremiseLink.toPin]
+    rw [this, List.filterMap_some]
   rw [h1, h2, h3, h4]
   simp
 
@@ -274,7 +274,7 @@ def encodeEdges (from_ : C.ClaimId) : List (Claim C P) → Option (List (EdgeCon
 
 /-- Lay out a claim and its outgoing edge claims as an object document. -/
 def toDocument (c : Claim C P) (outgoing : List (Claim C P)) : Option (ObjectDocument C P) :=
-  match encode c, encodeEdges d E (c.id d) outgoing with
+  match encode c, encodeEdges E (c.id d) outgoing with
   | some cell, some edges => some ⟨cell, edges⟩
   | _, _ => none
 
@@ -301,7 +301,7 @@ theorem encodeEdges_atomPins (from_ : C.ClaimId) :
       · injection h with h
         subst h
         rw [List.flatMap_cons, List.mem_append, cellAtomPins_encode e cell hc,
-          encodeEdges_atomPins es rest hr x]
+          encodeEdges_atomPins from_ es rest hr x]
         simp
       · cases h
     · cases h
@@ -396,7 +396,7 @@ theorem viewEvidence_sameBytes (readable : C.SourceId → Bool)
   unfold viewEvidence
   simp only [hr, Bool.not_true, Bool.false_eq_true, if_false]
   split
-  · rename_i h; simp only [List.all_eq_true] at h; simp [h]
+  · rename_i h; simp only [List.all_eq_true] at h; exact iff_of_true rfl h
   · rename_i h
     simp only [List.all_eq_true, not_forall] at h
     obtain ⟨a, ha, hc⟩ := h
@@ -409,7 +409,7 @@ theorem admitEvidence_none (writerReads : C.SourceId → Bool)
     admitEvidence writerReads held e = none ↔
       writerReads e.pin.source = true ∧ ∀ a ∈ e.pin.atoms, held e.pin.source a = true := by
   unfold admitEvidence
-  cases hw : writerReads e.pin.source <;> simp [List.all_eq_true]
+  cases hw : writerReads e.pin.source <;> simp
 
 /-! ## Visibility agrees with the per-room audience rule (exploration 01 §2.5) -/
 

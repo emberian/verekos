@@ -21,6 +21,7 @@ import World.WellFormed
 import World.Traverse
 import World.Identity
 import World.Admission
+import World.Document
 import Mathlib.Data.Prod.Lex
 
 namespace World.Example
@@ -340,5 +341,64 @@ example : canonical (links R₀ reg₀ d₀ V₀ (L₀ ++ [r₁, r₂, r₃]) ca
   have hs := same_canonical (links R₀ reg₀ d₀ V₀ (L₀ ++ [r₁, r₂, r₃]) cands₀) cC.key
   rw [hl] at hs ⊢
   exact (same_empty _ _ hs).symm
+
+end World.Example
+
+/-! ### The document shape, refusals, and rooms -/
+
+namespace World.Example
+
+/-- Atom revisions in the example are numbers. -/
+instance (n : Nat) : OfNat C₀.AtomRev n := inferInstanceAs (OfNat Nat n)
+
+/-- File A's `customers`, pinned to two atoms of file A at revisions 7 and 8. -/
+def cW : Claim C₀ Cols where
+  key := ⟨Sch.table, [customers], [fileA]⟩
+  payload := [(colEmail, tVarchar)]
+  pins := [⟨.source fileA none, .atoms [7, 8], 1000⟩]
+  valid := ⟨none, none⟩
+
+/-- A pin of the wrong shape: a source read as a core digest. -/
+def cBad : Claim C₀ Cols := { cW with pins := [⟨.source fileA none, .core (0 : Nat), 1000⟩] }
+
+example : (encode cW).map cellAtomPins = some [(fileA, 7), (fileA, 8)] := by decide
+example : (encode cBad).isNone = true := by decide
+example : (encode conflictAB).map (·.premises.length) = some 2 := by decide
+
+/-- `orders` with its outgoing foreign key lays out as one document with one
+edge container linking to `customers`. -/
+example : (toDocument d₀ E₀ cO [fkOC]).map (·.edges.map (·.link)) = some [cA.id d₀] := by
+  decide
+/-- An edge that does not start at the object is refused. -/
+example : (toDocument d₀ E₀ cA [fkOC]).isNone = true := by decide
+
+/-- The kernel's refusals, by name. -/
+example : admitEvidence (C := C₀) (fun _ => false) (fun _ _ => true)
+    ⟨⟨1000, none⟩, ⟨fileA, [7]⟩⟩ = some .sourceNotCovered := by decide
+example : admitEvidence (C := C₀) (fun _ => true) (fun _ a => a == 7)
+    ⟨⟨1000, none⟩, ⟨fileA, [7, 9]⟩⟩ = some .staleOpening := by decide
+
+/-- What readers see: the placeholder without a grant, `moved` after an edit,
+the same bytes otherwise. -/
+example : viewEvidence (C := C₀) (fun _ => false) (fun _ _ => true)
+    ⟨⟨1000, none⟩, ⟨fileA, [7, 8]⟩⟩ = .noGrant 2 := by decide
+example : viewEvidence (C := C₀) (fun _ => true) (fun _ a => a == 7)
+    ⟨⟨1000, none⟩, ⟨fileA, [7, 8]⟩⟩ = .moved := by decide
+example : viewEvidence (C := C₀) (fun _ => true) (fun _ _ => true)
+    ⟨⟨1000, none⟩, ⟨fileA, [7, 8]⟩⟩ = .sameBytes := by decide
+
+/-- Rooms: file C alone in room 2, the rest in room 1. -/
+def roomOf (doc : Nat) : Nat := if doc = fileC then 2 else 1
+
+/-- The audience theorem applies to file A's table: visible exactly to readers
+holding room 1's grant. -/
+example (g : Nat → Bool) :
+    visibleR d₀ σ₀ (readerScope fun doc => g (roomOf doc)) (rankN d₀ Lσ) cW = true ↔
+      g 1 = true :=
+  visibleR_iff_room d₀ σ₀ (rankN d₀ Lσ) roomOf g 1 cW _ rfl (by simp [Claim.PinsNonempty, cW]) (by
+    intro p hp
+    simp only [cW, List.mem_singleton] at hp
+    subst hp
+    exact ⟨fileA, none, rfl, by decide⟩)
 
 end World.Example
