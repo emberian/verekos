@@ -137,6 +137,14 @@ incremental conflicts per (subject, attribute), `diff` as a segment lookup) prov
 list specification, with the import boundary keeping only the implementation in any runner.
 **Trigger:** the first time `check/run.py` or a fixture panel takes longer than a few minutes.
 
+## Wave 7: typeclasses and minidregg's real records (2026-10-19 night)
+
+| Lane | Owns | Model | Deliverable |
+|---|---|---|---|
+| W26 | `world/` | the Opus veteran | **done, verified by the root** (`lake build` 3,060 jobs green; `WorldCore` still 16 jobs, Mathlib-free, boundary script green; no escape hatches; every `Minidregg.lean` theorem on standard axioms). `Carriers` and `ClaimIdDerivation` are classes; the `Nat` carriers are a scoped example instance. The minidregg instance uses minidregg's own types (`Digest`, `DocumentId`, `StableRange`, `AtomId × OperationId`, `PrincipalRef`, `ElementId` via `deriveIdentifier`). Proved against minidregg's definitions: (a) `staleIn_iff_moved` and `same_bytes_of_not_stale` (staleness IS `pinHolds`; `transclusion_pinned`'s bytes), (b) `toEvent_causal_injective` via `VersionEventRecord.toCausalPreimage_injective`, (c) `viewEvidence_eq_render`, `render_unavailable_iff`, `visibleR_iff_rendered` (the evidence view is `renderTransclusion` through the reader's own read), `admit_sourceNotCovered` matches `transclude_uncovered_refused`, (d) `cellAtomPins_eq_requests`. Divergences found and fixed or stated: the deleted stand-in called a tombstoned atom fresh (`pinHolds` does not); `Context.sourceRead` is the writer's check, not the reader's; principal kind lives in `historyDomain` by our choice; no live-transclusion states; a whole-document pin has no `TranscludeRequest`. Still `Nat`: the examples (decide cannot run a real store), the shapes' revision counters; digest injectivity remains a premise, as in minidregg |
+| B⁗ | `check/` | lane B | re-pin to `79b0445`; adopt the typeclass binders (`Claim P`, `latest L`, `status R reg L c`, `admissible L r`, `c.id`); verdicts unchanged |
+| W27 | `map/` | the W24 lane | the same re-pin and binders; `receipt.sh` 95/95 unchanged |
+
 ## Rules
 
 - No `sorry`, `oops`, `skip_proof`, new axioms. Read theorem statements; a
