@@ -1,0 +1,27 @@
+# The VerEKOS scoreboard control dump (exploration 03 §2.2, design §6).
+#
+# One binary that reads a panel JSONL (inputs only) and writes EKOS's own
+# answers as control JSONL, by calling the library functions behind each
+# decision kernel directly. It lives in VerEKOS, not EKOS, so the control is
+# tied to a pinned checkout that EKOS's own churn cannot move.
+#
+# The EKOS paths are absolute on purpose: the control must name the exact tree
+# it was built against, the same tree `controls/MANIFEST.json` records.
+[workspace]
+
+[package]
+name = "control-dump"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.98"
+publish = false
+
+[dependencies]
+ekos-common = { path = "/Users/ember/dev/EKOS/ekos/crates/common" }
+ekos-identity = { path = "/Users/ember/dev/EKOS/ekos/crates/identity" }
+ekos-kir = { path = "/Users/ember/dev/EKOS/ekos/crates/kir" }
+ekos-ledger = { path = "/Users/ember/dev/EKOS/ekos/crates/ledger" }
+ekos-semantic = { path = "/Users/ember/dev/EKOS/ekos/crates/semantic" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v5"] }
