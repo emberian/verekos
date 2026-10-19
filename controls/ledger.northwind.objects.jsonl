@@ -1,0 +1,15 @@
+{"id": "2043da6e-032d-5f48-b2ac-809a337c48ff", "kind": "Table", "name": "Orders"}
+{"id": "349274de-9b46-56ac-a6b5-02d98cb79ee9", "kind": "File", "name": "schemas/northwind.sql"}
+{"id": "3e51c27e-fd31-5baa-8bde-8e095a23cd90", "kind": "Table", "name": "CustomerDemographics"}
+{"id": "4ebe8eaf-ba22-5095-8c8d-f01a5de0fbea", "kind": "Table", "name": "Categories"}
+{"id": "50479ac5-29a2-5ce7-80da-5509e05864a8", "kind": "File", "name": "ekos.toml"}
+{"id": "77f56d71-2036-5268-86ee-5eada717d6b0", "kind": "Table", "name": "Employees"}
+{"id": "882020f5-c0fa-5a7b-8cc9-d4db9af433ba", "kind": "Table", "name": "Suppliers"}
+{"id": "97dc8f5e-970a-5639-bf43-60b3a8c44882", "kind": "Table", "name": "EmployeeTerritories"}
+{"id": "9e0f8253-7ba8-5a06-88cc-4314e266fd08", "kind": "Table", "name": "Territories"}
+{"id": "a707c156-bb33-5ffc-87c2-48158ad36d7a", "kind": "Table", "name": "Region"}
+{"id": "cde3c803-bbc8-5967-9c92-c5d26f7d51f4", "kind": "Table", "name": "Products"}
+{"id": "d578ca3e-e159-53de-8109-1f8e91bf22f5", "kind": "Table", "name": "CustomerCustomerDemo"}
+{"id": "deb7c00b-ef25-5cef-9d0c-127f9f2fd67d", "kind": "Table", "name": "\"Order Details\""}
+{"id": "f39c3428-f1ff-5f40-b7c0-df14650352d5", "kind": "Table", "name": "Shippers"}
+{"id": "f8dd66c6-8d25-54cc-a18a-282ec7b1100a", "kind": "Table", "name": "Customers"}

@@ -1,0 +1,15 @@
+{"counts":{"objects_after_filter":8,"relationships_after_filter":6,"returned_edges":6,"returned_nodes":8,"total_objects":8,"total_relationships":6},"filters":{"exclude_rel_kinds":[],"kinds":null,"min_degree":0,"rel_kinds":null},"generated_at":"2026-10-19T19:32:53.532115Z","id_space":"kir","kind_index":["File","Table"],"level":"object","record":"header","rel_kind_index":["ForeignKey"],"schema_version":1,"truncated":{"edge_limit":1000000,"edges":false,"node_limit":1000000,"nodes":false,"selection":"degree_desc"},"workspace":"/Users/ember/dev/verekos/var/w18/ecommerce/ws"}
+{"d":0,"fs":"2026-10-19T19:32:52.505734Z","id":"50479ac5-29a2-5ce7-80da-5509e05864a8","k":0,"n":"ekos.toml","record":"node"}
+{"d":0,"fs":"2026-10-19T19:32:52.565720Z","id":"efe3d294-31d6-5248-80f1-c8802ee3ea2f","k":0,"n":"schemas/ecommerce.sql","record":"node"}
+{"d":3,"fs":"2026-10-19T19:32:53.094365Z","id":"4ebe8eaf-ba22-5095-8c8d-f01a5de0fbea","k":1,"n":"categories","record":"node"}
+{"d":1,"fs":"2026-10-19T19:32:53.126784Z","id":"f8dd66c6-8d25-54cc-a18a-282ec7b1100a","k":1,"n":"customers","record":"node"}
+{"d":2,"fs":"2026-10-19T19:32:53.257372Z","id":"88f26ba9-e0d8-5a4d-821b-629cc2c680c6","k":1,"n":"order_items","record":"node"}
+{"d":3,"fs":"2026-10-19T19:32:53.220534Z","id":"2043da6e-032d-5f48-b2ac-809a337c48ff","k":1,"n":"orders","record":"node"}
+{"d":1,"fs":"2026-10-19T19:32:53.288732Z","id":"0d73c3c8-fed7-5e05-a23d-0cca481b2557","k":1,"n":"payments","record":"node"}
+{"d":2,"fs":"2026-10-19T19:32:53.164258Z","id":"cde3c803-bbc8-5967-9c92-c5d26f7d51f4","k":1,"n":"products","record":"node"}
+{"fs":"2026-10-19T19:32:53.306634Z","k":0,"record":"edge","s":2,"t":2}
+{"fs":"2026-10-19T19:32:53.379040Z","k":0,"record":"edge","s":4,"t":5}
+{"fs":"2026-10-19T19:32:53.397352Z","k":0,"record":"edge","s":4,"t":7}
+{"fs":"2026-10-19T19:32:53.356869Z","k":0,"record":"edge","s":5,"t":3}
+{"fs":"2026-10-19T19:32:53.415781Z","k":0,"record":"edge","s":6,"t":5}
+{"fs":"2026-10-19T19:32:53.339889Z","k":0,"record":"edge","s":7,"t":2}

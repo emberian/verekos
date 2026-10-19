@@ -1,0 +1,82 @@
+{
+  "panel": "ledger.northwind",
+  "fixture": {
+    "path": "/Users/ember/dev/EKOS/tests/fixtures/northwind.sql",
+    "sha256": "8708061e703e789b025b411c1d6798b7fdd4fa3552b381c9d371480631f29a86",
+    "bytes": 5348
+  },
+  "ekos_binary": {
+    "path": "/Users/ember/dev/EKOS/ekos/target/release/ekos",
+    "sha256": "03cf977be667e41c3740ee26410fe8fed9ffc27773bccf35d03f2d2c60fe21b5",
+    "version": "ekos 1.1.0"
+  },
+  "ekos": {
+    "repo": "/Users/ember/dev/EKOS",
+    "commit": "8e3c178fc45741c7e2b1576e936646e0c461e75c",
+    "dirty": false
+  },
+  "workspace": "/Users/ember/dev/verekos/var/w18/northwind/ws",
+  "ekos_home": "/Users/ember/dev/verekos/var/w18/northwind/home",
+  "ekos_toml": "[workspace]\nroot = \".\"\nlog-level = \"info\"\nlog-format = \"pretty\"\n\n[observe]\npaths = [\".\"]\nignore-patterns = [\".ekos\", \".git\", \"target\", \"node_modules\"]\n",
+  "stages_seconds": {
+    "init": 0.013,
+    "build": 0.329,
+    "recover": 0.024,
+    "resolve": 0.012,
+    "compile": 0.024,
+    "commit": 1.156,
+    "graph-export": 0.014,
+    "ekl-objects": 0.013,
+    "ekl-relationships": 0.013
+  },
+  "graph": {
+    "nodes": 15,
+    "edges": 13,
+    "truncated": false,
+    "counts": {
+      "objects_after_filter": 15,
+      "relationships_after_filter": 13,
+      "returned_edges": 13,
+      "returned_nodes": 15,
+      "total_objects": 15,
+      "total_relationships": 13
+    },
+    "kind_index": [
+      "File",
+      "Table"
+    ],
+    "rel_kind_index": [
+      "ForeignKey"
+    ]
+  },
+  "ekl": {
+    "objects": 15,
+    "relationships": 13
+  },
+  "controls": {
+    "graph.ndjson": "b9654e44d1cc8e093f23bb7067cf282dea2652cd018c06e7c65333a350f7cf5c",
+    "objects.jsonl": "e8480c60c533fd77c5cfcd2bbce95843e4dd26440f5e0c44518f9cc69a0d5668",
+    "relationships.jsonl": "45b54bcb59d9d7179e4f0ed6b4170b7222e6de7af11c3941dc645fbf0b82b9a7",
+    "status.json": "ed23cffe8eeea9f7985b3f6bf5f43747b523e781d4fe5bbc0c8890b7121775a9",
+    "conflicts.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+  },
+  "volatile_fields": {
+    "graph.ndjson": [
+      "header.generated_at",
+      "header.workspace",
+      "header.as_of",
+      "node.fs",
+      "edge.fs"
+    ],
+    "status.json": [
+      "workspace",
+      "last_write",
+      "storage",
+      "freshness"
+    ],
+    "conflicts.json": [],
+    "objects.jsonl": [],
+    "relationships.jsonl": []
+  },
+  "recorded": "2026-10-19T19:33:05Z"
+}

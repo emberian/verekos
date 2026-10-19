@@ -1,0 +1,8 @@
+{"id": "0d73c3c8-fed7-5e05-a23d-0cca481b2557", "kind": "Table", "name": "payments"}
+{"id": "2043da6e-032d-5f48-b2ac-809a337c48ff", "kind": "Table", "name": "orders"}
+{"id": "4ebe8eaf-ba22-5095-8c8d-f01a5de0fbea", "kind": "Table", "name": "categories"}
+{"id": "50479ac5-29a2-5ce7-80da-5509e05864a8", "kind": "File", "name": "ekos.toml"}
+{"id": "88f26ba9-e0d8-5a4d-821b-629cc2c680c6", "kind": "Table", "name": "order_items"}
+{"id": "cde3c803-bbc8-5967-9c92-c5d26f7d51f4", "kind": "Table", "name": "products"}
+{"id": "efe3d294-31d6-5248-80f1-c8802ee3ea2f", "kind": "File", "name": "schemas/ecommerce.sql"}
+{"id": "f8dd66c6-8d25-54cc-a18a-282ec7b1100a", "kind": "Table", "name": "customers"}

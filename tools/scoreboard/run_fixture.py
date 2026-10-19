@@ -140,15 +140,16 @@ class Runner:
 
 
 def load_graph(path: Path) -> dict:
-    """header, nodes (list of dicts with id/n/k/d), edges (s/t indexes)."""
+    """header, nodes, edges — the ndjson records carry a `record` tag."""
     lines = [ln for ln in path.read_text().splitlines() if ln.strip()]
     header = json.loads(lines[0])
     nodes, edges = [], []
     for ln in lines[1:]:
         v = json.loads(ln)
-        if "n" in v and "id" in v:
+        kind = v.get("record")
+        if kind == "node" or (kind is None and "n" in v):
             nodes.append(v)
-        elif "s" in v:
+        elif kind == "edge" or (kind is None and "s" in v):
             edges.append(v)
         else:
             sys.exit(f"{path}: unrecognized record: {ln[:80]}")
@@ -156,7 +157,11 @@ def load_graph(path: Path) -> dict:
 
 
 def write_jsonl(path: Path, rows: list[dict]) -> None:
-    path.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows))
+    """Canonical JSONL: rows sorted by id upstream, keys sorted here — the
+    EKL rows come out of a HashMap (per-row key order varies per process), so
+    without this no two runs would be byte-identical."""
+    path.write_text("".join(json.dumps(r, sort_keys=True, ensure_ascii=False) + "\n"
+                            for r in rows))
 
 
 def upsert_panel(panel_file: Path, entry: dict) -> None:
@@ -211,9 +216,10 @@ def cmd_run(args) -> int:
         ["graph", "export", "--format", "ndjson", "--max-nodes", "1000000",
          "--max-edges", "1000000", "--first-seen", "--output", str(graph_path)])
     graph = load_graph(graph_path)
-    if graph["header"].get("truncated"):
+    truncated = graph["header"].get("truncated") or {}
+    if truncated.get("nodes") or truncated.get("edges"):
         sys.exit(f"graph export truncated at the caps; raise them: "
-                 f"{json.dumps(graph['header'].get('counts'))}")
+                 f"{json.dumps(truncated)} {json.dumps(graph['header'].get('counts'))}")
 
     objects_txt, timings["ekl-objects"] = r.capture("ekl-objects", ["ekl", "FIND Object", "--json"])
     objects = json.loads(objects_txt)

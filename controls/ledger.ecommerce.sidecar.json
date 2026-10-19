@@ -1,0 +1,82 @@
+{
+  "panel": "ledger.ecommerce",
+  "fixture": {
+    "path": "/Users/ember/dev/EKOS/tests/fixtures/ecommerce.sql",
+    "sha256": "accad143288923b4cb4d4e8fd8894a7afdacfa5db436ff9ab938600dfa1c0180",
+    "bytes": 2905
+  },
+  "ekos_binary": {
+    "path": "/Users/ember/dev/EKOS/ekos/target/release/ekos",
+    "sha256": "03cf977be667e41c3740ee26410fe8fed9ffc27773bccf35d03f2d2c60fe21b5",
+    "version": "ekos 1.1.0"
+  },
+  "ekos": {
+    "repo": "/Users/ember/dev/EKOS",
+    "commit": "8e3c178fc45741c7e2b1576e936646e0c461e75c",
+    "dirty": false
+  },
+  "workspace": "/Users/ember/dev/verekos/var/w18/ecommerce/ws",
+  "ekos_home": "/Users/ember/dev/verekos/var/w18/ecommerce/home",
+  "ekos_toml": "[workspace]\nroot = \".\"\nlog-level = \"info\"\nlog-format = \"pretty\"\n\n[observe]\npaths = [\".\"]\nignore-patterns = [\".ekos\", \".git\", \"target\", \"node_modules\"]\n",
+  "stages_seconds": {
+    "init": 0.012,
+    "build": 0.342,
+    "recover": 0.026,
+    "resolve": 0.011,
+    "compile": 0.024,
+    "commit": 0.685,
+    "graph-export": 0.013,
+    "ekl-objects": 0.011,
+    "ekl-relationships": 0.012
+  },
+  "graph": {
+    "nodes": 8,
+    "edges": 6,
+    "truncated": false,
+    "counts": {
+      "objects_after_filter": 8,
+      "relationships_after_filter": 6,
+      "returned_edges": 6,
+      "returned_nodes": 8,
+      "total_objects": 8,
+      "total_relationships": 6
+    },
+    "kind_index": [
+      "File",
+      "Table"
+    ],
+    "rel_kind_index": [
+      "ForeignKey"
+    ]
+  },
+  "ekl": {
+    "objects": 8,
+    "relationships": 6
+  },
+  "controls": {
+    "graph.ndjson": "0667f1ffd66f6e1c201f74e056c77a4f239227c200ac9f36b38616aa4c4d5c1a",
+    "objects.jsonl": "052c88c86096c672abbc561d3ac7b68523c1dbc4e35ec7540eed2c699931c2bb",
+    "relationships.jsonl": "6180fd4e0585a2d0b8088d23e7cc1cb24821aed84076d3042a4274492632083f",
+    "status.json": "23a080c7b8eeb64bdad5e8848938981fa99a08717d89a8e809b69cfee013a403",
+    "conflicts.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+  },
+  "volatile_fields": {
+    "graph.ndjson": [
+      "header.generated_at",
+      "header.workspace",
+      "header.as_of",
+      "node.fs",
+      "edge.fs"
+    ],
+    "status.json": [
+      "workspace",
+      "last_write",
+      "storage",
+      "freshness"
+    ],
+    "conflicts.json": [],
+    "objects.jsonl": [],
+    "relationships.jsonl": []
+  },
+  "recorded": "2026-10-19T19:32:53Z"
+}

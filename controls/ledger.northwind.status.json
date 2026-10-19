@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "workspace": "/Users/ember/dev/verekos/var/w18/northwind/ws",
+  "backend": "fact-segment",
+  "entries": 56,
+  "objects": 15,
+  "relationships": 13,
+  "evidence": 28,
+  "integrity": "unchecked",
+  "last_write": "2026-10-19T19:33:05.095223482Z",
+  "storage": {
+    "total_bytes": 43549,
+    "components": [
+      {
+        "name": "facts",
+        "bytes": 37927,
+        "files": 35
+      },
+      {
+        "name": "artifacts",
+        "bytes": 5622,
+        "files": 5
+      }
+    ]
+  },
+  "freshness": {
+    "status": "fresh",
+    "committed_at": "2026-10-19T19:33:05.113265Z",
+    "git_head_then": "19f588c11d6de88d5cdab994100ef4027d1cb614",
+    "git_head_now": "19f588c11d6de88d5cdab994100ef4027d1cb614",
+    "changed_count": 0,
+    "added_count": 0,
+    "removed_count": 0,
+    "changed": [],
+    "added": [],
+    "removed": [],
+    "rule": "a file counts as changed when its size or modification time differs"
+  },
+  "conflicts": {
+    "dismissed": 0,
+    "open": 0,
+    "resolved": 0
+  }
+}

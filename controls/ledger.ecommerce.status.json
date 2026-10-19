@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "workspace": "/Users/ember/dev/verekos/var/w18/ecommerce/ws",
+  "backend": "fact-segment",
+  "entries": 28,
+  "objects": 8,
+  "relationships": 6,
+  "evidence": 14,
+  "integrity": "unchecked",
+  "last_write": "2026-10-19T19:32:53.415850632Z",
+  "storage": {
+    "total_bytes": 28537,
+    "components": [
+      {
+        "name": "facts",
+        "bytes": 24239,
+        "files": 35
+      },
+      {
+        "name": "artifacts",
+        "bytes": 4298,
+        "files": 4
+      }
+    ]
+  },
+  "freshness": {
+    "status": "fresh",
+    "committed_at": "2026-10-19T19:32:53.438935Z",
+    "git_head_then": "4eb85b88841f972eba6b882f8269b5a3433dad5d",
+    "git_head_now": "4eb85b88841f972eba6b882f8269b5a3433dad5d",
+    "changed_count": 0,
+    "added_count": 0,
+    "removed_count": 0,
+    "changed": [],
+    "added": [],
+    "removed": [],
+    "rule": "a file counts as changed when its size or modification time differs"
+  },
+  "conflicts": {
+    "dismissed": 0,
+    "open": 0,
+    "resolved": 0
+  }
+}
