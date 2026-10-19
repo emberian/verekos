@@ -13,15 +13,15 @@
   "control_sha256": "6249610707a4ad763d39f1f93937ac52cb96fe206dd79b1f7a8a94ceccd58cf2",
   "candidate_sha256": "de6f37f2b0543a50fd43bac04613e68321fe0ad9ee29773046917ef7522466a0",
   "classified_sha256": "71c578daf600e9a321d5f0bcb9406271fc8e37c75861070bb3643c2be037c3d0",
-  "recorded": "2026-10-19T20:33:58Z",
+  "recorded": "2026-10-19T20:45:42Z",
   "control": "controls/scope.decision.control.jsonl",
   "candidate": "controls/check/scope.decision.mutant-deny-ignored.candidate.jsonl",
   "score_exit": 1,
   "check_build": {
-    "exe_sha256": "58e1575f34cd762ed2be50c9d3d93246221c9fcfebd88c85f07eb596f825918d",
-    "check_tree": "67fcb570a60e36f94aef43dbfc2a2e9cade39c8e",
+    "exe_sha256": "30167dcb02b8708556b4c4bb1d43dda9177f5790dae306d5f0c6f6eb9b6e42ad",
+    "check_tree": "7ab2bc98262397d0bb38fcba2342ba1efdc9afcf",
     "check_dirty": false,
-    "world_rev": "12e5543712db1ec507a47b821d0fd4b6c7aad98a",
+    "world_rev": "833eae5e9d24ad2a291172f209bd86ee1a480dfa",
     "toolchain": "leanprover/lean4:v4.30.0"
   }
 }

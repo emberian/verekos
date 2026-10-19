@@ -190,6 +190,39 @@ VerEKOS defect of the untrusted parser. A fix would need a custom JSON reader.
 All 31 glob patterns agree (62 items: visibility and parse for each), including `[!…]`, `**` placement errors, `[]]` and a
 leading `./`.
 
+**Twins deleted, 2026-10-19 (world `833eae5`, `WorldCore`).** The world
+lane split out `WorldCore`, a Mathlib-free library. `check/` now imports it
+and keeps no copy of any model definition. Deleted:
+
+| File | Definitions | Lines |
+|---|---|---|
+| `check/Check/Adm.lean` | `pinRankL`, `maxPinRankL`, `newRankL`, `rstepL`, `rankMapL`, `admissibleL`, `admLogB`, `pinsNonemptyB` | 60 |
+| `check/Check/Detect.lean` | `statedL`, `disagreeOnL`, `detectL` | 45 |
+| `check/Check/DetectBy.lean` | `ClashL`, `disagreeOnByL`, `detectLBy`, `disjointBL`, `labelClashL` | 52 |
+| `check/CheckProofs/Adm.lean` | `pinRankL_eq`, `maxPinRankL_eq`, `newRankL_eq`, `rstepL_eq`, `rankMapL_eq`, `admissibleL_eq`, `admLogB_iff`, `pinsNonemptyB_iff` | 63 |
+| `check/CheckProofs/Detect.lean` | `statedL_eq`, `disagreeOnL_eq`, `mem_detectL`, `detectL_toFinset`, `mem_detectL_congr` | 58 |
+| `check/CheckProofs/DetectBy.lean` | `disagreeOnByL_eq`, `disjointBL_eq`, `labelClashL_eq`, `mem_detectLBy`, `detectLBy_toFinset`, `mem_detectLBy_label` | 62 |
+| `check/CheckProofs.lean` and the `CheckProofs` library in `check/lakefile.toml` | — | 3 |
+
+The runner now calls `World.detectL`, `World.detectLBy`, `World.Clash`,
+`World.labelClash`, `World.admissible`, the `Decidable` instance of
+`World.AdmLog` and `World.Claim.PinsNonempty` (as `c.pins ≠ []`) directly. The
+model's own `detectL_toFinset` and `detectLBy_toFinset` replace the deleted
+equalities.
+- **Lines:** Lean in `check/` went from 1650 to 1303. What remains is
+  `Glob`, `Scope`, `Conflicts`, `Laws` and `Main`: parsers, mappers, the
+  report and the runner. No `def` in `check/Check/` shares a name with a
+  WorldCore definition, except `Check.Glob.compile`, the `glob` crate's
+  `Pattern::new`, which is unrelated.
+- **Build:** a clean build is 41 jobs, 7.2 s wall
+  (`var/check/build-worldcore.log`). The link step (`lake build -v`,
+  `var/check/link-worldcore.log`) takes 19 objects: 5 from `check`, 14 from
+  `world`, all WorldCore. None is from Mathlib.
+- **Verdicts:** every candidate is byte-identical to before: 59/59, 16/16,
+  7/7, 16/16 under `--clash`, and 26/26 for the probes. The five laws runs
+  keep their exits and reports. Only `exe_sha256`, `check_tree` and
+  `world_rev` moved; the binary is now `sha256:30167dcb02b8…`.
+
 **F1 closed by the world lane; runner path added, 2026-10-19.** World
 `12e5543` adds `World/Clash.lean`: `detectBy`/`detectListBy` under a per-schema
 clash table, with `detectBy_differ` proving the default is `detect`, and
