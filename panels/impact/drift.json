@@ -1,0 +1,66 @@
+{
+  "ekos_commit": "8e3c178fc45741c7e2b1576e936646e0c461e75c",
+  "recorded": "2026-10-19",
+  "functions": {
+    "load_neighborhood_depth_0_is_root_only": {
+      "file": "ekos/crates/runtime/src/lib.rs",
+      "sha256": "64591edf3463d31dfbf77caac52122ed4f8c7f8c7f73e903a5867a118bbe1150"
+    },
+    "load_neighborhood_excludes_unconfirmed_same_as_but_keeps_confirmed": {
+      "file": "ekos/crates/runtime/src/lib.rs",
+      "sha256": "4b5342fd02d05e9510db1c2f9a8d52f897ff6d19be963ef6bfb83ace542f62bc"
+    },
+    "load_neighborhood_depth_1_returns_direct_neighbours": {
+      "file": "ekos/crates/runtime/src/lib.rs",
+      "sha256": "a9a1af3f1dd160eea1fab7388de2619c5a94ebee74c1b2c5d58e6df96c3053f3"
+    },
+    "load_neighborhood_depth_2_returns_two_hops": {
+      "file": "ekos/crates/runtime/src/lib.rs",
+      "sha256": "b0a7ec824444f63de578a24f69267bd72d6d1445439f851402610d9e4e5bf152"
+    },
+    "bounded_neighborhood_truncates_reports_it_and_keeps_no_dangling_edge": {
+      "file": "ekos/crates/runtime/src/lib.rs",
+      "sha256": "7371091c87ed66b5d84f1e0a78a423e0af4e99dc6c3030e77b0da37147d168d3"
+    },
+    "bounded_neighborhood_under_budget_equals_unbounded": {
+      "file": "ekos/crates/runtime/src/lib.rs",
+      "sha256": "b16dac8838d84473e3351f34fe3c1d2977c6f3c4919eee15e40e8ced192bdaa5"
+    },
+    "load_neighborhood_handles_cycles": {
+      "file": "ekos/crates/runtime/src/lib.rs",
+      "sha256": "30390c22ab0c6310a597bb9fd7a846668647fb7227054f0988ae58aaf39b5bc5"
+    },
+    "trace_impact_dependents_and_dependencies_are_disjoint": {
+      "file": "ekos/crates/runtime/src/lib.rs",
+      "sha256": "8545dd113652518c21a1e73e54d011a73c8618e0afea5c862aa0fb2ea78ca3a5"
+    },
+    "trace_impact_excludes_unconfirmed_same_as_but_keeps_confirmed": {
+      "file": "ekos/crates/runtime/src/lib.rs",
+      "sha256": "be692bffe5492b699d62ea626c5fa43eba77cdb2c3cb04928790c50d1f709ffb"
+    },
+    "trace_impact_skips_doc_mention_edges": {
+      "file": "ekos/crates/runtime/src/lib.rs",
+      "sha256": "2d37a84a1057291c41316dd5b1a9495164ef74a9879be5c7e8707684bf104b11"
+    },
+    "an_rfc_depends_on_link_is_a_real_dependent_but_a_bare_mention_is_not": {
+      "file": "ekos/crates/runtime/src/lib.rs",
+      "sha256": "8ffbd5a25d72c380089df7219c15a0d1988902515ce3e0137870a57eba06ebb6"
+    },
+    "trace_impact_filters_by_kind": {
+      "file": "ekos/crates/runtime/src/lib.rs",
+      "sha256": "3ec692eeff7060c54f8942854e92a8286e29b17b867ec931a5c6d3ab55140b50"
+    },
+    "trace_impact_handles_cycles": {
+      "file": "ekos/crates/runtime/src/lib.rs",
+      "sha256": "4160b57fa8c431039ed15ab320e7ce4cd9caf0639e5308f569f7d781747d3886"
+    },
+    "trace_impact_max_hops_bounds_traversal": {
+      "file": "ekos/crates/runtime/src/lib.rs",
+      "sha256": "99c009a7217829860bd6800422590ca597575e4d331916228193d03656ad1563"
+    },
+    "session_memory_is_absent_from_every_object_read_path": {
+      "file": "ekos/crates/runtime/src/lib.rs",
+      "sha256": "4fc706505c9f0913656ceb4542e34c447da8ae0c1b96107497f9dda04b5606c1"
+    }
+  }
+}
