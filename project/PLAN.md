@@ -109,7 +109,8 @@ Then M1a, the reader-local compile, against the world W17 leaves on hbox.
 
 Attribution rule from R1: commits name the model that wrote them (Opus 5.5, GLM 5.3, Grok 4.7, Fable 5.1), so git shows who did what.
 
-| W22 | `world/` | the Opus veteran | `Schema.clash`: a per-schema comparator generalizing `≠` on stated values so EKOS's label-mismatch rule (disjoint sources ∧ disjoint word sets) is expressible; existing theorems re-proved over it (lane B's F1) |
+| W22 | `world/` | the Opus veteran | **done, verified by the root** (build green, 2,979 jobs; 11 theorems in `Clash.lean` on standard axioms): a per-schema clash table over (sources, value) pairs, `detectBy` with `detectBy_differ` recovering `detect` exactly so `Conflicts.lean` is untouched; coverage, soundness, order independence and monotonicity re-proved for any table; `labelClash` is EKOS's label-mismatch rule (disjoint sources ∧ disjoint word sets) with `mem_detectBy_label`; lane B's three probes come out as EKOS has them (`asset account` vs `asset` is no conflict) |
+| B″ | `check/` | lane B, resumed | re-pin world to `12e5543`; run the three label probes through `detectBy` with `labelClash`; the EKOS label-mismatch control as a regression set |
 | B′ | `check/` | lane B, resumed | **done, verified by the root**: the untrusted scope parser refuses duplicate keys (compared after unescaping) as `parse`, matching `ReadScope::from_json`; 7 regression inputs with EKOS's own answers, 7/7; panels unchanged; exit codes documented in `check/README.md`; a failed law now always exits 1. New EKOS finding (held, not filed): `ReadScope::from_value` (scope.rs:101, the MCP per-call path) receives already-parsed JSON that kept the last duplicate, so the same scope text is refused on the file path and accepted on the MCP path |
 
 ## Rules
