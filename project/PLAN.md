@@ -49,7 +49,7 @@ definitions and theorems in `world/`.
 | W2 | `var/w2/`, `notes/W2-transclusion-and-laws.md` | GLM | **done**: the host binary on disk is from 2026-09-19 (`66d74dd0`), before the `transclude` action (2026-10-01) and the Sep-30 genesis vocabulary, so every journey fails at J0 and transclusion is **untestable until a fresh host is built** (`scripts/build-native-host.sh` in a snapshot; a heavy Lean-native build, not run). Laws: arbitrary Pred JSON installs via `law ID REF @FILE` or `doc new NAME @FILE` (shell.rs:79, :1360-1372); slice-1 step 1 is unblocked. Rebuilt `minidregg-resource-client` (1m29s) under `native/target` |
 | W3 | `panels/identity/`, `notes/W3-identity-panels.md` | Grok, then GLM-flash after Grok died on context | EKOS identity tests as panel items + controls + drift checker |
 | W4 | `laws/`, `notes/W4-pred-laws.md` | Grok (drafts), root (checker + memo) | **done**: four laws pass `laws/check.py`; install paths recorded. Originally: L-src/L-obj/L-rev/L-run as client Pred JSON with a checker against the real constructors and slots |
-| W5 | `tools/scoreboard/`, `panels/{scope,conflicts}/`, `controls/`, `notes/W5-control-dump.md` | GLM | **done, root verification pending**: `control-dump` workspace (163 crates, 5.4 min cold); scope panel 59 items from 17 tests, 59/59 agree; conflicts panel 16 items from 8 tests, 16/16 agree; drift checkers; partial `controls/MANIFEST.json`. Not built: `score.py`, `board.py`, `regen_controls.py`, the leak-suite family, identity and branch dumps |
+| W5 | `tools/scoreboard/`, `panels/{scope,conflicts}/`, `controls/`, `notes/W5-control-dump.md` | GLM | **done, verified by the root 2026-10-19** (reran both controls: 59/59 and 16/16, byte-identical to the committed control files; both drift checks 0 drifted; a flipped visibility assertion is caught, exit 1, 58/1): `control-dump` workspace (163 crates, 5.4 min cold); scope panel 59 items from 17 tests, 59/59 agree; conflicts panel 16 items from 8 tests, 16/16 agree; drift checkers; partial `controls/MANIFEST.json`. Not built: `score.py`, `board.py`, `regen_controls.py`, the leak-suite family, identity and branch dumps |
 
 Grok lanes run with `CLAUDE_CODE_MAX_CONTEXT_TOKENS=120000` and
 `CLAUDE_CODE_AUTO_COMPACT_WINDOW=90000` (set in `~/.local/bin/claude-grok`), because two
@@ -72,5 +72,6 @@ earlier Grok lanes died with "Prompt is too long" before Claude Code compacted.
 - Never kill by pattern; PID file or nothing. Never `git stash`, `git reset`,
   `git add -A`. Named files. Unsigned commits are fine.
 - Disk pressure: stop writing, report, wait.
+- Commit named files often; torn commits are fine. **Push often** (`origin` is `emberian/verekos`, branch `dev`): after every harvest or verification, not once per session.
 - Plain words, for a reader who is not a software engineer: what it does, what
   it proves, what it cannot do yet.
