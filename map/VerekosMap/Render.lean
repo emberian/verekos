@@ -3,9 +3,9 @@
 
 UNTRUSTED (a renderer). This file turns the values `VerekosMap.Model` builds
 with the World shapes into proposal-v1 `invoke` requests, in the action
-order, id derivation and JSON spelling of `slice1/mapper.py`, so that the
+order, id derivation and JSON spelling of the Python twin, so that the
 bytes are the same. It also diffs a recompile against the cells' current
-documents (mapper.py's `Builder`). The receipt that it reproduces the twin is
+documents (the twin's `Builder`). The receipt that it reproduces the twin is
 byte-identity on slice 1's run-2 (`notes/W24-lean-mapper.md`).
 
 Where the deployed documents carry something the shape does not (the meta
@@ -31,7 +31,7 @@ def lowerAscii (s : String) : Except String String := do
   if s.toList.any (fun c => decide (c.toNat > 127)) then throw s!"non-ASCII name {s.quote}: Python's Unicode lower() is not reproduced"
   pure (String.ofList (s.toList.map asciiLower))
 
-/-- mapper.py `safe`: lower, runs of anything but `[a-z0-9]` to `-`, trim `-`. -/
+/-- the twin's `safe`: lower, runs of anything but `[a-z0-9]` to `-`, trim `-`. -/
 def safe (s : String) : Except String String := do
   let l ← lowerAscii s
   let mut out := ""
@@ -56,7 +56,7 @@ def dedupSorted (xs : List String) : List String :=
 
 /-! ## Sources -/
 
-/-- One imported source cell (mapper.py `Source`). -/
+/-- One imported source cell (the twin's `Source`). -/
 structure Source where
   key : String
   doc : Doc
@@ -78,7 +78,7 @@ def sourceHeader (d : Doc) : Except String J := do
       return ← J.parse (← unhexText (a.s "payload"))
   throw s!"read of {d.target}: no ekos/source-header/v1 atom"
 
-/-- The structural key an atom's id was derived from (mapper.py `key_of_atom`). -/
+/-- The structural key an atom's id was derived from (the twin's `key_of_atom`). -/
 def keyOfAtom (key path : String) (d : Doc) (aid : String) : Except String String := do
   let k ← structuralKey (← d.payload aid)
   for occ in List.range 64 do
@@ -114,7 +114,7 @@ def Source.text (s : Source) : Except String String := do
   for (_, a) in s.order do out := out ++ (← s.doc.payload a)
   pure out
 
-/-- (atom, revision) of a statement (mapper.py `Source.pin`): the last atom with
+/-- (atom, revision) of a statement (the twin's `Source.pin`): the last atom with
 that key, as a Python dict would keep. -/
 def Source.pin (s : Source) (structural : String) : Except String (String × String) :=
   match (s.order.reverse.find? (·.1 == structural)) with
@@ -224,7 +224,7 @@ def buildPlan (nodes : List Node) (sources : List Source) : Except String (List 
   plan := plan.push ⟨"manifest", "ekos/manifest/v1", "L-obj", none, none⟩
   pure plan.toList
 
-/-! ## The builder (mapper.py `Builder`) -/
+/-! ## The builder (the twin's `Builder`) -/
 
 structure B where
   cell : String
@@ -345,7 +345,7 @@ def pinParts (sources : List Source) (src : String) (atoms : List (String × Str
 
 /-! ## Objects -/
 
-/-- `references\s+<to>\b` in the lowered statement (mapper.py's edge-evidence
+/-- `references\s+<to>\b` in the lowered statement (the twin's edge-evidence
 guess, approximation 6). Refuses where Python's Unicode `\b` or `lower()`
 would differ from ASCII. -/
 def referencesName (text to : String) : Except String Bool := do

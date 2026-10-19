@@ -1,6 +1,6 @@
 /-
 `verekos-map`: the slice-1 mapper and laws, computed by the World shapes and
-minidregg's `Pred`. Subcommands and flags are mapper.py's (and laws.py's for
+minidregg's `Pred`. Subcommands and flags are the twin's (and the laws script's for
 `laws`); see map/README.md.
 -/
 import VerekosMap

@@ -2,8 +2,8 @@
 # VerekosMap.Commands — the subcommands of `verekos-map`
 
 UNTRUSTED (file handling and rendering). Each command reads the inputs
-mapper.py read, builds the World values (`VerekosMap.Model`), renders them
-(`VerekosMap.Render`), and writes the files mapper.py wrote, with the same
+the twin read, builds the World values (`VerekosMap.Model`), renders them
+(`VerekosMap.Render`), and writes the files the twin wrote, with the same
 stdout line.
 -/
 import VerekosMap.Render
@@ -12,7 +12,7 @@ namespace VerekosMap
 
 open World
 
-/-- mapper.py's argument parser: `--k v` pairs; `source` and `current` repeat. -/
+/-- the twin's argument parser: `--k v` pairs; `source` and `current` repeat. -/
 def parseArgs (argv : List String) : Except String (List (String × String)) := do
   let rec go : List String → Except String (List (String × String))
     | [] => pure []
@@ -187,7 +187,7 @@ def cmdImport (a : List (String × String)) : IO Unit := do
     let r := cur.foldl (fun m t => max m t.rev) 0 + 1
     let N := reimportedSource atomOf D statements r
     -- A statement the current document lacks is NOT written as `createAtom` + `insertRun`
-    -- (mapper.py's spelling): the deployed client refuses `insertRun` ("unknown workspace content
+    -- (the twin's spelling): the deployed client refuses `insertRun` ("unknown workspace content
     -- action", minidregg native/resource-client/src/content_privacy.rs:83; lane A,
     -- notes/A-reader-local.md). It is folded into the preceding live statement atom with one
     -- `editAtom` (lane A's shape), or into the following one when it comes first. The model's

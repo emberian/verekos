@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # map/receipt.sh — run verekos-map on slice 1's run-2 inputs (var/w17/run-2, local and
-# git-ignored) and compare every file it writes with the file the deleted twins (slice1/mapper.py,
-# slice1/laws.py) wrote then: the committed request files under var/w17/run-2, laws/L-*.json, and
+# git-ignored) and compare every file it writes with the file the deleted twins (the Python twin,
+# the Python laws script) wrote then: the committed request files under var/w17/run-2, laws/L-*.json, and
 # map/fixtures/ (the twin's split, id, structural-key and table-cell outputs, recorded before it went).
 # Prints one row per file: same | DIFFERS, and the SHA-256 of the Lean output.
 # Usage: bash map/receipt.sh [OUT]   (OUT defaults to var/w24/receipt; never builds)
@@ -51,7 +51,7 @@ for t in compile-1 compile-2; do
   cmpf "$t/ws/src/legacy/legacy_customers.sql" "$D/ws/src/legacy/legacy_customers.sql" "$O/$t-ws/src/legacy/legacy_customers.sql"
 done
 
-# the compile-run appends. mapper_sha256 records the mapper that ran: on run-2 that was slice1/mapper.py
+# the compile-run appends. mapper_sha256 records the mapper that ran: on run-2 that was the Python twin
 # at fc8c7e1 (SHA-256 c9264a14...), given here as a value
 MAPPER_AS_RUN=c9264a14fdfb855b3819729248effdded5bff752a5a09b709b185c29ab67eae3
 for t in compile-1 compile-2; do
@@ -89,7 +89,7 @@ out=$("$M" review --conflict "$D/cf.json" --conflict-cell cf-customers-columns-e
 cmptext "review stdout" "$(cat "$D/mapper.txt")" "$out"
 cmpf "review/review.req.json" "$D/review.req.json" "$O/review.req.json"
 
-# laws: the deployed files (laws.py, real subjects) and the repository files (placeholders)
+# laws: the deployed files (the laws script, real subjects) and the repository files (placeholders)
 P=$(cat "$R/principals.json")
 pr() { python3 -I -c "import json,sys;print(json.loads(sys.argv[1])[sys.argv[2]])" "$P" "$1"; }
 "$M" laws --out "$O/laws-deployed" --owner 7 --importer "$(pr importer)" --compiler "$(pr compiler)" \

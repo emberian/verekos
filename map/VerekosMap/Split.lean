@@ -1,7 +1,7 @@
 /-
 # VerekosMap.Split — statements of a SQL file, and their structural keys
 
-UNTRUSTED (a recognizer). This is mapper.py's `split` and `structural_key`,
+UNTRUSTED (a recognizer). This is the twin's `split` and `structural_key`,
 ported line for line so that the atoms, and therefore the atom ids, are the
 same. Python's string semantics are reproduced where they matter here:
 `str.splitlines(keepends=True)`, `str.strip()` / `str.split()` (Unicode
@@ -153,7 +153,7 @@ def createMatch (text : String) : M (Option (String × String)) := do
             if let some n := found then return some (kind, n)
       return none) s
 
-/-- mapper.py `structural_key`. -/
+/-- the twin's `structural_key`. -/
 def structuralKey (text : String) : M String := do
   match ← createMatch text with
   | some (kind, name) =>
@@ -161,7 +161,7 @@ def structuralKey (text : String) : M String := do
     pure s!"create-{kind}:{String.ofList (name.toList.map asciiLower)}"
   | none => pure ("anon:" ++ (sha256Hex (pyNormSpace text)).take 16)
 
-/-- mapper.py `split`: statement atoms whose concatenation is the file, with
+/-- the twin's `split`: statement atoms whose concatenation is the file, with
 keys `<structural key>#<occurrence>`. -/
 def splitStatements (data : String) : M (List (String × String)) := do
   let mut chunks : Array String := #[]

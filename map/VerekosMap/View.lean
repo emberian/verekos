@@ -3,7 +3,7 @@
 
 UNTRUSTED (a parser). A `mini workspace --action read` view is the cell's
 entries; this file indexes them by type and id, in the order they appear
-(Python dict order, which mapper.py iterates). An EKOS `graph export
+(Python dict order, which the twin iterates). An EKOS `graph export
 --format ndjson` is a header, nodes and edges.
 -/
 import VerekosMap.Json
@@ -37,7 +37,7 @@ def liftM {α : Type} (x : Except String α) : IO α :=
 (the mapper only compares them with ids). -/
 def J.s (j : J) (k : String) : String := ((j.get? k).bind J.str?).getD ""
 
-/-- The parts of a read view the mapper uses (mapper.py `Doc`). -/
+/-- The parts of a read view the mapper uses (the twin's `Doc`). -/
 structure Doc where
   target : String
   atoms : OMap J

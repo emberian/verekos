@@ -2,14 +2,14 @@
 # VerekosMap.Json — a JSON value with key order, and Python's spellings of it
 
 UNTRUSTED (a renderer and a parser). Nothing here is proved. It exists so the
-Lean mapper writes the same bytes `slice1/mapper.py` and `slice1/laws.py`
+Lean mapper writes the same bytes the Python twin and the Python laws script
 wrote; the receipt that it does is byte-identity on the slice-1 run
 (`notes/W24-lean-mapper.md`), not a theorem.
 
 Three spellings, each Python's `json.dumps` with `ensure_ascii=False`:
-- `compact`: `sort_keys=True, separators=(",", ":")` (`mapper.py canon`);
+- `compact`: `sort_keys=True, separators=(",", ":")` (the twin's `canon`);
 - `spaced`: `sort_keys=True` with the default separators `", "` and `": "`
-  (`laws.py`);
+  (`the laws script`);
 - `indented`: `indent=1`, with or without `sort_keys` (`commands.json`,
   `plan`).
 
@@ -93,10 +93,10 @@ partial def flat (sk : Bool) (item key : String) : J → String
     let kvs := if sk then sortKvs kvs else kvs
     "{" ++ item.intercalate (kvs.map fun (k, v) => escape k ++ key ++ flat sk item key v) ++ "}"
 
-/-- `mapper.py canon`: sorted keys, `(",", ":")`. -/
+/-- the twin's `canon`: sorted keys, `(",", ":")`. -/
 def compact (j : J) : String := flat true "," ":" j
 
-/-- `laws.py`: `json.dumps(x, sort_keys=True)`. -/
+/-- `the laws script`: `json.dumps(x, sort_keys=True)`. -/
 def spaced (j : J) : String := flat true ", " ": " j
 
 /-- `json.dumps(x, indent=1, sort_keys=sk)`. -/

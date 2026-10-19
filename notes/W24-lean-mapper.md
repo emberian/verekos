@@ -88,3 +88,30 @@ Carriers: everything is a string. A source is its key (`shop`), a range is a sta
 ## Files
 
 `map/{lakefile.toml, lake-manifest.json, lean-toolchain, Main.lean, VerekosMap.lean, MapProofs.lean, receipt.sh, README.md}`, `map/VerekosMap/{Json, Bytes, Split, View, Model, Render, Commands, Laws}.lean`. Scratch: `var/w24/` (`receipt/`, `receipt.tsv`, `build-*.log`, `diffreq.py`, `addstmt/`, `py/`, `lean/`).
+
+## W25: the twins deleted (2026-10-19)
+
+**Deleted** (`bddd85f`, `git rm`, named): `slice1/mapper.py` (721 lines with the banner), `slice1/laws.py` (41), `reader/vendor/mapper.py` (718, lane A's copy), `reader/vendor/VENDORED.txt` (6), `reader/remote/edit-atom.py` (18, replaced by `verekos-map edit-atom`). 1504 lines in all. `laws/L-*.json` stay committed as generated artifacts (`laws/GENERATED.md`); `laws/check.py` stays.
+
+**Repointed** (`e86d32a`). Every mapping step now runs **on the Mac** with `verekos-map`. hbox only reads cells and submits the files it is sent, so no Lean toolchain, build or binary is needed on hbox. Shared helpers are in `slice1/mac-lib.sh` (`hread`: signed reads on hbox copied back; `hput`; `render_sources`; `map_compile`; `map_runrec`).
+
+| Was (on hbox unless noted) | Now |
+|---|---|
+| `s2-setup.sh` called `laws.py` mid-setup | `s2-setup.sh` stops after enrolment; `laws.sh` (Mac) copies `principals.json` back, runs `verekos-map laws --owner … --verifier …`, sends `$RUN/laws/` + `laws.tsv`; `s2-cells.sh` (new) creates cells and grants |
+| `s-import.sh` read + `mapper.py import` + submit | `import.sh` (Mac): reads via `hread`, `verekos-map import`, sends the request; `s-import.sh` only submits and reads after |
+| `compile.sh` (Mac) `render`/`plan`; `s-compile.sh` `compile` + `runrec` on hbox | `compile.sh` does render, EKOS, plan, `compile` (current reads via `hread`), `runrec`; `s-compile.sh` submits the requests, `s-runrec.sh` (new) submits the record |
+| `replay.sh` (Mac) `render`; `s4-attest.sh` `compile` + `attest` | `replay.sh` does render, EKOS, `compile`, the claimed-record lookup, `attest`; `s4-attest.sh` compares and submits |
+| `s5-review.sh` `mapper.py review` | `review.sh` (Mac) reads and maps; `s5-review.sh` submits and renders |
+| `s3-refusals.sh`, `s5-r5.sh`, `s6-reader.sh` `idof` (imported mapper.py) | **values computed on the Mac**: `ids.sh` writes `verekos-map id` for the 17 tuples to `ids.tsv`, and `run.sh` copies it to hbox `code/slice1/ids.tsv`; `idof` is a lookup in that file |
+| `reader/lib.py` `import mapper as M` (vendored) | `lib.vmap(...)`: `id schema …`, `source --read` (statement keys and order), `structural-key` (the evidence-fragment guess), `table-cell`. A view reader `Doc`, a `Source` built from `verekos-map source`, and the export reader are small local code that parses JSON and derives nothing |
+| `reader/edit_as_importer.py` ran the vendored mapper on hbox | maps on the Mac (`verekos-map import`, or `edit-atom` with `--atom-key`); `remote/importer-edit.sh` has `read` and `submit` phases only |
+
+New Lean subcommands for these callers: `source`, `edit-atom`, `structural-key`, `table-cell`, `runrec --mapper-sha256`.
+
+**Receipts.**
+- (a) `bash map/receipt.sh`: **95/95 same** after the deletions. It compares against the committed run-2 request files, `laws/L-*.json`, and `map/fixtures/` (the twin's `split` output for the three inputs, 18 ids, 6 structural keys and 3 table cells, recorded from the `fc8c7e1` twin just before deletion). The compile-run records now get `--mapper-sha256 c9264a14…` (the twin as it ran) as a value. Concatenations: compile-1 `bcd84c64…`, compile-2 `2d0da4d2…`, replay-1 `bcd84c64…`.
+- (b) `bash slice1/dry.sh`: the Mac half of `run.sh`'s compiles and replay without hbox. From run-2's saved signed reads it renders the sources (byte-equal to run-2's `ws/` files), runs the unchanged EKOS pipeline afresh, plans and compiles through the same `mac-lib.sh` functions `compile.sh`/`replay.sh` call. Result: `commands.sha256` **bcd84c64… (compile-1), 2d0da4d2… (compile-2), bcd84c64… (replay-1)**; `plan.json` identical for both compiles; the runrec stdout lines equal the run's. About 12 s.
+- (c) reader: no hbox run was needed. `var/w24/sync_offline.py` runs `reader/sync.py`'s own `main` with the node replaced by lane A's saved reads (`var/lane-a/reader/reader-shop/20261019T163112/cells`); EKOS runs for real. It prints **"7 documents, 46 atoms, 7 objects, 2 I could not read"**, and every field of the new `sync.json` except timings equals lane A's (cells, unreadable, files with statement keys/atoms/revisions, kinds, edges, conflicts, the crosscheck). `find`/`before`/`disagree` re-read pins live over ssh, so I did not run them; the mapper-touching code they use (`table_cell`, `Doc`) is covered by the fixtures and by sync.
+- (d) `grep -rn mapper.py` outside `var/`, `.lake/` and `.git/` finds `notes/` history plus four files I do not own. The `map/` files now say "the Python twin". The four: `CLAUDE.md:18` (layout table: "driver scripts, `mapper.py`"), `project/PLAN.md:108,118,123,125` (the root's log), `docs/design/explorations/05-next-lanes.md:40-71` (a dated exploration), `check/slice1_log.py:7` (a docstring, lane B's). The root should reword `CLAUDE.md:18`; the rest are records.
+
+**Not run, and why.** Nothing went to hbox: the drivers' hbox halves (`s-import.sh`, `s-compile.sh`, `s-runrec.sh`, `s4-attest.sh`, `s5-review.sh`, `s2-setup.sh`/`s2-cells.sh`, the `idof` lookups) are syntax-checked (`bash -n`) but not executed. A full `slice1/run.sh` on a fresh run root is the test of them, about 20 minutes and about 40 MB on hbox. Two side effects of the split: hbox-side row timings no longer include the mapper (compile passes `MAPSEC` instead), and a few run-root artifact names changed (`import-N/before/CELL.json`, `compile-N/cur/CELL.json`, `review/CELL.json`). `reader/vendor/__pycache__/` (lane A's untracked bytecode of the deleted file, git-ignored) is still there; I did not create it, so I left it.

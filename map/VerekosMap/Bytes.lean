@@ -5,7 +5,7 @@ SHA-256 is minidregg's `Compiler.Sha256` (FIPS 180-4, with known-answer
 vectors in `Compiler.Sha256Vectors`); this file only turns its words into
 bytes and hex.
 
-`num` is mapper.py's identifier: SHA-256 over `VEREKOS/ID/v1 ∖0` and the
+`num` is the twin's identifier: SHA-256 over `VEREKOS/ID/v1 ∖0` and the
 NUL-joined parts, the first 15 bytes as a big-endian integer, in decimal (`1`
 if that is zero). This is slice 1's approximation 1 (W17 memo): minidregg
 derives ids with `deriveIdentifier` over an `IdPreimage`, which the deployed
@@ -34,7 +34,7 @@ def hexBytes (b : ByteArray) : String := Id.run do
 /-- `hashlib.sha256(s.encode()).hexdigest()`. -/
 def sha256Hex (s : String) : String := Minidregg.Compiler.Sha256.hexString s
 
-/-- `mapper.py hexs`: the UTF-8 bytes of a text, in lowercase hex. -/
+/-- the twin's `hexs`: the UTF-8 bytes of a text, in lowercase hex. -/
 def hexs (s : String) : String := hexBytes s.toUTF8
 
 def hexVal (c : Char) : Option Nat :=
@@ -60,14 +60,14 @@ def unhexText (h : String) : Except String String := do
   | some s => pure s
   | none => throw "payload is not UTF-8"
 
-/-- mapper.py `num(*parts)`: a 120-bit identifier as a decimal string. -/
+/-- the twin's `num(*parts)`: a 120-bit identifier as a decimal string. -/
 def num (parts : List String) : String :=
   let pre := "VEREKOS/ID/v1".toUTF8.push 0 ++ ("\x00".intercalate parts).toUTF8
   let h := sha256 pre
   let n := (List.range 15).foldl (fun acc i => acc * 256 + (h.get! i).toNat) 0
   toString (if n == 0 then 1 else n)
 
-/-- mapper.py `schema(name)`. -/
+/-- the twin's `schema(name)`. -/
 def schemaId (name : String) : String := num ["schema", name]
 
 end VerekosMap
