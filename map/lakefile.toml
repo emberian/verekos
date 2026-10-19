@@ -1,0 +1,23 @@
+name = "map"
+defaultTargets = ["verekos-map"]
+
+# The model, pinned to one commit of this repository and cloned under
+# .lake/packages/world (subDir world), as check/ does: a path dependency would
+# build inside world/, which the world lane owns. Its dependencies (minidregg,
+# and the Mathlib family that nothing here imports) are a local clone and
+# symlinks under .lake/packages; nothing is downloaded.
+[[require]]
+name = "world"
+git = "/Users/ember/dev/verekos"
+rev = "cd753c19b914b2a2ca01c70c66ae8dadf68e437f"
+subDir = "world"
+
+# The mapper: imports only WorldCore modules (World.Document, World.Shapes),
+# minidregg's Pred.Core and Compiler.Sha256, and Lean's JSON reader, so the
+# executable never compiles or links Mathlib.
+[[lean_lib]]
+name = "VerekosMap"
+
+[[lean_exe]]
+name = "verekos-map"
+root = "Main"
