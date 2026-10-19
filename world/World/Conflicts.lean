@@ -63,6 +63,7 @@ def detect (cs : Finset (Claim C P)) : Finset (ConflictKey C) :=
 def detectList (l : List (Claim C P)) : Finset (ConflictKey C) :=
   detect reg l.toFinset
 
+omit [∀ s, DecidableEq (P s)] in
 theorem mem_disagreeOn (c₁ c₂ : Claim C P) (a : C.Digest) :
     a ∈ disagreeOn reg c₁ c₂ ↔
       ∃ v₁ v₂, (a, v₁) ∈ c₁.stated reg ∧ (a, v₂) ∈ c₂.stated reg ∧ v₁ ≠ v₂ := by
@@ -82,10 +83,8 @@ theorem mem_disagreeOn (c₁ c₂ : Claim C P) (a : C.Digest) :
     · exact absurd hsome (by simp)
   · rintro ⟨v₁, v₂, h₁, h₂, hne⟩
     refine ⟨(a, v₁), h₁, ?_⟩
-    have : (c₂.stated reg).any (fun bw => decide (bw.1 = a ∧ bw.2 ≠ v₁)) = true := by
-      rw [List.any_eq_true]
-      exact ⟨(a, v₂), h₂, by simp [Ne.symm hne]⟩
-    simp [this]
+    simp
+    exact ⟨v₂, h₂, Ne.symm hne⟩
 
 /-- **Exact characterization of `detect`.** A key is detected iff two
 different claims in the set, about the same schema and subject, state
