@@ -7,7 +7,7 @@ import VerekosMap
 
 open VerekosMap
 
-def usage : String := "usage: verekos-map (split FILE | import | render | plan | compile | runrec | attest | review | laws) --flag value ...
+def usage : String := "usage: verekos-map (split FILE | id PART... | import | render | plan | compile | runrec | attest | review | laws) --flag value ...
   import  --source-key K --path P --file F --cell NAME [--read READ.json] --out REQ.json
   render  --key K --read READ.json --out FILE
   plan    --export E --source K=READ.json ...
@@ -41,6 +41,7 @@ def cmdLaws (a : List (String × String)) : IO Unit := do
 def run (argv : List String) : IO Bool := do
   match argv with
   | "split" :: file :: _ => cmdSplit file; pure true
+  | "id" :: parts => IO.println (num parts); pure true
   | cmd :: rest =>
     let a ← liftM (parseArgs rest)
     match cmd with

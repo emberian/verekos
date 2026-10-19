@@ -1,4 +1,7 @@
 #!/usr/bin/env python3 -I
+# DEPRECATED (2026-10-19, lane W24): a twin of the Lean mapper `map/` (`verekos-map`), which
+# computes the same request files from the World shapes, byte-identical on run-2 (71/71,
+# notes/W24-lean-mapper.md). Kept only until lane A stops reading it; the root deletes it.
 """slice1/mapper.py: EKOS sources and an EKOS graph export, as minidregg content commands.
 
 Stdlib only; run with `python3 -I`. Every output is a pure function of the inputs named on the

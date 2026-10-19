@@ -95,4 +95,14 @@ pr() { python3 -I -c "import json,sys;print(json.loads(sys.argv[1])[sys.argv[2]]
 for f in "$O"/laws-deployed/*.json; do cmpf "run-2/laws/$(basename "$f")" "$R/laws/$(basename "$f")" "$f"; done
 "$M" laws --out "$O/laws" >/dev/null
 for f in "$O"/laws/*.json; do cmpf "laws/$(basename "$f")" "$V/laws/$(basename "$f")" "$f"; done
+# split and id (the drivers' `idof` helper calls mapper.num)
+for f in slice1/inputs/ecommerce.sql slice1/fixtures/legacy_customers.sql slice1/inputs/legacy_customers.v2.sql; do
+  "$M" split "$V/$f" >"$O/split-$(basename "$f").txt"
+  python3 -I "$O/mapper-as-run.py" split "$V/$f" >"$O/split-$(basename "$f").py.txt"
+  cmpf "split $f" "$O/split-$(basename "$f").py.txt" "$O/split-$(basename "$f").txt"
+done
+for parts in "atom cf-customers-columns-email-data-type header" "run compile-run run bcd84c6407873338f39a80edc4eacadd836dca7ec48f8c1f40909b8d43778443" "schema ekos/object/v1"; do
+  # shellcheck disable=SC2086
+  cmptext "id $parts" "$(python3 -I -c 'import sys; sys.path.insert(0, sys.argv[1]); import importlib.util as u; s=u.spec_from_file_location("m", sys.argv[2]); m=u.module_from_spec(s); s.loader.exec_module(m); print(m.num(*sys.argv[3:]))' "$O" "$O/mapper-as-run.py" $parts)" "$("$M" id $parts)"
+done
 exit $fail
