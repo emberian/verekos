@@ -1,0 +1,26 @@
+{"item":"redacts_kettle_passwords_and_keeps_the_xml_well_formed#xml","redacted":"<connection><name>dwh</name><username>sa</username><password>[REDACTED:xml-password-element]</password><httpPassword>[REDACTED:xml-password-element]</httpPassword><password/></connection>"}
+{"item":"redacts_kettle_passwords_and_keeps_the_xml_well_formed#properties","redacted":"DWH_PASSWORD=[REDACTED:kettle-encrypted-password]\n"}
+{"item":"redacts_kettle_passwords_and_keeps_the_xml_well_formed#plain","redacted":"<description>Encrypted at rest</description><passes>3</passes>"}
+{"item":"redacts_aws_access_key_id","redacted":"key = [REDACTED:aws-access-key-id] end"}
+{"item":"redacts_github_token","redacted":"token: [REDACTED:github-token]"}
+{"item":"redacts_private_key_block","redacted":"before\n[REDACTED:private-key-block]\nafter"}
+{"item":"redacts_jwt","redacted":"[REDACTED:jwt]"}
+{"item":"redacts_generic_password_assignment","redacted":"password = \"[REDACTED:generic-assigned-secret]\""}
+{"item":"redaction_preserves_the_real_field_name_and_quotes_replacing_only_the_value","redacted":"api_key: \"[REDACTED:generic-assigned-secret]\".to_string(),"}
+{"item":"label_match_requires_a_real_word_boundary_not_a_substring_of_a_longer_identifier#api-secret","redacted":"api_secret: \"[REDACTED:generic-assigned-secret]\".to_string(),"}
+{"item":"label_match_requires_a_real_word_boundary_not_a_substring_of_a_longer_identifier#access-token-secret","redacted":"access_token_secret: \"[REDACTED:generic-assigned-secret]\".to_string(),"}
+{"item":"generic_pattern_leaves_a_dotted_code_reference_untouched","redacted":"api_key=settings.azure_openai_api_key,"}
+{"item":"generic_pattern_still_redacts_a_dotted_value_that_is_not_a_clean_identifier_chain","redacted":"api_key=[REDACTED:generic-assigned-secret]"}
+{"item":"leaves_ordinary_text_untouched","redacted":"fn main() { println!(\"hello world\"); }"}
+{"item":"extra_pattern_from_config_is_additive#extra","redacted":"token=[REDACTED:internal-token]"}
+{"item":"extra_pattern_from_config_is_additive#baseline","redacted":"key = [REDACTED:aws-access-key-id]"}
+{"item":"invalid_extra_pattern_regex_is_skipped_not_fatal","redacted":"key = [REDACTED:aws-access-key-id]"}
+{"excluded":true,"item":"is_excluded_path_matches_builtin_globs#env"}
+{"excluded":true,"item":"is_excluded_path_matches_builtin_globs#env-local"}
+{"excluded":true,"item":"is_excluded_path_matches_builtin_globs#id-rsa"}
+{"excluded":true,"item":"is_excluded_path_matches_builtin_globs#pem"}
+{"excluded":false,"item":"is_excluded_path_matches_builtin_globs#main-rs"}
+{"excluded":false,"item":"is_excluded_path_matches_builtin_globs#ekos-toml"}
+{"excluded":true,"item":"is_excluded_path_extra_glob_is_additive#yaml"}
+{"excluded":true,"item":"is_excluded_path_extra_glob_is_additive#env"}
+{"item":"redact_json_recurses_into_arrays_and_objects","json":{"count":3,"excerpt":"key = [REDACTED:aws-access-key-id]","nested":{"inner":"token: [REDACTED:aws-access-key-id]"},"symbols":["fn main","[REDACTED:aws-access-key-id]"]}}

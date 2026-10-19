@@ -215,6 +215,7 @@ dependencies = [
  "chrono",
  "ekos-artifact",
  "ekos-common",
+ "ekos-ekl",
  "ekos-identity",
  "ekos-kir",
  "ekos-ledger",
@@ -423,6 +424,17 @@ dependencies = [
  "toml",
  "tracing",
  "walkdir",
+]
+
+[[package]]
+name = "ekos-ekl"
+version = "1.1.0"
+dependencies = [
+ "chrono",
+ "ekos-kir",
+ "ekos-runtime",
+ "serde_json",
+ "thiserror 2.0.21",
 ]
 
 [[package]]

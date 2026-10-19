@@ -1,0 +1,50 @@
+{"ast":{"as_of":null,"count":false,"depth":null,"entity":"Object","from":null,"group_by":null,"limit":null,"order_by":null,"predicates":[{"field":"kind","op":"Eq","value":{"str":"Table"}}],"returns":[],"semantic":null,"via":null},"item":"parses_minimal_find_object","panics":false}
+{"ast":{"as_of":null,"count":false,"depth":null,"entity":"Object","from":null,"group_by":null,"limit":null,"order_by":null,"predicates":[{"field":"kind","op":"Eq","value":{"str":"Table"}}],"returns":["name","evidence"],"semantic":null,"via":null},"item":"parses_return_clause","panics":false}
+{"ast":{"as_of":null,"count":false,"depth":null,"entity":"Relationship","from":"orders","group_by":null,"limit":null,"order_by":null,"predicates":[{"field":"kind","op":"Eq","value":{"str":"ForeignKey"}}],"returns":[],"semantic":null,"via":null},"item":"parses_relationship_with_from","panics":false}
+{"ast":{"as_of":null,"count":false,"depth":null,"entity":"Object","from":null,"group_by":null,"limit":1,"order_by":{"direction":"Asc","field":"name"},"predicates":[{"field":"kind","op":"Eq","value":{"str":"Table"}}],"returns":[],"semantic":null,"via":null},"item":"parses_order_by_and_limit","panics":false}
+{"ast":{"as_of":null,"count":false,"depth":null,"entity":"Object","from":null,"group_by":null,"limit":null,"order_by":{"direction":"Desc","field":"name"},"predicates":[],"returns":[],"semantic":null,"via":null},"item":"parses_order_by_desc","panics":false}
+{"ast":{"as_of":null,"count":false,"depth":null,"entity":"Object","from":null,"group_by":null,"limit":null,"order_by":null,"predicates":[{"field":"kind","op":"Eq","value":{"str":"Table"}},{"field":"name","op":"Contains","value":{"str":"order"}}],"returns":[],"semantic":null,"via":null},"item":"parses_and_chained_predicates","panics":false}
+{"ast":{"as_of":null,"count":false,"depth":null,"entity":"Object","from":"orders","group_by":null,"limit":null,"order_by":null,"predicates":[],"returns":[],"semantic":null,"via":null},"item":"parses_query_with_no_where","panics":false}
+{"ast":{"as_of":null,"count":false,"depth":null,"entity":"Object","from":null,"group_by":null,"limit":null,"order_by":null,"predicates":[{"field":"x","op":"Gt","value":{"num":1.0}}],"returns":[],"semantic":null,"via":null},"item":"parses_numeric_comparison_operators-gt","panics":false}
+{"ast":{"as_of":null,"count":false,"depth":null,"entity":"Object","from":null,"group_by":null,"limit":null,"order_by":null,"predicates":[{"field":"x","op":"Lt","value":{"num":1.0}}],"returns":[],"semantic":null,"via":null},"item":"parses_numeric_comparison_operators-lt","panics":false}
+{"ast":{"as_of":null,"count":false,"depth":null,"entity":"Object","from":null,"group_by":null,"limit":null,"order_by":null,"predicates":[{"field":"x","op":"Ge","value":{"num":1.0}}],"returns":[],"semantic":null,"via":null},"item":"parses_numeric_comparison_operators-ge","panics":false}
+{"ast":{"as_of":null,"count":false,"depth":null,"entity":"Object","from":null,"group_by":null,"limit":null,"order_by":null,"predicates":[{"field":"x","op":"Le","value":{"num":1.0}}],"returns":[],"semantic":null,"via":null},"item":"parses_numeric_comparison_operators-le","panics":false}
+{"ast":{"as_of":null,"count":false,"depth":null,"entity":"Object","from":null,"group_by":null,"limit":null,"order_by":null,"predicates":[{"field":"x","op":"Ne","value":{"num":1.0}}],"returns":[],"semantic":null,"via":null},"item":"parses_numeric_comparison_operators-ne","panics":false}
+{"ast":{"as_of":null,"count":false,"depth":3,"entity":"Object","from":"orders","group_by":null,"limit":null,"order_by":null,"predicates":[],"returns":[],"semantic":null,"via":"DependsOn"},"item":"parses_via_and_depth","panics":false}
+{"ast":{"as_of":null,"count":false,"depth":2,"entity":"Object","from":"orders","group_by":null,"limit":null,"order_by":null,"predicates":[],"returns":[],"semantic":null,"via":null},"item":"depth_alone_generalizes_from_without_via","panics":false}
+{"ast":{"as_of":null,"count":false,"depth":null,"entity":"Object","from":"orders","group_by":null,"limit":null,"order_by":null,"predicates":[],"returns":[],"semantic":null,"via":null},"item":"queries_without_via_or_depth_default_to_none","panics":false}
+{"error":"VIA requires a FROM anchor","item":"rejects_via_without_from","panics":false,"position":17}
+{"ast":{"as_of":null,"count":false,"depth":null,"entity":"Object","from":null,"group_by":null,"limit":null,"order_by":null,"predicates":[],"returns":[],"semantic":"authentication and sessions","via":null},"item":"parses_semantic_clause","panics":false}
+{"ast":{"as_of":null,"count":false,"depth":null,"entity":"Object","from":null,"group_by":null,"limit":5,"order_by":null,"predicates":[{"field":"kind","op":"Eq","value":{"str":"Symbol"}}],"returns":[],"semantic":"welcome email","via":null},"item":"parses_semantic_with_where_and_inline_limit","panics":false}
+{"error":"SEMANTIC is not compatible with FROM (SEMANTIC is a search anchor, FROM is a graph anchor)","item":"rejects_semantic_combined_with_from_asof_count_and_relationship-from","panics":false,"position":31}
+{"error":"SEMANTIC is not compatible with AS OF (retrieval has no point-in-time form)","item":"rejects_semantic_combined_with_from_asof_count_and_relationship-as-of","panics":false,"position":32}
+{"error":"SEMANTIC is not compatible with COUNT (rank a set, not a scalar — use a plain FIND to count)","item":"rejects_semantic_combined_with_from_asof_count_and_relationship-count","panics":false,"position":26}
+{"error":"SEMANTIC is not compatible with FIND Relationship (SEMANTIC retrieves objects)","item":"rejects_semantic_combined_with_from_asof_count_and_relationship-relationship","panics":false,"position":28}
+{"error":"unknown entity 'Widget'","item":"rejects_unknown_entity","panics":false,"position":5}
+{"error":"expected 'FIND', found 'Object'","item":"rejects_missing_find_keyword","panics":false,"position":0}
+{"error":"unterminated string literal","item":"rejects_unterminated_string","panics":false,"position":25}
+{"error":"unexpected trailing token 'ZZZ'","item":"rejects_trailing_garbage","panics":false,"position":33}
+{"ast":{"as_of":"2026-01-01T00:00:00Z","count":false,"depth":null,"entity":"Object","from":null,"group_by":null,"limit":null,"order_by":null,"predicates":[{"field":"kind","op":"Eq","value":{"str":"Table"}}],"returns":[],"semantic":null,"via":null},"item":"parses_as_of_clause","panics":false}
+{"error":"invalid AS OF timestamp 'not-a-timestamp': premature end of input","item":"rejects_malformed_as_of_timestamp","panics":false,"position":18}
+{"ast":{"as_of":null,"count":true,"depth":null,"entity":"Object","from":null,"group_by":null,"limit":null,"order_by":null,"predicates":[{"field":"kind","op":"Eq","value":{"str":"Table"}}],"returns":[],"semantic":null,"via":null},"item":"parses_bare_count","panics":false}
+{"ast":{"as_of":null,"count":true,"depth":null,"entity":"Object","from":null,"group_by":"kind","limit":null,"order_by":null,"predicates":[],"returns":[],"semantic":null,"via":null},"item":"parses_count_with_group_by","panics":false}
+{"error":"GROUP BY requires COUNT","item":"rejects_group_by_without_count","panics":false,"position":22}
+{"error":"RETURN is not compatible with COUNT","item":"rejects_count_combined_with_return","panics":false,"position":26}
+{"error":"expected 'FIND', found end of input","item":"fuzz_random_strings_never_panic-c1","panics":false,"position":0}
+{"error":"expected identifier, found end of input","item":"fuzz_random_strings_never_panic-c2","panics":false,"position":1}
+{"error":"expected identifier, found end of input","item":"fuzz_random_strings_never_panic-c3","panics":false,"position":13}
+{"error":"unterminated string literal","item":"fuzz_random_strings_never_panic-c4","panics":false,"position":2}
+{"error":"unexpected character '!'","item":"fuzz_random_strings_never_panic-c5","panics":false,"position":0}
+{"error":"expected literal, found end of input","item":"fuzz_random_strings_never_panic-c6","panics":false,"position":21}
+{"error":"expected number, found 'abc'","item":"fuzz_random_strings_never_panic-c7","panics":false,"position":18}
+{"error":"unexpected character '\u0000'","item":"fuzz_random_strings_never_panic-c8","panics":false,"position":0}
+{"error":"unterminated string literal","item":"fuzz_random_strings_never_panic-c9","panics":false,"position":22}
+{"error":"expected string literal, found end of input","item":"fuzz_random_strings_never_panic-c10","panics":false,"position":19}
+{"error":"expected 'FIND', found ','","item":"fuzz_random_strings_never_panic-c11","panics":false,"position":0}
+{"error":"expected identifier, found ','","item":"fuzz_random_strings_never_panic-c12","panics":false,"position":19}
+{"error":"expected string literal, found end of input","item":"fuzz_random_strings_never_panic-c13","panics":false,"position":16}
+{"error":"unterminated string literal","item":"fuzz_random_strings_never_panic-c14","panics":false,"position":18}
+{"error":"expected 'OF', found end of input","item":"fuzz_random_strings_never_panic-c15","panics":false,"position":13}
+{"error":"expected 'BY', found end of input","item":"fuzz_random_strings_never_panic-c16","panics":false,"position":19}
+{"error":"expected identifier, found end of input","item":"fuzz_random_strings_never_panic-c17","panics":false,"position":19}
+{"error":"expected identifier, found end of input","item":"fuzz_random_strings_never_panic-c18","panics":false,"position":19}

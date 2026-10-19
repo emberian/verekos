@@ -23,6 +23,7 @@ chrono = "0.4"
 # function ekos-ledger's pub(crate) content_signature calls.
 ekos-artifact = { path = "/Users/ember/dev/EKOS/ekos/crates/artifact" }
 ekos-common = { path = "/Users/ember/dev/EKOS/ekos/crates/common" }
+ekos-ekl = { path = "/Users/ember/dev/EKOS/ekos/crates/ekl" }
 ekos-identity = { path = "/Users/ember/dev/EKOS/ekos/crates/identity" }
 ekos-kir = { path = "/Users/ember/dev/EKOS/ekos/crates/kir" }
 ekos-ledger = { path = "/Users/ember/dev/EKOS/ekos/crates/ledger" }

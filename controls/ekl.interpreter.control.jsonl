@@ -1,0 +1,33 @@
+{"item":"where_filters_on_a_property","row_count":1,"rows":[{"name":"b","status":"confirmed"}]}
+{"item":"a_dotted_field_reads_a_nested_property","row_count":1,"rows":[{"id":"00000000-0000-5000-8000-000000000001","kind":"Table","name":"a"}]}
+{"item":"count_groups_by_a_property","row_count":3,"rows":[{"count":1,"status":""},{"count":1,"status":"confirmed"},{"count":1,"status":"hypothesis"}]}
+{"item":"relationship_properties_filter_too","row_count":1,"rows":[{"from":"00000000-0000-5000-8000-000000000001","id":"00000000-0000-5000-8000-000000000101","kind":"ForeignKey","to":"00000000-0000-5000-8000-000000000002"}]}
+{"error":"UnknownField","field":"statuz","item":"a_field_no_row_has_is_an_error_not_zero_rows","message":"unknown field 'statuz': not a built-in column (id, name, kind, evidence, created_at) and no matching object has a property of that name"}
+{"item":"an_unknown_field_over_no_candidates_is_empty","row_count":0,"rows":[]}
+{"item":"a_built_in_column_wins_over_a_property_of_the_same_name-real","row_count":1,"rows":[{"id":"00000000-0000-5000-8000-000000000001","kind":"Table","name":"real"}]}
+{"item":"a_built_in_column_wins_over_a_property_of_the_same_name-shadow","row_count":0,"rows":[]}
+{"item":"example_1_all_tables","row_count":3,"rows":[{"id":"00000000-0000-5000-8000-000000000001","kind":"Table","name":"orders"},{"id":"00000000-0000-5000-8000-000000000002","kind":"Table","name":"customers"},{"id":"00000000-0000-5000-8000-000000000003","kind":"Table","name":"order_items"}]}
+{"item":"example_2_return_name_only","row_count":3,"rows":[{"name":"orders"},{"name":"customers"},{"name":"order_items"}]}
+{"item":"example_3_exact_name_match","row_count":1,"rows":[{"id":"00000000-0000-5000-8000-000000000001","kind":"Table","name":"orders"}]}
+{"item":"example_4_contains_predicate","row_count":2,"rows":[{"id":"00000000-0000-5000-8000-000000000001","kind":"Table","name":"orders"},{"id":"00000000-0000-5000-8000-000000000003","kind":"Table","name":"order_items"}]}
+{"item":"semantic_clause_seeds_candidates_from_retrieval","row_count":1,"rows":[{"id":"00000000-0000-5000-8000-000000000001","kind":"Table","name":"orders"}]}
+{"item":"semantic_clause_with_no_match_is_empty_not_an_error","row_count":0,"rows":[]}
+{"item":"example_5_order_by_and_limit","row_count":1,"rows":[{"id":"00000000-0000-5000-8000-000000000002","kind":"Table","name":"customers"}]}
+{"item":"example_6_all_foreign_keys","row_count":2,"rows":[{"from":"00000000-0000-5000-8000-000000000001","id":"00000000-0000-5000-8000-000000000101","kind":"ForeignKey","to":"00000000-0000-5000-8000-000000000002"},{"from":"00000000-0000-5000-8000-000000000001","id":"00000000-0000-5000-8000-000000000102","kind":"ForeignKey","to":"00000000-0000-5000-8000-000000000003"}]}
+{"item":"example_7_relationships_from_anchor","row_count":2,"rows":[{"from":"00000000-0000-5000-8000-000000000001","id":"00000000-0000-5000-8000-000000000101","kind":"ForeignKey","to":"00000000-0000-5000-8000-000000000002"},{"from":"00000000-0000-5000-8000-000000000001","id":"00000000-0000-5000-8000-000000000102","kind":"ForeignKey","to":"00000000-0000-5000-8000-000000000003"}]}
+{"item":"example_8_object_neighbourhood","row_count":3,"rows":[{"id":"00000000-0000-5000-8000-000000000001","kind":"Table","name":"orders"},{"id":"00000000-0000-5000-8000-000000000002","kind":"Table","name":"customers"},{"id":"00000000-0000-5000-8000-000000000003","kind":"Table","name":"order_items"}]}
+{"item":"example_9_no_matches","row_count":0,"rows":[]}
+{"item":"example_10_return_projection_with_limit","row_count":1,"rows":[{"from":"00000000-0000-5000-8000-000000000001","to":"00000000-0000-5000-8000-000000000002"}]}
+{"item":"via_kind_filters_and_traces_dependencies","row_count":3,"rows":[{"id":"00000000-0000-5000-8000-000000000001","kind":"Table","name":"orders"},{"id":"00000000-0000-5000-8000-000000000002","kind":"Table","name":"customers"},{"id":"00000000-0000-5000-8000-000000000003","kind":"Table","name":"order_items"}]}
+{"item":"depth_without_via_generalizes_single_hop_default","row_count":3,"rows":[{"id":"00000000-0000-5000-8000-000000000001","kind":"Table","name":"orders"},{"id":"00000000-0000-5000-8000-000000000002","kind":"Table","name":"customers"},{"id":"00000000-0000-5000-8000-000000000003","kind":"Table","name":"order_items"}]}
+{"error":"AnchorNotFound","item":"unknown_anchor_returns_error","message":"FROM anchor not found: 'zzznonexistent'"}
+{"item":"finds_objects_of_a_newly_added_object_kind","row_count":1,"rows":[{"id":"00000000-0000-5000-8000-000000000004","kind":"Person","name":"Alice"}]}
+{"item":"as_of_before_anything_written_returns_empty","row_count":0,"rows":[]}
+{"item":"as_of_now_returns_current_objects","row_count":3,"rows":[{"id":"00000000-0000-5000-8000-000000000001","kind":"Table","name":"orders"},{"id":"00000000-0000-5000-8000-000000000002","kind":"Table","name":"customers"},{"id":"00000000-0000-5000-8000-000000000003","kind":"Table","name":"order_items"}]}
+{"history_has_row_count":false,"item":"as_of_reconstructs_a_past_version_not_a_later_update","row_count":1,"rows":[{"id":"00000000-0000-5000-8000-000000000001","kind":"Table","name":"orders"}]}
+{"error":"AsOfWithFromUnsupported","item":"as_of_combined_with_from_is_rejected","message":"AS OF is not yet supported combined with FROM-anchored queries"}
+{"item":"bare_count_returns_one_row_with_total","row_count":1,"rows":[{"count":3}]}
+{"item":"count_group_by_kind_groups_correctly","row_count":2,"rows":[{"count":2,"kind":"Person"},{"count":3,"kind":"Table"}]}
+{"item":"count_group_by_respects_where_predicate_first","row_count":1,"rows":[{"count":3,"kind":"Table"}]}
+{"item":"count_group_by_honors_limit","row_count":1,"rows":[{"count":1,"kind":"Person"}]}
+{"item":"finds_relationships_of_a_custom_kind","row_count":1,"rows":[{"from":"00000000-0000-5000-8000-000000000004","id":"00000000-0000-5000-8000-000000000103","kind":"DEPLOYED","to":"00000000-0000-5000-8000-000000000005"}]}
