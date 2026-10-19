@@ -190,6 +190,23 @@ VerEKOS defect of the untrusted parser. A fix would need a custom JSON reader.
 All 31 glob patterns agree (62 items: visibility and parse for each), including `[!…]`, `**` placement errors, `[]]` and a
 leading `./`.
 
+**Re-pinned to world `79b0445` (carriers as classes), 2026-10-19.** The
+runner's three carrier sets (`Check.Scope.SC`, `Check.Conflicts.CC`,
+`Check.Laws.LC`) and its two id derivations (`Check.Scope.derive`,
+`Check.Laws.derive`) are now `scoped instance`s, each in its own namespace.
+That keeps exactly one `World.Carriers` instance in scope wherever a model
+term is built, though `Main` imports all three modules. Types lost their
+carriers argument, and calls to `visible`, `latest`, `statusAt`,
+`admissible`, `AdmLog` and `Claim.id` lost the derivation argument. No
+meaning changed.
+- **Build:** green, 41 jobs. The link takes 19 objects: 5 from `check`, 14
+  from WorldCore, none from Mathlib (`var/check/link-classes.log`).
+- **Receipts:** `run.py` exits 0. Every candidate is byte-identical: 59/59,
+  16/16, 7/7, 16/16 under `--clash`, 26/26 for the probes, and the mutant at
+  44/59. The five laws runs keep their exits and reports. Only `exe_sha256`
+  (now `c2f1cb3bc851…`), `check_tree` and `world_rev` moved. The board is
+  re-rendered.
+
 **Twins deleted, 2026-10-19 (world `833eae5`, `WorldCore`).** The world
 lane split out `WorldCore`, a Mathlib-free library. `check/` now imports it
 and keeps no copy of any model definition. Deleted:

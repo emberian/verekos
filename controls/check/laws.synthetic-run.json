@@ -82,10 +82,10 @@
   },
   "stderr": "",
   "check_build": {
-    "exe_sha256": "30167dcb02b8708556b4c4bb1d43dda9177f5790dae306d5f0c6f6eb9b6e42ad",
-    "check_tree": "7ab2bc98262397d0bb38fcba2342ba1efdc9afcf",
+    "exe_sha256": "c2f1cb3bc85153f3c23650b9585d872301fb09df6a5e60362a4b977207bd88b4",
+    "check_tree": "59811cd671c21b0e31752dd3393dc196a13d36d9",
     "check_dirty": false,
-    "world_rev": "833eae5e9d24ad2a291172f209bd86ee1a480dfa",
+    "world_rev": "79b044570f273cdfb8cea996b93e3fc741846eed",
     "toolchain": "leanprover/lean4:v4.30.0"
   }
 }
