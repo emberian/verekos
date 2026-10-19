@@ -298,8 +298,11 @@ def report (lines : List Line) (expect : Option Json) : Json × Bool := Id.run d
       | Except.ok (Json.bool b) => b == got
       | _ => true
     | none => true
-  let ok := statusOk && expBool "adm_log" adm && expBool "pins_nonempty" unpinned.isEmpty &&
-    expBool "tx_monotone" txMono && (expect.isSome || (adm && unpinned.isEmpty && txMono))
+  -- every law must hold, whatever expect.json says; expect.json can only add
+  -- requirements (conflict statuses and timelines), never excuse a failed law
+  let lawsHold := adm && unpinned.isEmpty && txMono
+  let ok := lawsHold && statusOk && expBool "adm_log" adm &&
+    expBool "pins_nonempty" unpinned.isEmpty && expBool "tx_monotone" txMono
   let j := Json.mkObj [
     ("receipts", .num L.length),
     ("adm_log", .bool adm),
@@ -314,7 +317,9 @@ def report (lines : List Line) (expect : Option Json) : Json × Bool := Id.run d
         ("signer_kind", .str (kindText l.receipt.author.1)),
         ("payload_says", .str (l.payloadAuthor.getD ""))]).toArray),
     ("conflicts", .arr conflicts),
-    ("expectations_met", .bool ok)]
+    ("laws_hold", .bool lawsHold),
+    ("expectations_met", .bool (statusOk && expBool "adm_log" adm &&
+      expBool "pins_nonempty" unpinned.isEmpty && expBool "tx_monotone" txMono))]
   return (j, ok)
 
 def readJsonFile (p : System.FilePath) : IO Json := do

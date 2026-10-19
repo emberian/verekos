@@ -146,8 +146,53 @@ def ruleOf (j : Json) : Except Err Rule := do
       | none => .error .parse
   pure { effect, source, path, object }
 
+/-- Does any JSON object in `text` name the same key twice? serde's derived
+`Deserialize` refuses a repeated field ("duplicate field"), which
+`ReadScope::from_json` reports as `ScopeError::Parse`; Lean's `Json.parse`
+keeps the last value instead, so the runner scans the raw text first. Keys
+are compared after JSON unescaping, as serde compares them. (EKOS's other
+entry point, `ReadScope::from_value`, receives an already-parsed
+`serde_json::Value`, whose map has already kept the last value, so there a
+duplicate is not refused; the panel exercises `from_json`.) -/
+partial def hasDuplicateKey (text : String) : Bool :=
+  let cs := text.toList.toArray
+  -- stack: `some keys` for an open object, `none` for an open array
+  let rec go (i : Nat) (stack : List (Option (List String))) : Bool :=
+    if h : i < cs.size then
+      let c := cs[i]
+      if c == '"' then
+        -- find the closing quote, honouring backslash escapes
+        let rec close (j : Nat) : Nat :=
+          if h : j < cs.size then
+            if cs[j] == '\\' then close (j + 2)
+            else if cs[j] == '"' then j else close (j + 1)
+          else j
+        let e := close (i + 1)
+        let rec skipWs (k : Nat) : Nat :=
+          if h : k < cs.size then
+            if cs[k] == ' ' || cs[k] == '\n' || cs[k] == '\t' || cs[k] == '\r' then skipWs (k + 1)
+            else k
+          else k
+        let k := skipWs (e + 1)
+        let isKey := k < cs.size && cs[k]! == ':'
+        match stack, isKey with
+        | some keys :: rest, true =>
+          let raw := String.ofList (cs.extract i (e + 1)).toList
+          let key := match Json.parse raw with
+            | .ok (.str s) => s
+            | _ => raw
+          if key ∈ keys then true else go (e + 1) (some (key :: keys) :: rest)
+        | _, _ => go (e + 1) stack
+      else if c == '{' then go (i + 1) (some [] :: stack)
+      else if c == '[' then go (i + 1) (none :: stack)
+      else if c == '}' || c == ']' then go (i + 1) stack.tail
+      else go (i + 1) stack
+    else false
+  go 0 []
+
 /-- `ReadScope::from_json` up to the shape check (`ScopeError::Parse`). -/
 def parseScope (text : String) : Except Err ReadScope := do
+  if hasDuplicateKey text then .error .parse
   let j ← match Json.parse text with
     | .ok j => pure j
     | .error _ => .error .parse

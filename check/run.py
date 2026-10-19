@@ -26,6 +26,7 @@ the git tree of `check/` (and whether the working tree differs from it), the
 `world` commit `check/lakefile.toml` pins, and the Lean toolchain.
 
 Build first (`cd check && nice -n 10 lake build`); this script never builds.
+Exit codes, for this script and every `verekos-check` subcommand: check/README.md.
 
     python3 -I check/run.py [--classified controls/classified.jsonl]
 """
@@ -55,6 +56,12 @@ PANELS = [
     ("scope.decision", "scope", ["scope"], SCOPE_PANEL, SCOPE_CONTROL),
     ("conflicts.unit", "conflicts", ["conflicts"], CONFLICTS_PANEL,
      "controls/check/conflicts.unit.keys.control.jsonl"),
+]
+# Regression inputs outside the panels, with EKOS's answers from control-dump
+# committed beside them; they must score clean (notes/B-check.md F4).
+REGRESSIONS = [
+    ("scope.regression", "scope", ["scope"], "check/probes/scope.regression.jsonl",
+     "check/probes/scope.regression.control.jsonl"),
 ]
 MUTANT = ("scope.decision.mutant-deny-ignored", "scope", ["scope", "--mutant", "deny-ignored"],
           SCOPE_PANEL, SCOPE_CONTROL)
@@ -157,6 +164,9 @@ def main() -> int:
         print(f"== {name}: exit {r.returncode} (expected {want})")
         if r.returncode != want:
             worst = max(worst, 1)
+    for row in REGRESSIONS:
+        v = run_one(*row, a.classified, info)
+        worst = max(worst, v["score_exit"])
     m = run_one(*MUTANT, a.classified, info)
     if m["agree"] >= faithful["scope.decision"]["agree"]:
         print("the deny-ignored mutant does not score worse: the panel cannot see deny")
