@@ -1,0 +1,72 @@
+{
+  "root": "var/check/slice1-run-2.review-signed-by-compiler",
+  "synthetic": false,
+  "mutant": null,
+  "exit": 1,
+  "expected_exit": 1,
+  "report": {
+    "unpinned_compiled_tx": [],
+    "tx_monotone": true,
+    "receipts": 13,
+    "pins_nonempty": true,
+    "first_inadmissible_tx": null,
+    "expectations_met": false,
+    "conflicts": [
+      {
+        "timeline": [
+          [
+            7,
+            "open"
+          ]
+        ],
+        "status": "open",
+        "key": {
+          "subject": [
+            "sql-analyzer-table:customers",
+            "columns"
+          ],
+          "sources": [
+            "legacy",
+            "shop"
+          ],
+          "schema": "Conflict"
+        },
+        "header_rev": "37944105005862909048945530035745540691943051608422561648430425599407947951951",
+        "expected": "open"
+      },
+      {
+        "timeline": [
+          [
+            8,
+            "open"
+          ]
+        ],
+        "status": "open",
+        "key": {
+          "subject": [
+            "sql-analyzer-table:customers",
+            "columns.email.data_type"
+          ],
+          "sources": [
+            "legacy",
+            "shop"
+          ],
+          "schema": "Conflict"
+        },
+        "header_rev": "20420898420237021437509528238072906893825878592234993696950518316461302752360",
+        "expected": "needsReview"
+      }
+    ],
+    "compiled_puts": 13,
+    "author_mismatch": [],
+    "adm_log": true
+  },
+  "stderr": "",
+  "check_build": {
+    "exe_sha256": "fac1926915b761350e6f1f70e039a54f4faa361d6e58cba071f124ec6dc38825",
+    "check_tree": "096b3bc2dada0cf2e48f129ff8bf8ead1fa65c66",
+    "check_dirty": false,
+    "world_rev": "a8bb023fba8340b05eab8f6a32d6798233aa703c",
+    "toolchain": "leanprover/lean4:v4.30.0"
+  }
+}
