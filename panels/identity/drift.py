@@ -4,7 +4,9 @@
 The transcription in identity.unit.jsonl is a copy of Rust test bodies, and a copy
 can rot. This checker (a) collects every cited test function name from the panel's
 `source` fields, (b) locates each function in the pinned EKOS checkout — from its
-`#[test]` line to the closing brace at the same indentation — and (c) compares the
+`fn` line to the closing brace at the same indentation (the walk back to `#[test]`
+compares the attribute without its indentation, so it never fires; the recorded
+hashes start at `fn`, and panels/transcribed/drift_check.py reproduces them) — and (c) compares the
 SHA-256 of that source text against drift.json. It does not prove the transcription
 equals the test, only that the test has not changed since the transcription was made.
 
@@ -45,8 +47,8 @@ def cited_functions():
 
 
 def function_text(lines, fn):
-    """Source text of `fn` from its #[test] line to the closing brace at the same
-    indentation, or None when the function does not exist in the file."""
+    """Source text of `fn` from its `fn` line (see the module docstring) to the
+    closing brace at the same indentation, or None when it does not exist."""
     fn_line = None
     for i, line in enumerate(lines):
         if line.rstrip("\n") == f"    fn {fn}() {{":
