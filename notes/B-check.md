@@ -190,6 +190,32 @@ VerEKOS defect of the untrusted parser. A fix would need a custom JSON reader.
 All 31 glob patterns agree (62 items: visibility and parse for each), including `[!…]`, `**` placement errors, `[]]` and a
 leading `./`.
 
+**F1 closed by the world lane; runner path added, 2026-10-19.** World
+`12e5543` adds `World/Clash.lean`: `detectBy`/`detectListBy` under a per-schema
+clash table, with `detectBy_differ` proving the default is `detect`, and
+`labelClash`, EKOS's label rule (`mem_detectBy_label`). `check/` is re-pinned
+to `12e5543`. `verekos-check conflicts --clash` runs `Check.detectLBy` (a
+Mathlib-free copy) with `labelClashL "EnumMeaning"`. On this path the label
+claims are one per distinct label, with that label's source set as the key's
+sources. Every other schema keeps "values differ". `CheckProofs/DetectBy.lean`
+proves `mem_detectLBy` (`k ∈ detectLBy reg κ l ↔ k ∈ World.detectListBy reg κ l`),
+`detectLBy_toFinset` and `mem_detectLBy_label`, on the standard axioms only.
+Numbers:
+- `conflicts.unit` through `--clash`: 16/16. The candidate is byte-identical
+  to the default path's, including both `label_mismatches` items.
+- The 26 conflicts probes: 26/26 under `--clash`, against 22/26 on the
+  default path. All four label probes flip to agree: the three F1 cases
+  (overlapping words, a label shared by two sources, a shared source with
+  a second label) and the two source-less labels, which were a mapper
+  artefact of keying claims by source.
+
+Both runs are regressions in `run.py` (`controls/check/conflicts.unit.clash.verdict.json`,
+`controls/check/conflicts.probe.clash.verdict.json`; the probe control is
+`check/probes/conflicts.probe.keys.control.jsonl`, made by `control-dump conflicts`
+then `project_conflict_keys.py`). The `conflicts.unit` panel verdict still
+comes from the default path and is unchanged (16/16, same candidate sha256).
+F1's proposed `verekos_defect` classifications in follow-up 3 are void.
+
 **F4 fixed, 2026-10-19 (root's follow-up).** The parser now scans the raw
 text for a key repeated in any JSON object (compared after unescaping) and
 refuses it as `parse`, before `Json.parse` runs (`check/Check/Scope.lean`,

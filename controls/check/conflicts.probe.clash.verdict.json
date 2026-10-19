@@ -1,0 +1,27 @@
+{
+  "kernel": "conflicts",
+  "panel": "conflicts.probe",
+  "items": 26,
+  "agree": 26,
+  "mismatch": 0,
+  "missing": 0,
+  "extra": 0,
+  "classified": 0,
+  "verekos_defect": 0,
+  "unexplained": 0,
+  "panel_sha256": "d1b3cc827ff5cf967587c148c5006339a6f3037af6087dcf33ae70e06044baed",
+  "control_sha256": "89b16584c108cd2516b2adae8a9278db3afa7c66930165a46e1056c0e215bb0c",
+  "candidate_sha256": "89b16584c108cd2516b2adae8a9278db3afa7c66930165a46e1056c0e215bb0c",
+  "classified_sha256": "71c578daf600e9a321d5f0bcb9406271fc8e37c75861070bb3643c2be037c3d0",
+  "recorded": "2026-10-19T20:33:58Z",
+  "control": "check/probes/conflicts.probe.keys.control.jsonl",
+  "candidate": "controls/check/conflicts.probe.clash.candidate.jsonl",
+  "score_exit": 0,
+  "check_build": {
+    "exe_sha256": "58e1575f34cd762ed2be50c9d3d93246221c9fcfebd88c85f07eb596f825918d",
+    "check_tree": "67fcb570a60e36f94aef43dbfc2a2e9cade39c8e",
+    "check_dirty": false,
+    "world_rev": "12e5543712db1ec507a47b821d0fd4b6c7aad98a",
+    "toolchain": "leanprover/lean4:v4.30.0"
+  }
+}
