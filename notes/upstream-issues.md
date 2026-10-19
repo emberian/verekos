@@ -85,6 +85,37 @@ issue number once opened. Items from lane D2 are appended when it reports.
 
 ---
 
+---
+
+## 8. Hypothesis `ExplainedBy` edges carry no status, so dependents/impact walk them as facts
+
+**Filed** 2026-10-19 as alexeyban/EKOS#17: https://github.com/alexeyban/EKOS/issues/17
+
+**Where.** `semantic/src/business_semantics.rs:469-476` (`relate()` sets no properties), `:479-481` (the object gets `status: hypothesis`, the edge does not), `:2082` (`relate(EXPLAINED_BY, owner, id)`); `runtime/src/lib.rs:148-150` (`is_traversable` checks the edge only); `cli/src/commands/mcp.rs:1933-1961` (`tool_dependents` iterates every kind, skips only pending edges, prints `rel.properties`, never the endpoint's status). Verified by the root.
+
+## 9. `read_crate_doc_comment` sends raw doc comments to the LLM provider unredacted
+
+**Filed** 2026-10-19 as alexeyban/EKOS#18: https://github.com/alexeyban/EKOS/issues/18
+
+**Where.** `recovery/src/architecture_reasoning.rs:412-417`; zero `redact` calls in that file or `cli/src/commands/architecture.rs`; prompt path `:264-266` → `:311-316`. Verified by the root.
+
+## 10. `git blame` commit summaries are persisted to the ledger unredacted
+
+**Filed** 2026-10-19 as alexeyban/EKOS#19: https://github.com/alexeyban/EKOS/issues/19
+
+**Where.** `cli/src/commands/semantics.rs:306-328` (no `redact`, no exclusion check); `semantic/src/business_semantics.rs:2060-2066` (property) and `:2076-2080` (evidence fragment). Opt-in `[semantics]`. Verified by the root.
+
+## 11. `llm_description`'s span reader skips `is_excluded_path`
+
+**Filed** 2026-10-19 as alexeyban/EKOS#20: https://github.com/alexeyban/EKOS/issues/20
+
+**Where.** `recovery/src/llm_description.rs:272-298` (redacts, no exclusion check) vs `cli/src/commands/migrate_logic.rs:43-49` (both). Verified by the root.
+
+## Comments posted
+
+- On #14 (string-scan guards): rename vacuity, and extension tools being outside every scan. https://github.com/alexeyban/EKOS/issues/14#issuecomment-6273772548
+- On #13 (read trait): `every_store_method_has_a_decision_here` proves name presence only; `--read-scope` is accepted by three commands and `CLAUDE.md` should say so. https://github.com/alexeyban/EKOS/issues/13#issuecomment-6273773019
+
 ## Noted, not filed
 
 - `is_pending_review` (`kir/src/lib.rs:480-485`) treats a non-string `status` as "confirmed". Every current writer stores a string (checked: `governance_analyzer.rs:167` writes a `String`), so this is a typing hole, not a live defect. Worth a sentence in the doc comment or a typed accessor.

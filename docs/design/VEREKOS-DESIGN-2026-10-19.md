@@ -28,7 +28,7 @@ has 60 rows; these are the twelve that carry the product):
 | P6 | Identity: merge iff normalized names are exactly equal and neither kind is structurally keyed; a fuzzy match is an `unconfirmed` `SameAs` edge; traversal never crosses a pending edge. | `exact_name_match`, registry scan test, `is_pending_review` filters at four traversal sites | holds; `is_pending_review` reads a non-string `status` as "confirmed" (theoretical: every writer stores a string) |
 | P7 | Conflicts: both claims kept, normalized before comparison, a `Custom("ConflictingEvidence")` object with a `Disputes` edge; detection pure and order-independent; a review survives while the signature is unchanged. | `conflicts.rs` and its reversed-input test | holds; the surviving object is the **last-read** member, so which definition survives is the caller's path order (`conflicts.rs:310-323`) |
 | P8 | Read scope: deny wins; an object in two sources needs both; unattributed objects are hidden from a restricted reader; relationships need both ends; evidence only through a visible object; a per-call scope only removes. | `ScopedStore`, the leak suite, `every_store_method_has_a_decision_here` | holds; the strongest empirical check in the repo (lane A row 49) |
-| P9 | Secrets never enter: a non-disableable pattern table runs at every raw-content entry point. | two entry points call `ekos_common::redaction`; `pg-live` has its own; no scan test enforces "every future entry point calls it" | holds for the known entry points; the table is a shape table and says so |
+| P9 | Secrets never enter: a non-disableable pattern table runs at every raw-content entry point. | two entry points call `ekos_common::redaction`; `pg-live` has its own; no scan test enforces "every future entry point calls it" | **does not hold** for two later readers: crate doc comments to the LLM (D2 §2) and `git blame` summaries into the ledger (D2 §3); the table is a shape table and says so |
 | P10 | Human-only decisions are unreachable from any agent surface. | four string-containment scans of `commands/mcp.rs`; the `Class::Review` catalogue list the MCP server does not dispatch | holds against omission; a `use … as` rename evades the scans |
 | P11 | Domain time and observation time are distinct and never conflated. | `valid_from`/`valid_until` on relationships; `object_at` separate | holds; no query surface for validity windows yet |
 | P12 | Freshness: a committed (path, size, mtime) manifest says whether the ledger still matches the source; session anchors go stale when their object changes. | RFC 0171/0151 | holds, as metadata |
@@ -194,7 +194,7 @@ given.
 ## 5. What flows back
 
 Verified by the root at the cited lines on 2026-10-19 and filed the same day as
-alexeyban/EKOS#10 to #16 (`notes/upstream-issues.md` has each link):
+alexeyban/EKOS#10 to #20 (`notes/upstream-issues.md` has each link):
 
 1. Evidence ids are random, so a cache miss forks every touched object's version.
 2. `ekos_clickhouse_query` appends to the knowledge ledger.
@@ -203,6 +203,10 @@ alexeyban/EKOS#10 to #16 (`notes/upstream-issues.md` has each link):
 5. The human-only guards are string scans a rename evades.
 6. RFC 0007 no longer describes the shipped identity algorithm.
 7. `ekos_identity_review` also confirms `AuthorizedBy`; `CLAUDE.md` says `SameAs`.
+8. Hypothesis `ExplainedBy` edges carry no status and are walked as facts.
+9. Crate doc comments go to the LLM provider unredacted.
+10. `git blame` summaries are ledgered unredacted (a fourth raw-content entry point RFC 0043 never listed).
+11. One span re-reader skips the excluded-path check its sibling applies.
 
 Later: a stated model of P8 EKOS can cite; kernel binaries as drop-in checkers;
 a persisted branch conflict (P13) instead of a printed one.
@@ -211,7 +215,7 @@ a persisted branch conflict (P13) instead of a printed one.
 
 | | Deliverable | Number that proves it |
 |---|---|---|
-| M0 | this design; six memos harvested; issue drafts | done except D2 |
+| M0 | this design; seven memos harvested; eleven issues filed upstream | done |
 | M0.5 | the scoreboard: panels, control dumps, the diff classifier | EKOS's own numbers reproduced on every panel first |
 | M1 | `Ledger` + `Branch` kernels: theories, theorems, SML binary | `object_at`, `diff` and `merge_branch` identical to EKOS on the ecommerce fixture and the `merge_branch_*` cases |
 | M2 | `Scope` kernel with the BD-security instantiation | the leak-suite inputs: identical visible sets; a disabled filter is caught |
@@ -243,6 +247,7 @@ notions). That anything here is built.
 - **D1** (`notes/D1-upstream-review.md`): random evidence ids fork versions;
   `ekos_clickhouse_query` writes; evidence-less edges and rollups; the review
   tool is wider than documented.
+- **D2** (`notes/D2-upstream-review.md`): hypothesis edges without status; two unredacted LLM/ledger paths outside RFC 0043's entry-point list; a span reader without the exclusion check; the scope coverage test proves names only.
 - **E** (`notes/E-veri7vn-lessons.md`): EKOS ships no scoreboard; freeze the
   export recipe; owners end to end, not scouts; pre-register the drain.
 - **F** (`notes/F-revision-system.md`): EKOS is already a patch store; it has
