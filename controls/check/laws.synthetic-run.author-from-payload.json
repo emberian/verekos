@@ -1,0 +1,87 @@
+{
+  "root": "check/fixtures/synthetic-run",
+  "synthetic": true,
+  "mutant": "author-from-payload",
+  "exit": 1,
+  "expected_exit": 1,
+  "report": {
+    "unpinned_compiled_tx": [],
+    "tx_monotone": true,
+    "receipts": 11,
+    "pins_nonempty": true,
+    "first_inadmissible_tx": null,
+    "expectations_met": false,
+    "conflicts": [
+      {
+        "timeline": [
+          [
+            4,
+            "open"
+          ],
+          [
+            6,
+            "confirmed"
+          ],
+          [
+            8,
+            "rejected"
+          ],
+          [
+            10,
+            "needsReview"
+          ]
+        ],
+        "status": "needsReview",
+        "key": {
+          "subject": [
+            "sql-analyzer-table:customers",
+            "columns.email.data_type"
+          ],
+          "sources": [
+            "legacy",
+            "shop"
+          ],
+          "schema": "Conflict"
+        },
+        "header_rev": "hdr-email@2",
+        "expected": "needsReview"
+      },
+      {
+        "timeline": [
+          [
+            5,
+            "open"
+          ],
+          [
+            7,
+            "dismissed"
+          ]
+        ],
+        "status": "dismissed",
+        "key": {
+          "subject": [
+            "sql-analyzer-table:orders",
+            "columns.total.data_type"
+          ],
+          "sources": [
+            "shop"
+          ],
+          "schema": "Conflict"
+        },
+        "header_rev": "hdr-total@1",
+        "expected": "dismissed"
+      }
+    ],
+    "compiled_puts": 8,
+    "author_mismatch": [],
+    "adm_log": true
+  },
+  "stderr": "",
+  "check_build": {
+    "exe_sha256": "fac1926915b761350e6f1f70e039a54f4faa361d6e58cba071f124ec6dc38825",
+    "check_tree": "5a95aee29abc9a850d84a602acf399e0e6dd70e9",
+    "check_dirty": false,
+    "world_rev": "a8bb023fba8340b05eab8f6a32d6798233aa703c",
+    "toolchain": "leanprover/lean4:v4.30.0"
+  }
+}

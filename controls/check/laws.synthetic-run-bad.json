@@ -1,0 +1,29 @@
+{
+  "root": "check/fixtures/synthetic-run-bad",
+  "synthetic": true,
+  "mutant": null,
+  "exit": 1,
+  "expected_exit": 1,
+  "report": {
+    "unpinned_compiled_tx": [
+      1
+    ],
+    "tx_monotone": false,
+    "receipts": 3,
+    "pins_nonempty": false,
+    "first_inadmissible_tx": 3,
+    "expectations_met": false,
+    "conflicts": [],
+    "compiled_puts": 3,
+    "author_mismatch": [],
+    "adm_log": false
+  },
+  "stderr": "",
+  "check_build": {
+    "exe_sha256": "fac1926915b761350e6f1f70e039a54f4faa361d6e58cba071f124ec6dc38825",
+    "check_tree": "5a95aee29abc9a850d84a602acf399e0e6dd70e9",
+    "check_dirty": false,
+    "world_rev": "a8bb023fba8340b05eab8f6a32d6798233aa703c",
+    "toolchain": "leanprover/lean4:v4.30.0"
+  }
+}
