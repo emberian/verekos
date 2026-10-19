@@ -139,7 +139,7 @@ fn run_panel(
             match expected.get(&item.item) {
                 None => {
                     report.missing += 1;
-                    eprintln!("{{\"item\":{},\"no_expected\":true}}", item.item);
+                    eprintln!("{{\"item\":{:?},\"no_expected\":true}}", item.item);
                 }
                 Some(assert) => {
                     let failures = check(&control, assert);
@@ -148,7 +148,7 @@ fn run_panel(
                     } else {
                         report.mismatch += 1;
                         eprintln!(
-                            "{{\"item\":{},\"control\":{},\"assert\":{},\"failed\":{}}}",
+                            "{{\"item\":{:?},\"control\":{},\"assert\":{},\"failed\":{}}}",
                             item.item, control, assert, failures.join("; ")
                         );
                     }
