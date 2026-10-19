@@ -24,6 +24,7 @@ use std::path::{Path, PathBuf};
 
 mod conflicts_dump;
 mod scope_dump;
+mod scope_store_dump;
 
 /// One panel line: the envelope of exploration 03 §1.2 plus a `kind` that says
 /// which shape `input` has and which control line it becomes.
@@ -164,7 +165,7 @@ fn parse_args() -> Result<(String, PathBuf, Option<PathBuf>), String> {
     let args: Vec<String> = std::env::args().collect();
     if args.len() < 3 {
         return Err(format!(
-            "usage: {} <scope|conflicts> <panel.jsonl> [--expected <expected.jsonl>] | selftest",
+            "usage: {} <scope|conflicts|store> <panel.jsonl> [--expected <expected.jsonl>] | selftest",
             args.first().map(String::as_str).unwrap_or("control-dump")
         ));
     }
@@ -205,7 +206,7 @@ fn main() {
     let sub = args.next().unwrap_or_default();
     if sub == "selftest" {
         println!(
-            "{{\"kernel\":\"control-dump\",\"ekos_pin\":\"{EKOS_PIN}\",\"panels\":[\"scope.decision\",\"conflicts.unit\"],\"oracles\":0}}"
+            "{{\"kernel\":\"control-dump\",\"ekos_pin\":\"{EKOS_PIN}\",\"panels\":[\"scope.decision\",\"conflicts.unit\",\"scope.store\"],\"oracles\":0}}"
         );
         return;
     }
@@ -230,6 +231,13 @@ fn main() {
             "conflicts.unit",
             conflicts_dump::control_for,
             conflicts_dump::check_assert,
+        ),
+        "store" => run_panel(
+            &panel,
+            expected.as_deref(),
+            "scope.store",
+            scope_store_dump::control_for,
+            scope_store_dump::check_assert,
         ),
         other => {
             eprintln!("{me}: unknown subcommand {other}");

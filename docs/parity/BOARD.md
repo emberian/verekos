@@ -1,8 +1,8 @@
 # The VerEKOS parity board (M0.5)
 
-Generated 2026-10-19T19:08:04Z by `tools/scoreboard/board.py` from the committed control and classification files. Hand edits are overwritten on the next render.
+Generated 2026-10-19T19:15:32Z by `tools/scoreboard/board.py` from the committed control and classification files. Hand edits are overwritten on the next render.
 
-- EKOS pin: `8e3c178fc45741c7e2b1576e936646e0c461e75c`, control manifest `sha256:964398297900…`
+- EKOS pin: `8e3c178fc45741c7e2b1576e936646e0c461e75c` (tree `8719103d4703b3b43f8294497fa446f7320d7362`), control manifest `sha256:7f17636b0eca…`
 - Panels: 3 measured rows, 8 placeholder rows
 - Counts are agree / classified / unexplained. Agree with the control is not correctness: EKOS can be wrong (see classified ekos_defect rows). Classified differences are not hidden; they are counted.
 
@@ -10,7 +10,7 @@ Generated 2026-10-19T19:08:04Z by `tools/scoreboard/board.py` from the committed
 |---|---|---|---|---|---|---|---|---|
 | Scope | `scope.decision` | 59 | 59 | 0 / 0 / 0 | 0 (law: 0) | design target | ReadScope parsing (parse vs rule refusals), the visibility decision `Compiled::visible` on (id, origins) inputs, `is_unrestricted`, and the sources×paths `origins` crossing — the decision-test families of ekos/crates/ledger/src/scope.rs, answered by EKOS's own functions on 59 items from 17 tests. | anything inside a store (the ScopedStore wrappers: filtered reads, both-ends relationships, evidence gating, counts, diff, search, write refusal — that is the scope.store panel); MCP/CLI scope enforcement end to end (the RFC 0181 leak suite needs the fixture pipeline, no control exists yet); the scope fingerprint's equality behaviour across scope changes. |
 | Conflicts | `conflicts.unit` | 16 | 16 | 0 / 0 / 0 | 0 (law: 0) | design target | the detectors `duplicate_definitions`, `merge_losses`, `label_mismatches` and `normalize_type` (ekos/crates/semantic/src/conflicts.rs): type-alias normalization, duplicate collapse (incl. silent and per-attribute), permutation-invariance with stable conflict ids/claims/signature, exact vs fuzzy merge losses, label mismatch exclusion rules — 16 items from 8 tests. | the conflicts review workflow (`resolve`, `carry_forward`, `column_links` — reviewing, not detecting); conflict persistence (EKOS prints conflicts, it does not store them); fixture-scale conflict finding (conflicts.ledgersmb needs the LedgerSMB demo pipeline, not built). |
-| Scope | `scope.store` | — | — | — | — | design target | (when built) ScopedStore read filtering over a real ledger: objects, relationships (both ends), evidence gating, counts, diff, search, write refusal, multi-scope intersection and replacement. | the MCP/CLI surface over a compiled project (leak suite: marker words through every tool), which needs the fixture pipeline. |
+| Scope | `scope.store` | 8 | 8 | 0 / 0 / 0 | 0 (law: 0) | design target | ScopedStore — the RFC 0181 store wrapper — over a real (temp SQLite) Ledger built through ekos_ledger's public API: the eight store tests of scope.rs:1041 on as ordered step scenarios — filtered object/relationship/history/at/fact/audit reads, both-ends relationship visibility, evidence gating through visible objects, search and retrieval filtering, scoped counts and diff, write/event/vacuum refusal, multi-scope intersection and set_scopes replacement. | the MCP/CLI surface over a compiled project (the read_scope.rs leak suite: marker words through every tool shape, the result cache, --read-scope flag and process scope) — that needs the fixture pipeline (run_fixture.py), not built; the every_store_method_has_a_decision_here meta-test (source inspection, nothing to replay); scale (the world is four objects). |
 | Branch | `branch.unit` (panel exists (panels/branch/, lane W6); no control in controls/ yet — the merge_stores/merge_branch dump is not built) | 3 | — | — | — | design target | (planned) merge_stores vs the kernel on object additions, property divergence and no-ops with fixed re-keyed ids; main's version never overwritten. | removed-in-branch objects (EKOS never looks for absences); three-way merges; evidence copied into main; persisted conflicts. |
 | Identity | `identity.unit` (panel exists (panels/identity/, lane W3); no control in controls/ yet — the DefaultResolver::resolve dump is not built) | 58 | — | — | — | design target | (planned) DefaultResolver::resolve merge groups, conflict groups and pending-edge sets on named objects with assigned ids. | confidence floats beyond 1e-6 tolerance; overlay-versus-re-key choices (design §7); fixtures-scale resolve. |
 | Ledger | `ledger.ecommerce / ledger.northwind` (no panel; needs run_fixture.py (the fixture→workspace→graph pipeline) and the ledger dump) | — | — | — | — | design target | (planned) current (id, content_signature) sets, object_at cuts, diff touched ids, re-commit append-only behaviour. | events (no lister exists, §2.4); unreferenced evidence; entry rowids and written_at volatility. |
@@ -38,7 +38,7 @@ No classified differences on record.
 
 ### `scope.store`
 
-Placeholder: control pending (W9 task 4: the ScopedStore family of scope.rs:1041 on, via a second dump that builds an in-memory/temp ledger through ekos_ledger's public API).
+Self-score (the control is the candidate, §3.5-1) run at render time: 8 items, 8 agree, 0 mismatch, 0 missing, 0 extra, 0 unexplained.
 
 No classified differences on record.
 

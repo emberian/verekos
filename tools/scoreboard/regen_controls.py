@@ -49,6 +49,11 @@ REGISTRY = [
      "control": "controls/conflicts.unit.control.jsonl",
      "drift": ["python3", "-I", "panels/transcribed/drift_check.py",
                "--ekos", "{ekos}", "--record", "panels/transcribed/conflicts_drift.json"]},
+    {"sub": "store", "panel": "panels/scope/store.jsonl",
+     "expected": "controls/scope.store.expected.jsonl",
+     "control": "controls/scope.store.control.jsonl",
+     "drift": ["python3", "-I", "panels/transcribed/drift_check.py",
+               "--ekos", "{ekos}", "--record", "panels/transcribed/scope_store_drift.json"]},
 ]
 
 # Drift checkers for panels whose dumps live in other lanes' files; run for

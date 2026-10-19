@@ -1,0 +1,8 @@
+{"item":"an_unrestricted_store_returns_what_the_inner_store_returns#1","results":[false,true,["other_pages","public_orders","secret_payroll","unplaced_person"],["public_orders->other_pages","public_orders->secret_payroll"],4,9,3,true,true]}
+{"item":"objects_are_filtered_on_every_object_read#1","results":[true,["public_orders"],"public_orders",null,[],null,null,0,[],[],null,[],null,null,0,[],[],null,[],null,null,0,[],[],["public_orders"],["public_orders"],"public_orders"]}
+{"item":"a_relationship_needs_both_ends#1","results":[[],[],[],null,0,"ok",["public_orders->other_pages"],["public_orders->other_pages"]]}
+{"item":"evidence_is_readable_only_through_something_visible#1","results":[false,false,"public_orders",null,true,false]}
+{"item":"search_returns_only_visible_hits#1","results":[[],0,[],0,[],0,[],0,["public_orders"],1]}
+{"item":"counts_and_diff_cover_only_what_is_visible#1","results":[1,0,1,2,{"added":0,"touched":["public_orders"]}]}
+{"item":"a_restricted_store_refuses_writes_events_and_copies#1","results":["read_scope","read_scope","read_scope","read_scope",true]}
+{"item":"several_scopes_must_all_agree_and_can_be_replaced#1","results":[["public_orders","secret_payroll"],true,"ok",["public_orders"],true,null,false,"ok",["other_pages","public_orders","secret_payroll","unplaced_person"]]}

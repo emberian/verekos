@@ -17,6 +17,7 @@ rust-version = "1.98"
 publish = false
 
 [dependencies]
+chrono = "0.4"
 ekos-common = { path = "/Users/ember/dev/EKOS/ekos/crates/common" }
 ekos-identity = { path = "/Users/ember/dev/EKOS/ekos/crates/identity" }
 ekos-kir = { path = "/Users/ember/dev/EKOS/ekos/crates/kir" }

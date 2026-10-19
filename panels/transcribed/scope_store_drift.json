@@ -1,0 +1,54 @@
+{
+  "ekos_commit": "8e3c178fc45741c7e2b1576e936646e0c461e75c",
+  "recorded": "2026-10-19",
+  "functions": {
+    "object": {
+      "file": "ekos/crates/ledger/src/scope.rs",
+      "sha256": "4eb709aa0c5186be9ad2fac9b174d7be59d6998df87aa89c35da11e644e3b5eb"
+    },
+    "world": {
+      "file": "ekos/crates/ledger/src/scope.rs",
+      "sha256": "4808d01302960984a985785257682464462f1e2516d4f511734f956ce7d3d183"
+    },
+    "scoped": {
+      "file": "ekos/crates/ledger/src/scope.rs",
+      "sha256": "1527edf1a32811bc34f5ff8a7c729143eb206c3ebf0f84db52dc6e3578f4532f"
+    },
+    "names": {
+      "file": "ekos/crates/ledger/src/scope.rs",
+      "sha256": "e810475c7b35ee3942b2b9fa81a436ca61cfc59850e0f0c988267ed749738298"
+    },
+    "an_unrestricted_store_returns_what_the_inner_store_returns": {
+      "file": "ekos/crates/ledger/src/scope.rs",
+      "sha256": "97ad4ced7efc64f35d98409cd57f54e2729452abc30170615613a0c52738347d"
+    },
+    "objects_are_filtered_on_every_object_read": {
+      "file": "ekos/crates/ledger/src/scope.rs",
+      "sha256": "01a99ca0209341e493cd49f91d5d6712710032cf01355f0729d582819c5331c1"
+    },
+    "a_relationship_needs_both_ends": {
+      "file": "ekos/crates/ledger/src/scope.rs",
+      "sha256": "fba59c517071823dc523ea29ce52e86b3587c76e69755b936839dd587b93be2b"
+    },
+    "evidence_is_readable_only_through_something_visible": {
+      "file": "ekos/crates/ledger/src/scope.rs",
+      "sha256": "6299fc51b3d714e07ed177601e9c6f6195b4fd1b735c7a344504a9ce0d0cc435"
+    },
+    "search_returns_only_visible_hits": {
+      "file": "ekos/crates/ledger/src/scope.rs",
+      "sha256": "537847255fa707e09883f7fea62c468782670d4d0af7fc668207b1ad2779707d"
+    },
+    "counts_and_diff_cover_only_what_is_visible": {
+      "file": "ekos/crates/ledger/src/scope.rs",
+      "sha256": "b1c4027c019e1beee39e9fb31ecc743e89baad365c22c98cdba18ae2c6591ff7"
+    },
+    "a_restricted_store_refuses_writes_events_and_copies": {
+      "file": "ekos/crates/ledger/src/scope.rs",
+      "sha256": "3460c549a817378050763ad254b22d4dd726856f94e76a7ecd6bf466168af890"
+    },
+    "several_scopes_must_all_agree_and_can_be_replaced": {
+      "file": "ekos/crates/ledger/src/scope.rs",
+      "sha256": "0d0c5cb2ac012958a2e722f40a8ca8d89fa435034abacf45b0ea1c68854c5970"
+    }
+  }
+}

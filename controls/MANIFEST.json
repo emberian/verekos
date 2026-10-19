@@ -7,24 +7,28 @@
   },
   "dump_binary": {
     "path": "tools/scoreboard/control-dump/target/debug/control-dump",
-    "sha256": "1419d112436d2c8f5503715a3ba8ecca69405624cc583e1fb8cb9c90dd0211bb",
-    "source_tree_sha256": "8d0a08fb90cfd8cc4b65071a69e98f1761a24bd8f83729ee63c98dd9a4cc5b27",
+    "sha256": "f70e7c7eea1661386902cdadb33440e7f29f3eff3ede3c431ed792709d6ef459",
+    "source_tree_sha256": "cf6506ee539b60f99073f8a3465099f5b7648688097345f3f7f8b38b6bf5e32b",
     "source_files": [
       "tools/scoreboard/control-dump/src/conflicts_dump.rs",
       "tools/scoreboard/control-dump/src/main.rs",
-      "tools/scoreboard/control-dump/src/scope_dump.rs"
+      "tools/scoreboard/control-dump/src/scope_dump.rs",
+      "tools/scoreboard/control-dump/src/scope_store_dump.rs"
     ],
-    "build_log": "var/w9/build-20261019T191014Z.log"
+    "build_log": null
   },
   "panels": {
     "panels/scope/decision.jsonl": "43c3119e3f7a56a258f1bc58f871172ab6e7529b69595e7a90875fb82449d136",
-    "panels/conflicts/unit.jsonl": "b0c268c2161dbac531e38f0601058b15b2048d44ae408e8f5ceb59b15a43d321"
+    "panels/conflicts/unit.jsonl": "b0c268c2161dbac531e38f0601058b15b2048d44ae408e8f5ceb59b15a43d321",
+    "panels/scope/store.jsonl": "062ff6a5ab05b7d3186c26797d96b9979a9fb2bc39aa2fa4405687c2b22ef2c2"
   },
   "controls": {
     "controls/scope.decision.expected.jsonl": "071705f373d7391291fd67bdfe93b6f7ab6c050de941b35f213e569b3cd59020",
     "controls/scope.decision.control.jsonl": "6249610707a4ad763d39f1f93937ac52cb96fe206dd79b1f7a8a94ceccd58cf2",
     "controls/conflicts.unit.expected.jsonl": "63dc35d5b8544ac6afbb1342521bc91aeeee641fffe8125ddb85209c27221e50",
-    "controls/conflicts.unit.control.jsonl": "07533414d14b19e3a5c6e46e0042c31c9010a7af39688f69db6298b1895c4494"
+    "controls/conflicts.unit.control.jsonl": "07533414d14b19e3a5c6e46e0042c31c9010a7af39688f69db6298b1895c4494",
+    "controls/scope.store.expected.jsonl": "610dfdacb5189f1b73808e231d056b0f44221ab8805d14d88c6ca74ad4f3f11e",
+    "controls/scope.store.control.jsonl": "5b1470e31e414a2eed71a1286a159c3000f36380cc69f528a242107d40991221"
   },
   "runs": [
     {
@@ -44,6 +48,15 @@
       "reproducible": true,
       "committed_control": "identical",
       "moved_items": []
+    },
+    {
+      "control": "controls/scope.store.control.jsonl",
+      "panel": "panels/scope/store.jsonl",
+      "items": 8,
+      "agree": 8,
+      "reproducible": true,
+      "committed_control": "identical",
+      "moved_items": []
     }
   ],
   "drift_checks": [
@@ -56,6 +69,11 @@
       "cmd": "python3 -I panels/transcribed/drift_check.py --ekos /Users/ember/dev/EKOS --record panels/transcribed/conflicts_drift.json",
       "exit": 0,
       "out": "{\"record\": \"panels/transcribed/conflicts_drift.json\", \"functions\": 8, \"drifted\": 0, \"failures\": []}"
+    },
+    {
+      "cmd": "python3 -I panels/transcribed/drift_check.py --ekos /Users/ember/dev/EKOS --record panels/transcribed/scope_store_drift.json",
+      "exit": 0,
+      "out": "{\"record\": \"panels/transcribed/scope_store_drift.json\", \"functions\": 12, \"drifted\": 0, \"failures\": []}"
     },
     {
       "cmd": "python3 -I panels/branch/drift.py --ekos /Users/ember/dev/EKOS",
@@ -71,5 +89,5 @@
   "volatile_fields_stripped": [
     "created_at"
   ],
-  "recorded": "2026-10-19T19:10:15Z"
+  "recorded": "2026-10-19T19:15:24Z"
 }

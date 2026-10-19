@@ -26,12 +26,11 @@
     },
     "scope.store": {
       "kernel": "Scope",
-      "panel_file": null,
-      "control_file": null,
+      "panel_file": "panels/scope/store.jsonl",
+      "control_file": "controls/scope.store.control.jsonl",
       "assurance": "design target",
-      "status": "control pending (W9 task 4: the ScopedStore family of scope.rs:1041 on, via a second dump that builds an in-memory/temp ledger through ekos_ledger's public API)",
-      "measures": "(when built) ScopedStore read filtering over a real ledger: objects, relationships (both ends), evidence gating, counts, diff, search, write refusal, multi-scope intersection and replacement.",
-      "does_not_measure": "the MCP/CLI surface over a compiled project (leak suite: marker words through every tool), which needs the fixture pipeline."
+      "measures": "ScopedStore — the RFC 0181 store wrapper — over a real (temp SQLite) Ledger built through ekos_ledger's public API: the eight store tests of scope.rs:1041 on as ordered step scenarios — filtered object/relationship/history/at/fact/audit reads, both-ends relationship visibility, evidence gating through visible objects, search and retrieval filtering, scoped counts and diff, write/event/vacuum refusal, multi-scope intersection and set_scopes replacement.",
+      "does_not_measure": "the MCP/CLI surface over a compiled project (the read_scope.rs leak suite: marker words through every tool shape, the result cache, --read-scope flag and process scope) — that needs the fixture pipeline (run_fixture.py), not built; the every_store_method_has_a_decision_here meta-test (source inspection, nothing to replay); scale (the world is four objects)."
     }
   },
   "placeholders": [
