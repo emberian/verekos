@@ -18,7 +18,7 @@ numbers or states that it has none yet; a green theory is not a number.
 | C. AFP survey | `notes/C-afp.md`: entries that fit, a recommended session structure, RC1 compatibility notes | notes only | scout running (claude-grok, grok-4.7) |
 | D. Upstream review | `notes/D-upstream-review.md`: ranked findings where EKOS's code falls short of its stated invariants, each with a proposed upstream change | notes only | scout running (claude-grok, grok-4.7) |
 | E. veri7vn lessons | `notes/E-veri7vn-lessons.md`: the sibling pattern distilled as rules | notes only | scout running (claude-glm, glm-5.3-flash) |
-| M1. Ledger kernel | `src/isabelle/ledger/`: `Ledger.thy`, `Ledger_Export.thy`, `ROOT`; a binary reading an EKOS ledger dump | not started | after A, C |
+| M1. Ledger kernel | `src/isabelle/ledger/`: `Ledger.thy`, `Ledger_Export.thy`, `ROOT`; a binary reading an EKOS ledger dump. Control dump: `ekos graph export --format ndjson [--as-of <rfc3339>]` (`~/dev/EKOS/ekos/crates/cli/src/commands/graph.rs`), objects and relationships only; evidence records need `ekos ledger audit`/a second path. No `ekos` binary is built in `~/dev/EKOS` yet (`cargo build -p ekos --release` first) | not started | after A, C |
 | M2. Scope kernel | `src/isabelle/scope/` | not started | after A, C |
 | M5. The EKOS world | a law package and schema against minidregg's `Theory/Hyperdocument*.lean`; location decided by B | not started | after B |
 
