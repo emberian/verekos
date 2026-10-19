@@ -1,6 +1,6 @@
 # The VerEKOS parity board (M0.5)
 
-Generated 2026-10-19T20:20:09Z by `tools/scoreboard/board.py` from the committed control and classification files. Hand edits are overwritten on the next render.
+Generated 2026-10-19T20:20:57Z by `tools/scoreboard/board.py` from the committed control and classification files. Hand edits are overwritten on the next render.
 
 - EKOS pin: `8e3c178fc45741c7e2b1576e936646e0c461e75c` (tree `8719103d4703b3b43f8294497fa446f7320d7362`), control manifest `sha256:7f7384aa960c…`
 - Panels: 9 rows with an item-keyed control, 2 rows with inputs but no item-keyed control, 2 placeholder rows (no panel yet)
@@ -30,7 +30,7 @@ Generated 2026-10-19T20:20:09Z by `tools/scoreboard/board.py` from the committed
 
 Self-score (the control is the candidate, §3.5-1) run at render time: 59 items, 59 agree, 0 mismatch, 0 missing, 0 extra, 0 unexplained.
 
-Candidate (`controls/check/scope.decision.candidate.jsonl`, `sha256:6249610707a4…`) scored against `controls/scope.decision.control.jsonl` (`sha256:6249610707a4…`), panel `sha256:43c3119e3f7a…`, recorded 2026-10-19T20:17:56Z: 59 items, 59 agree, 0 mismatch, 0 missing, 0 extra, 0 classified, 0 verekos_defect, 0 unexplained. Built by `verekos-check` `sha256:fac1926915b7…` from `check/` tree `5a95aee29abc`, world `a8bb023fba83`.
+Candidate (`controls/check/scope.decision.candidate.jsonl`, `sha256:6249610707a4…`) scored against `controls/scope.decision.control.jsonl` (`sha256:6249610707a4…`), panel `sha256:43c3119e3f7a…`, recorded 2026-10-19T20:20:54Z: 59 items, 59 agree, 0 mismatch, 0 missing, 0 extra, 0 classified, 0 verekos_defect, 0 unexplained. Built by `verekos-check` `sha256:fac1926915b7…` from `check/` tree `7df7e4d7d162`, world `a8bb023fba83`.
 
 No classified differences on record.
 
@@ -38,7 +38,7 @@ No classified differences on record.
 
 Self-score (the control is the candidate, §3.5-1) run at render time: 16 items, 16 agree, 0 mismatch, 0 missing, 0 extra, 0 unexplained.
 
-Candidate (`controls/check/conflicts.unit.candidate.jsonl`, `sha256:5c879dcaec2f…`) scored against `controls/check/conflicts.unit.keys.control.jsonl` (`sha256:5c879dcaec2f…`), panel `sha256:b0c268c2161d…`, recorded 2026-10-19T20:17:56Z: 16 items, 16 agree, 0 mismatch, 0 missing, 0 extra, 0 classified, 0 verekos_defect, 0 unexplained. Built by `verekos-check` `sha256:fac1926915b7…` from `check/` tree `5a95aee29abc`, world `a8bb023fba83`.
+Candidate (`controls/check/conflicts.unit.candidate.jsonl`, `sha256:5c879dcaec2f…`) scored against `controls/check/conflicts.unit.keys.control.jsonl` (`sha256:5c879dcaec2f…`), panel `sha256:b0c268c2161d…`, recorded 2026-10-19T20:20:54Z: 16 items, 16 agree, 0 mismatch, 0 missing, 0 extra, 0 classified, 0 verekos_defect, 0 unexplained. Built by `verekos-check` `sha256:fac1926915b7…` from `check/` tree `7df7e4d7d162`, world `a8bb023fba83`.
 
 No classified differences on record.
 
