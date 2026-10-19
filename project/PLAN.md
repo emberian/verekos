@@ -124,6 +124,19 @@ ember: "we have mirrors and twins! we should never have that." The ATLAS rule ap
 | B‴ (after W23) | `check/` | lane B | import `WorldCore`, delete the copies and the equality proofs that only existed because of them |
 | root (after W24 and lane A) | `slice1/mapper.py`, `laws/*.json` as sources, `check/slice1_log.py` | — | delete the twins; the generated JSON stays only as a build artifact |
 
+## Known debt: the model is deliberately inefficient (2026-10-19 night)
+
+The Lean definitions are specifications over `List` and `Finset`: `detect` tries every ordered
+pair of claims (O(n²) times stated attributes); `status` rescans the whole log per claim;
+`visible` recomputes shared premises under the depth bound with no memoisation; `rankOf` walks
+the log; `diff` filters the whole log although `TxMonotone` makes it one contiguous segment.
+Fine at panel scale, a wall at EKOS scale (10⁵ objects), and against minidregg's own target
+("proportional to compared frontier/delta, not full history"). The fix is a refinement, not a
+twin: an indexed implementation (reviews per claim, memoised visibility in rank order,
+incremental conflicts per (subject, attribute), `diff` as a segment lookup) proved equal to the
+list specification, with the import boundary keeping only the implementation in any runner.
+**Trigger:** the first time `check/run.py` or a fixture panel takes longer than a few minutes.
+
 ## Rules
 
 - No `sorry`, `oops`, `skip_proof`, new axioms. Read theorem statements; a
