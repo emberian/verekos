@@ -62,6 +62,13 @@ PANELS = [
 REGRESSIONS = [
     ("scope.regression", "scope", ["scope"], "check/probes/scope.regression.jsonl",
      "check/probes/scope.regression.control.jsonl"),
+    # World.detectListBy with World.labelClash (world 12e5543): the panel, and
+    # (probe control: control-dump conflicts, then project_conflict_keys.py)
+    # the conflicts probes whose label items World.detectList could not state
+    ("conflicts.unit.clash", "conflicts", ["conflicts", "--clash"], CONFLICTS_PANEL,
+     "controls/check/conflicts.unit.keys.control.jsonl"),
+    ("conflicts.probe.clash", "conflicts", ["conflicts", "--clash"],
+     "check/probes/conflicts.probe.jsonl", "check/probes/conflicts.probe.keys.control.jsonl"),
 ]
 MUTANT = ("scope.decision.mutant-deny-ignored", "scope", ["scope", "--mutant", "deny-ignored"],
           SCOPE_PANEL, SCOPE_CONTROL)

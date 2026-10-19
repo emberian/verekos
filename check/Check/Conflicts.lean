@@ -41,6 +41,7 @@ How each item kind becomes claims:
 -/
 import Lean.Data.Json
 import Check.Detect
+import Check.DetectBy
 
 namespace Check.Conflicts
 
@@ -268,6 +269,42 @@ def labelClaims (enums : List Json) : List (World.Claim CC CP) :=
       claim "EnumMeaning" [key, toString i] s
         (.labels ((pairs.filter (·.1 == s)).map (·.2)))
 
+/-- For the clash path (`--clash`): one claim per distinct label of each
+`EnumMeaning` object, whose key's sources are the set of sources that gave
+that label (EKOS's `labels` map, conflicts.rs:390-405; a meaning without a
+`source` adds none). The schema's clash is `World.labelClash`. -/
+def labelClaimsByLabel (enums : List Json) : List (World.Claim CC CP) :=
+  (enums.zipIdx).flatMap fun (e, i) =>
+    if kindOf e != "EnumMeaning" then [] else
+    let key := (str? e "key").getD ""
+    let meanings := match e.getObjVal? "properties" with
+      | .ok props => arr props "meanings"
+      | .error _ => []
+    let pairs := meanings.filterMap fun m =>
+      match str? m "label" with
+      | some l =>
+        let l := l.trimAscii.toString
+        if l.isEmpty then none else some (l, str? m "source")
+      | none => none
+    let labels := (pairs.map (·.1)).eraseDups
+    labels.map fun l =>
+      let srcs := ((pairs.filter (·.1 == l)).filterMap (·.2)).eraseDups
+      let srcs : List String := (srcs.toArray.qsort (fun a b : String => a < b)).toList
+      { key := ⟨"EnumMeaning", [key, toString i], srcs⟩
+        payload := .labels [l]
+        pins := srcs.map fun s => ⟨.source s none, .atoms [], 1000⟩
+        valid := ⟨none, none⟩ }
+
+/-- The words a `label` value states: `stated` writes the word set as a JSON
+array of strings. -/
+def wordsOfValue (v : String) : List String :=
+  match Json.parse v with
+  | .ok (.arr a) => a.toList.filterMap fun | .str s => some s | _ => none
+  | _ => []
+
+/-- EKOS's label rule for `EnumMeaning`, values differ elsewhere. -/
+def κ : ClashL CC := labelClashL "EnumMeaning" wordsOfValue
+
 /-! ## One item → one candidate line -/
 
 /-- The join view of a key list: sorted, duplicate-free [subject key,
@@ -280,8 +317,13 @@ def keysJson (ks : List (String × List String × String)) : Json :=
 def sameSet (a b : List (String × List String × String)) : Bool :=
   a.all (· ∈ b) && b.all (· ∈ a)
 
-def answer (kind : String) (input : Json) : List (String × Json) :=
-  let detect := detectL reg
+/-- `clash = false`: the original path, `World.detectList` (values differ),
+one label claim per source. `clash = true`: `World.detectListBy` with the
+label table `κ`, one claim per distinct label; for every schema other than
+`EnumMeaning` the table is "values differ", which `World.detectBy_differ`
+proves is `detect`. -/
+def answerWith (clash : Bool) (kind : String) (input : Json) : List (String × Json) :=
+  let detect := if clash then detectLBy reg κ else detectL reg
   match kind with
   | "normalize_type_pair" =>
     let col (t : String) : Payload :=
@@ -301,7 +343,10 @@ def answer (kind : String) (input : Json) : List (String × Json) :=
     [("keys", keysJson (detect (mergeClaims ((arr input "objects").map objOf)
       (arr input "proposals"))))]
   | "label_mismatches" =>
-    [("keys", keysJson (detect (labelClaims (arr input "enums"))))]
+    let cs := if clash then labelClaimsByLabel (arr input "enums") else labelClaims (arr input "enums")
+    [("keys", keysJson (detect cs))]
   | other => [("error", .str s!"unknown kind {other}")]
+
+def answer : String → Json → List (String × Json) := answerWith false
 
 end Check.Conflicts

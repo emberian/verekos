@@ -13,7 +13,7 @@ docstring and in `notes/B-check.md`.
 | Command | 0 | 1 | 2 |
 |---|---|---|---|
 | `verekos-check scope [--mutant deny-ignored] < panel.jsonl` | every line was read and answered (a refused scope is an answer: `{"error":"parse"}` or `{"error":"rule"}`) | — | a panel line is not JSON, or bad arguments |
-| `verekos-check conflicts < panel.jsonl` | same as `scope` | — | same as `scope` |
+| `verekos-check conflicts [--clash] < panel.jsonl` | same as `scope` (`--clash`: `World.detectListBy` with `World.labelClash`) | — | same as `scope` |
 | `verekos-check laws [--mutant author-from-payload] <run-root>` | every law holds (pin law `AdmLog`, compiled pins nonempty, tx increasing) **and** every expectation in `expect.json` is met | a law fails, or an expectation is not met; `expect.json` can add requirements but never excuse a failed law | the run root cannot be read: a file is missing or not JSON, a log line is malformed, or a signer is not in `principals.json` or has a role that may not write |
 | `python3 -I check/run.py` | every run below exited as expected, every panel and regression scored 0 unexplained and 0 verekos_defect, and the deny-ignored mutant scored worse than the faithful mapping | any of those failed | — |
 
