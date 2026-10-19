@@ -15,28 +15,28 @@ namespace World
 
 set_option autoImplicit false
 
-variable {C : Carriers} {P : C.SchemaId → Type} [∀ s, DecidableEq (P s)]
-variable (reg : Registry C P)
+variable [C : Carriers] {P : C.SchemaId → Type} [∀ s, DecidableEq (P s)]
+variable (reg : Registry P)
 
 /-- A clash table: for each schema, when two (sources, value) pairs clash. -/
-abbrev Clash (C : Carriers) :=
+abbrev Clash [C : Carriers] :=
   C.SchemaId → (List C.SourceId × C.Digest) → (List C.SourceId × C.Digest) → Bool
 
 /-- The default: values differ. -/
-def Clash.differ : Clash C := fun _ x y => decide (x.2 ≠ y.2)
+def Clash.differ : Clash := fun _ x y => decide (x.2 ≠ y.2)
 
-variable (κ : Clash C)
+variable (κ : Clash)
 
 /-- The attributes on which `c₁` states a value that clashes with one `c₂`
 states. -/
-def disagreeOnBy (c₁ c₂ : Claim C P) : List C.Digest :=
+def disagreeOnBy (c₁ c₂ : Claim P) : List C.Digest :=
   (c₁.stated reg).filterMap fun av =>
     if (c₂.stated reg).any (fun bw => decide (bw.1 = av.1) &&
         κ c₁.key.schema (c₁.key.sources, av.2) (c₂.key.sources, bw.2))
     then some av.1 else none
 
 omit [∀ s, DecidableEq (P s)] in
-theorem mem_disagreeOnBy (c₁ c₂ : Claim C P) (a : C.Digest) :
+theorem mem_disagreeOnBy (c₁ c₂ : Claim P) (a : C.Digest) :
     a ∈ disagreeOnBy reg κ c₁ c₂ ↔
       ∃ v₁ v₂, (a, v₁) ∈ c₁.stated reg ∧ (a, v₂) ∈ c₂.stated reg ∧
         κ c₁.key.schema (c₁.key.sources, v₁) (c₂.key.sources, v₂) = true := by
@@ -65,7 +65,7 @@ theorem mem_disagreeOnBy (c₁ c₂ : Claim C P) (a : C.Digest) :
 
 omit [∀ s, DecidableEq (P s)] in
 /-- The default table gives the old `disagreeOn`. -/
-theorem disagreeOnBy_differ (c₁ c₂ : Claim C P) :
+theorem disagreeOnBy_differ (c₁ c₂ : Claim P) :
     disagreeOnBy reg Clash.differ c₁ c₂ = disagreeOn reg c₁ c₂ := by
   unfold disagreeOnBy disagreeOn Clash.differ
   have key : ∀ av bw : C.Digest × C.Digest,
@@ -95,20 +95,20 @@ theorem disjointB_iff {α : Type} [DecidableEq α] (l₁ l₂ : List α) :
 `wordsOf`, standing in for `label_words`): clash iff the source sets are
 disjoint and the word sets are disjoint. Every other schema keeps the
 default. -/
-def labelClash (label : C.SchemaId) (wordsOf : C.Digest → List C.KeyPart) : Clash C :=
+def labelClash (label : C.SchemaId) (wordsOf : C.Digest → List C.KeyPart) : Clash :=
   fun s x y =>
     if s = label then disjointB x.1 y.1 && disjointB (wordsOf x.2) (wordsOf y.2)
     else decide (x.2 ≠ y.2)
 
 /-- Detection under a clash table, over a list. -/
-def detectLBy (l : List (Claim C P)) : List (ConflictKey C) :=
+def detectLBy (l : List (Claim P)) : List (ConflictKey) :=
   l.flatMap fun c₁ => l.flatMap fun c₂ =>
     if c₁ ≠ c₂ ∧ sameSubject c₁ c₂ then
       (disagreeOnBy reg κ c₁ c₂).map fun a => (c₁.key.schema, c₁.key.subject, a)
     else []
 
 /-- **Exact characterization of `detectLBy`**, the same as `mem_detectBy`'s. -/
-theorem mem_detectLBy (l : List (Claim C P)) (k : ConflictKey C) :
+theorem mem_detectLBy (l : List (Claim P)) (k : ConflictKey) :
     k ∈ detectLBy reg κ l ↔
       ∃ c₁ ∈ l, ∃ c₂ ∈ l, c₁ ≠ c₂ ∧ sameSubject c₁ c₂ ∧
         ∃ a v₁ v₂, (a, v₁) ∈ c₁.stated reg ∧ (a, v₂) ∈ c₂.stated reg ∧

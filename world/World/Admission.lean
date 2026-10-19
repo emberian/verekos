@@ -41,68 +41,68 @@ namespace World
 
 set_option autoImplicit false
 
-variable {C : Carriers} {P : C.SchemaId → Type} (d : ClaimIdDerivation C)
+variable [C : Carriers] {P : C.SchemaId → Type} [d : ClaimIdDerivation]
 
 /-- Recorded ranks: the rank last recorded under each id, if any. -/
-abbrev RankMap (C : Carriers) := C.ClaimId → Option Nat
+abbrev RankMap [C : Carriers] := C.ClaimId → Option Nat
 
 /-- The rank one pin contributes: `1 +` the recorded rank of the id it pins
 (`0` for an unrecorded id), or `0` for a source pin. -/
-def pinRank (m : RankMap C) (p : Pin C) : Nat :=
+def pinRank (m : RankMap) (p : Pin) : Nat :=
   match p.target with
   | .claim j => (m j).getD 0 + 1
   | .source _ _ => 0
 
 /-- The largest pin rank in a list. -/
-def maxPinRank (m : RankMap C) : List (Pin C) → Nat
+def maxPinRank (m : RankMap) : List (Pin) → Nat
   | [] => 0
   | p :: ps => max (pinRank m p) (maxPinRank m ps)
 
 /-- The computed rank of a claim against recorded ranks. -/
-def newRank (m : RankMap C) (c : Claim C P) : Nat := maxPinRank m c.pins
+def newRank (m : RankMap) (c : Claim P) : Nat := maxPinRank m c.pins
 
 /-- One receipt's effect on the recorded ranks. -/
-def rstep (m : RankMap C) (r : Receipt C P) : RankMap C :=
+def rstep (m : RankMap) (r : Receipt P) : RankMap :=
   match r.op with
-  | .put c => fun i => if i = c.id d then some (newRank m c) else m i
+  | .put c => fun i => if i = c.id then some (newRank m c) else m i
   | .retract _ => m
 
 /-- The recorded ranks after a log. -/
-def rankMap (L : List (Receipt C P)) : RankMap C := L.foldl (rstep d) (fun _ => none)
+def rankMap (L : List (Receipt P)) : RankMap := L.foldl (rstep) (fun _ => none)
 
 /-- The computed rank of any claim against a log (total). -/
-def rankN (L : List (Receipt C P)) (c : Claim C P) : Nat := newRank (rankMap d L) c
+def rankN (L : List (Receipt P)) (c : Claim P) : Nat := newRank (rankMap L) c
 
 /-- The computed rank, refusing (`none`) a claim that pins an id the log never
 put. -/
-def rankOf (L : List (Receipt C P)) (c : Claim C P) : Option Nat :=
+def rankOf (L : List (Receipt P)) (c : Claim P) : Option Nat :=
   if c.pins.all (fun p => match p.target with
-      | .claim j => (rankMap d L j).isSome
+      | .claim j => (rankMap L j).isSome
       | .source _ _ => true)
-  then some (rankN d L c) else none
+  then some (rankN L c) else none
 
 /-- Is this receipt admissible after log `L`? -/
-def admissible (L : List (Receipt C P)) (r : Receipt C P) : Bool :=
+def admissible (L : List (Receipt P)) (r : Receipt P) : Bool :=
   match r.op with
   | .put c =>
     c.pins.all (fun p => match p.target with
-        | .claim j => decide (j ≠ c.id d) && (latest d L j).isSome
+        | .claim j => decide (j ≠ c.id) && (latest L j).isSome
         | .source _ _ => true) &&
-    (match rankMap d L (c.id d) with
-     | some k => decide (newRank (rankMap d L) c ≤ k)
+    (match rankMap L (c.id) with
+     | some k => decide (newRank (rankMap L) c ≤ k)
      | none => true)
   | .retract _ => true
 
 /-- Every receipt is admissible against the log before it. -/
-def AdmLog (L : List (Receipt C P)) : Prop :=
-  ∀ k (h : k < L.length), admissible d (L.take k) L[k] = true
+def AdmLog (L : List (Receipt P)) : Prop :=
+  ∀ k (h : k < L.length), admissible (L.take k) L[k] = true
 
-instance (L : List (Receipt C P)) : Decidable (AdmLog d L) := by
+instance (L : List (Receipt P)) : Decidable (AdmLog L) := by
   unfold AdmLog; infer_instance
 
 /-! ## Facts about ranks -/
 
-theorem lt_maxPinRank (m : RankMap C) (ps : List (Pin C)) (p : Pin C) (hp : p ∈ ps)
+theorem lt_maxPinRank (m : RankMap) (ps : List (Pin)) (p : Pin) (hp : p ∈ ps)
     (j : C.ClaimId) (ht : p.target = .claim j) : (m j).getD 0 < maxPinRank m ps := by
   induction ps with
   | nil => cases hp
@@ -113,7 +113,7 @@ theorem lt_maxPinRank (m : RankMap C) (ps : List (Pin C)) (p : Pin C) (hp : p �
       omega
     · have := ih hq; omega
 
-theorem maxPinRank_mono (m m' : RankMap C) (ps : List (Pin C))
+theorem maxPinRank_mono (m m' : RankMap) (ps : List (Pin))
     (h : ∀ p ∈ ps, ∀ j, p.target = .claim j → (m' j).getD 0 ≤ (m j).getD 0) :
     maxPinRank m' ps ≤ maxPinRank m ps := by
   induction ps with
@@ -128,7 +128,7 @@ theorem maxPinRank_mono (m m' : RankMap C) (ps : List (Pin C))
     have := ih (fun p hp => h p (List.mem_cons_of_mem _ hp))
     omega
 
-theorem maxPinRank_congr (m m' : RankMap C) (ps : List (Pin C))
+theorem maxPinRank_congr (m m' : RankMap) (ps : List (Pin))
     (h : ∀ p ∈ ps, ∀ j, p.target = .claim j → m' j = m j) :
     maxPinRank m' ps = maxPinRank m ps :=
   Nat.le_antisymm (maxPinRank_mono m m' ps fun p hp j ht => by simp [h p hp j ht])
@@ -136,8 +136,8 @@ theorem maxPinRank_congr (m m' : RankMap C) (ps : List (Pin C))
 
 /-! ## Admissible logs -/
 
-theorem admLog_snoc (L : List (Receipt C P)) (r : Receipt C P) :
-    AdmLog d (L ++ [r]) ↔ AdmLog d L ∧ admissible d L r = true := by
+theorem admLog_snoc (L : List (Receipt P)) (r : Receipt P) :
+    AdmLog (L ++ [r]) ↔ AdmLog L ∧ admissible L r = true := by
   constructor
   · intro h
     refine ⟨fun k hk => ?_, ?_⟩
@@ -157,21 +157,21 @@ theorem admLog_snoc (L : List (Receipt C P)) (r : Receipt C P) :
 /-- The invariant an admissible log keeps. (A) every claim in the state has a
 recorded rank at least its computed rank; (B) every claim pin of a claim in
 the state names an id with a recorded rank. -/
-def RankInv (L : List (Receipt C P)) : Prop :=
-  (∀ j c, latest d L j = some c → ∃ k, rankMap d L j = some k ∧ newRank (rankMap d L) c ≤ k) ∧
-  (∀ j c, latest d L j = some c → ∀ p ∈ c.pins, ∀ i, p.target = .claim i →
-    (rankMap d L i).isSome = true)
+def RankInv (L : List (Receipt P)) : Prop :=
+  (∀ j c, latest L j = some c → ∃ k, rankMap L j = some k ∧ newRank (rankMap L) c ≤ k) ∧
+  (∀ j c, latest L j = some c → ∀ p ∈ c.pins, ∀ i, p.target = .claim i →
+    (rankMap L i).isSome = true)
 
-theorem rankMap_snoc (L : List (Receipt C P)) (r : Receipt C P) :
-    rankMap d (L ++ [r]) = rstep d (rankMap d L) r := by
+theorem rankMap_snoc (L : List (Receipt P)) (r : Receipt P) :
+    rankMap (L ++ [r]) = rstep (rankMap L) r := by
   simp [rankMap, List.foldl_append]
 
-theorem latest_snoc' (L : List (Receipt C P)) (r : Receipt C P) :
-    latest d (L ++ [r]) = apply d (latest d L) r := by
+theorem latest_snoc' (L : List (Receipt P)) (r : Receipt P) :
+    latest (L ++ [r]) = apply (latest L) r := by
   simp [latest, replay, List.foldl_append]
 
-theorem rankInv_snoc (L : List (Receipt C P)) (r : Receipt C P) (hinv : RankInv d L)
-    (hadm : admissible d L r = true) : RankInv d (L ++ [r]) := by
+theorem rankInv_snoc (L : List (Receipt P)) (r : Receipt P) (hinv : RankInv L)
+    (hadm : admissible L r = true) : RankInv (L ++ [r]) := by
   obtain ⟨hA, hB⟩ := hinv
   rw [RankInv, rankMap_snoc, latest_snoc']
   unfold admissible at hadm
@@ -189,24 +189,24 @@ theorem rankInv_snoc (L : List (Receipt C P)) (r : Receipt C P) (hinv : RankInv 
   | put c₀ =>
     simp only [hop, Bool.and_eq_true, List.all_eq_true] at hadm ⊢
     obtain ⟨hpins, hcap⟩ := hadm
-    -- c₀'s pins avoid (c₀.id d) and name present ids.
-    have hpin : ∀ p ∈ c₀.pins, ∀ i, p.target = .claim i → i ≠ (c₀.id d) ∧ (latest d L i).isSome := by
+    -- c₀'s pins avoid (c₀.id) and name present ids.
+    have hpin : ∀ p ∈ c₀.pins, ∀ i, p.target = .claim i → i ≠ (c₀.id) ∧ (latest L i).isSome := by
       intro p hp i ht
       have := hpins p hp
       simp only [ht, Bool.and_eq_true, decide_eq_true_eq] at this
       exact this
-    -- The new map agrees with the old one except at (c₀.id d).
-    have hm'ne : ∀ i, i ≠ (c₀.id d) → (if i = (c₀.id d) then some (newRank (rankMap d L) c₀) else (rankMap d L) i) = (rankMap d L) i := by
+    -- The new map agrees with the old one except at (c₀.id).
+    have hm'ne : ∀ i, i ≠ (c₀.id) → (if i = (c₀.id) then some (newRank (rankMap L) c₀) else (rankMap L) i) = (rankMap L) i := by
       intro i hi; simp [hi]
     -- c₀'s computed rank is the same against the new map.
-    have hsame : newRank (fun i => if i = (c₀.id d) then some (newRank (rankMap d L) c₀) else (rankMap d L) i) c₀ = (newRank (rankMap d L) c₀) := by
+    have hsame : newRank (fun i => if i = (c₀.id) then some (newRank (rankMap L) c₀) else (rankMap L) i) c₀ = (newRank (rankMap L) c₀) := by
       unfold newRank
       exact maxPinRank_congr _ _ _ fun p hp i ht => hm'ne i (hpin p hp i ht).1
     -- The new map is no higher than the old one at every recorded id.
-    have hle : ∀ i, ((rankMap d L) i).isSome = true →
-        ((if i = (c₀.id d) then some (newRank (rankMap d L) c₀) else (rankMap d L) i).getD 0) ≤ ((rankMap d L) i).getD 0 := by
+    have hle : ∀ i, ((rankMap L) i).isSome = true →
+        ((if i = (c₀.id) then some (newRank (rankMap L) c₀) else (rankMap L) i).getD 0) ≤ ((rankMap L) i).getD 0 := by
       intro i hi
-      by_cases hix : i = (c₀.id d)
+      by_cases hix : i = (c₀.id)
       · subst hix
         obtain ⟨k, hk⟩ := Option.isSome_iff_exists.mp hi
         simp only [if_true, Option.getD_some, hk]
@@ -214,20 +214,20 @@ theorem rankInv_snoc (L : List (Receipt C P)) (r : Receipt C P) (hinv : RankInv 
         simpa using hcap
       · simp [hix]
     refine ⟨fun j c hj => ?_, fun j c hj => ?_⟩
-    · by_cases hjx : j = (c₀.id d)
+    · by_cases hjx : j = (c₀.id)
       · simp only [hjx, if_true, Option.some.injEq] at hj ⊢
         subst hj
-        exact ⟨(newRank (rankMap d L) c₀), rfl, Nat.le_of_eq hsame⟩
+        exact ⟨(newRank (rankMap L) c₀), rfl, Nat.le_of_eq hsame⟩
       · simp only [hjx, if_false] at hj ⊢
         obtain ⟨k, hk, hck⟩ := hA j c hj
         refine ⟨k, hk, Nat.le_trans ?_ hck⟩
         unfold newRank
         exact maxPinRank_mono _ _ _ fun p hp i ht => hle i (hB j c hj p hp i ht)
     · intro p hp i ht
-      by_cases hix : i = (c₀.id d)
+      by_cases hix : i = (c₀.id)
       · simp [hix]
       · simp only [hix, if_false]
-        by_cases hjx : j = (c₀.id d)
+        by_cases hjx : j = (c₀.id)
         · simp only [hjx, if_true, Option.some.injEq] at hj
           subst hj
           obtain ⟨-, hpres⟩ := hpin p hp i ht
@@ -237,27 +237,27 @@ theorem rankInv_snoc (L : List (Receipt C P)) (r : Receipt C P) (hinv : RankInv 
         · simp only [hjx, if_false] at hj
           exact hB j c hj p hp i ht
 
-theorem rankInv_of_admLog_rev : ∀ (R : List (Receipt C P)), AdmLog d R.reverse → RankInv d R.reverse
+theorem rankInv_of_admLog_rev : ∀ (R : List (Receipt P)), AdmLog R.reverse → RankInv R.reverse
   | [], _ => by
     refine ⟨fun j c h => ?_, fun j c h => ?_⟩ <;> cases h
   | r :: R, h => by
     rw [List.reverse_cons] at h ⊢
-    obtain ⟨hL, hr⟩ := (admLog_snoc d R.reverse r).mp h
-    exact rankInv_snoc d R.reverse r (rankInv_of_admLog_rev R hL) hr
+    obtain ⟨hL, hr⟩ := (admLog_snoc R.reverse r).mp h
+    exact rankInv_snoc R.reverse r (rankInv_of_admLog_rev R hL) hr
 
-theorem rankInv_of_admLog (L : List (Receipt C P)) (h : AdmLog d L) : RankInv d L := by
-  have := rankInv_of_admLog_rev d L.reverse (by rw [List.reverse_reverse]; exact h)
+theorem rankInv_of_admLog (L : List (Receipt P)) (h : AdmLog L) : RankInv L := by
+  have := rankInv_of_admLog_rev L.reverse (by rw [List.reverse_reverse]; exact h)
   rwa [List.reverse_reverse] at this
 
 /-- **An admissible log yields a ranked state**, ranked by the computed rank.
-So `visibleR` with `rankN d L` is defined on every admissible log, and by
+So `visibleR` with `rankN L` is defined on every admissible log, and by
 `visibleR_rank_irrelevant` it agrees with any other rank. -/
-theorem ranked_of_admLog (L : List (Receipt C P)) (h : AdmLog d L) :
-    Ranked (latest d L) (rankN d L) := by
-  obtain ⟨hA, -⟩ := rankInv_of_admLog d L h
+theorem ranked_of_admLog (L : List (Receipt P)) (h : AdmLog L) :
+    Ranked (latest L) (rankN L) := by
+  obtain ⟨hA, -⟩ := rankInv_of_admLog L h
   refine ⟨fun c' c ⟨p, hp, i, ht, hσ⟩ => ?_⟩
   obtain ⟨k, hk, hc'⟩ := hA i c' hσ
-  have := lt_maxPinRank (rankMap d L) c.pins p hp i ht
+  have := lt_maxPinRank (rankMap L) c.pins p hp i ht
   rw [hk] at this
   unfold rankN newRank
   simp only [Option.getD_some] at this
@@ -265,10 +265,10 @@ theorem ranked_of_admLog (L : List (Receipt C P)) (h : AdmLog d L) :
 
 /-- **On an admissible log, `rankOf` returns a rank for every claim in the
 state**, and it is the rank that `ranked_of_admLog` uses. -/
-theorem rankOf_some_of_admLog (L : List (Receipt C P)) (h : AdmLog d L)
-    (i : C.ClaimId) (c : Claim C P) (hc : latest d L i = some c) :
-    rankOf d L c = some (rankN d L c) := by
-  obtain ⟨-, hB⟩ := rankInv_of_admLog d L h
+theorem rankOf_some_of_admLog (L : List (Receipt P)) (h : AdmLog L)
+    (i : C.ClaimId) (c : Claim P) (hc : latest L i = some c) :
+    rankOf L c = some (rankN L c) := by
+  obtain ⟨-, hB⟩ := rankInv_of_admLog L h
   unfold rankOf
   rw [if_pos]
   rw [List.all_eq_true]
@@ -278,9 +278,9 @@ theorem rankOf_some_of_admLog (L : List (Receipt C P)) (h : AdmLog d L)
   | claim j => exact hB i c hc p hp j ht
 
 /-- A put that pins its own id is never admissible. -/
-theorem not_admissible_self_pin (L : List (Receipt C P)) (r : Receipt C P) (c : Claim C P)
-    (hop : r.op = .put c) (p : Pin C) (hp : p ∈ c.pins) (ht : p.target = .claim (c.id d)) :
-    admissible d L r = false := by
+theorem not_admissible_self_pin (L : List (Receipt P)) (r : Receipt P) (c : Claim P)
+    (hop : r.op = .put c) (p : Pin) (hp : p ∈ c.pins) (ht : p.target = .claim (c.id)) :
+    admissible L r = false := by
   unfold admissible
   simp only [hop, Bool.and_eq_false_iff]
   left
@@ -288,10 +288,10 @@ theorem not_admissible_self_pin (L : List (Receipt C P)) (r : Receipt C P) (c : 
   exact ⟨p, hp, by simp [ht]⟩
 
 /-- A put that pins an absent id is never admissible. -/
-theorem not_admissible_absent_pin (L : List (Receipt C P)) (r : Receipt C P) (c : Claim C P)
-    (hop : r.op = .put c) (p : Pin C) (hp : p ∈ c.pins) (j : C.ClaimId)
-    (ht : p.target = .claim j) (habs : latest d L j = none) :
-    admissible d L r = false := by
+theorem not_admissible_absent_pin (L : List (Receipt P)) (r : Receipt P) (c : Claim P)
+    (hop : r.op = .put c) (p : Pin) (hp : p ∈ c.pins) (j : C.ClaimId)
+    (ht : p.target = .claim j) (habs : latest L j = none) :
+    admissible L r = false := by
   unfold admissible
   simp only [hop, Bool.and_eq_false_iff]
   left

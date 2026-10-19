@@ -59,34 +59,34 @@ namespace World
 
 set_option autoImplicit false
 
-variable {C : Carriers}
+variable [C : Carriers]
 
 /-! ## The header atom and the review's pin -/
 
 /-- The conflict header atom: its revision and the signature it holds. -/
-structure HeaderAtom (C : Carriers) where
+structure HeaderAtom [C : Carriers] where
   rev : Nat
   sig : C.Digest
   deriving DecidableEq
 
 /-- One compile with signature `s`: rewrite the header only if `s` changed,
 at a revision newer than any before. -/
-def compileHeader (h : HeaderAtom C) (s : C.Digest) : HeaderAtom C :=
+def compileHeader (h : HeaderAtom) (s : C.Digest) : HeaderAtom :=
   if s = h.sig then h else ⟨h.rev + 1, s⟩
 
 /-- A sequence of compiles. -/
-def compileAll (h : HeaderAtom C) (hist : List C.Digest) : HeaderAtom C :=
+def compileAll (h : HeaderAtom) (hist : List C.Digest) : HeaderAtom :=
   hist.foldl compileHeader h
 
 /-- **The revision moves exactly when the signature changes.** -/
-theorem compileHeader_rev_eq_iff (h : HeaderAtom C) (s : C.Digest) :
+theorem compileHeader_rev_eq_iff (h : HeaderAtom) (s : C.Digest) :
     (compileHeader h s).rev = h.rev ↔ s = h.sig := by
   unfold compileHeader
   split
   · simp_all
   · rename_i hs; simp [hs]
 
-theorem rev_le_compileAll (h : HeaderAtom C) (hist : List C.Digest) :
+theorem rev_le_compileAll (h : HeaderAtom) (hist : List C.Digest) :
     h.rev ≤ (compileAll h hist).rev := by
   induction hist generalizing h with
   | nil => exact Nat.le_refl _
@@ -98,7 +98,7 @@ theorem rev_le_compileAll (h : HeaderAtom C) (hist : List C.Digest) :
 
 /-- The revision after a run of compiles is the one read iff every compile
 had the signature read. -/
-theorem compileAll_rev_eq_iff (h : HeaderAtom C) (hist : List C.Digest) :
+theorem compileAll_rev_eq_iff (h : HeaderAtom) (hist : List C.Digest) :
     (compileAll h hist).rev = h.rev ↔ ∀ s ∈ hist, s = h.sig := by
   induction hist generalizing h with
   | nil => simp [compileAll]
@@ -110,7 +110,7 @@ theorem compileAll_rev_eq_iff (h : HeaderAtom C) (hist : List C.Digest) :
       exact ⟨fun h' => ⟨hs, (ih h).mp h'⟩, fun ⟨_, h'⟩ => (ih h).mpr h'⟩
     · have hc : compileHeader h s = ⟨h.rev + 1, s⟩ := by simp [compileHeader, hs]
       rw [hc]
-      have := rev_le_compileAll (⟨h.rev + 1, s⟩ : HeaderAtom C) t
+      have := rev_le_compileAll (⟨h.rev + 1, s⟩ : HeaderAtom) t
       unfold compileAll at this
       simp only at this
       constructor
@@ -118,7 +118,7 @@ theorem compileAll_rev_eq_iff (h : HeaderAtom C) (hist : List C.Digest) :
       · rintro ⟨h', -⟩; exact absurd h' hs
 
 /-- The signature the header holds is the last one compiled. -/
-theorem compileAll_sig (h : HeaderAtom C) (hist : List C.Digest) :
+theorem compileAll_sig (h : HeaderAtom) (hist : List C.Digest) :
     (compileAll h hist).sig = hist.getLastD h.sig := by
   induction hist generalizing h with
   | nil => rfl
@@ -130,12 +130,12 @@ theorem compileAll_sig (h : HeaderAtom C) (hist : List C.Digest) :
 
 /-- A reviewer's view of the header pin (the reviewer holds a grant): the same
 bytes iff the header is still at the revision read. -/
-def renderHeaderPin (read : Nat) (h : HeaderAtom C) : PinView :=
+def renderHeaderPin (read : Nat) (h : HeaderAtom) : PinView :=
   if h.rev = read then .sameBytes else .moved
 
 /-- **The pin shows the same bytes iff the signature never changed since the
 review.** -/
-theorem pin_sameBytes_iff (h : HeaderAtom C) (hist : List C.Digest) :
+theorem pin_sameBytes_iff (h : HeaderAtom) (hist : List C.Digest) :
     renderHeaderPin h.rev (compileAll h hist) = .sameBytes ↔ ∀ s ∈ hist, s = h.sig := by
   rw [← compileAll_rev_eq_iff]
   unfold renderHeaderPin
@@ -143,7 +143,7 @@ theorem pin_sameBytes_iff (h : HeaderAtom C) (hist : List C.Digest) :
 
 /-- **The pin says `moved` iff some compile since the review changed the
 signature.** -/
-theorem pin_moved_iff (h : HeaderAtom C) (hist : List C.Digest) :
+theorem pin_moved_iff (h : HeaderAtom) (hist : List C.Digest) :
     renderHeaderPin h.rev (compileAll h hist) = .moved ↔ ∃ s ∈ hist, s ≠ h.sig := by
   have hs := pin_sameBytes_iff h hist
   have hcases : renderHeaderPin h.rev (compileAll h hist) = .sameBytes ∨
@@ -165,8 +165,8 @@ theorem pin_moved_iff (h : HeaderAtom C) (hist : List C.Digest) :
 for a reader with a grant, when atom revisions are read through an injective
 `pinOf`. -/
 theorem renderHeaderPin_eq_viewEvidence (pinOf : Nat → C.AtomRev)
-    (hinj : Function.Injective pinOf) (doc : C.SourceId) (m : EvidenceMeta C)
-    (read : Nat) (h : HeaderAtom C) :
+    (hinj : Function.Injective pinOf) (doc : C.SourceId) (m : EvidenceMeta)
+    (read : Nat) (h : HeaderAtom) :
     viewEvidence (fun _ => true) (fun _ a => decide (a = pinOf h.rev))
       ⟨m, ⟨doc, [pinOf read]⟩⟩ = renderHeaderPin read h := by
   unfold viewEvidence renderHeaderPin
@@ -187,7 +187,7 @@ inductive EStatus where
   deriving DecidableEq
 
 /-- The parts of an EKOS conflict object `carry_forward` reads and writes. -/
-structure EConflict (C : Carriers) where
+structure EConflict [C : Carriers] where
   status : EStatus
   reviewedSig : Option C.Digest
   sig : C.Digest
@@ -195,19 +195,19 @@ structure EConflict (C : Carriers) where
 
 /-- A human review: the decision, and `reviewed_signature` := the current
 signature. -/
-def ekosReview (cur : EConflict C) (s : Status) : EConflict C :=
+def ekosReview (cur : EConflict) (s : Status) : EConflict :=
   ⟨.decided s, some cur.sig, cur.sig⟩
 
 /-- One compile: the fresh conflict (status `open`, signature `fresh`), then
 `carry_forward(fresh, current)`. -/
-def ekosCompile (cur : EConflict C) (fresh : C.Digest) : EConflict C :=
+def ekosCompile (cur : EConflict) (fresh : C.Digest) : EConflict :=
   match cur.status with
   | .isOpen => ⟨.isOpen, none, fresh⟩
   | .decided s =>
     if cur.reviewedSig = some fresh then ⟨.decided s, cur.reviewedSig, fresh⟩
     else ⟨.isOpen, none, fresh⟩
 
-def ekosAll (cur : EConflict C) (hist : List C.Digest) : EConflict C :=
+def ekosAll (cur : EConflict) (hist : List C.Digest) : EConflict :=
   hist.foldl ekosCompile cur
 
 theorem ekosAll_open (r : Option C.Digest) (g : C.Digest) (hist : List C.Digest) :
@@ -219,7 +219,7 @@ theorem ekosAll_open (r : Option C.Digest) (g : C.Digest) (hist : List C.Digest)
 /-- **EKOS: a review holds iff every later compile had the reviewed
 signature.** Once a compile changes it, the conflict is `open` for good (until
 a new review), even if the signature later comes back. -/
-theorem ekos_holds_iff (cur : EConflict C) (s : Status) (hist : List C.Digest) :
+theorem ekos_holds_iff (cur : EConflict) (s : Status) (hist : List C.Digest) :
     (ekosAll (ekosReview cur s) hist).status = .decided s ↔ ∀ x ∈ hist, x = cur.sig := by
   unfold ekosReview
   generalize cur.sig = g
@@ -229,14 +229,14 @@ theorem ekos_holds_iff (cur : EConflict C) (s : Status) (hist : List C.Digest) :
     simp only [ekosAll, List.foldl_cons, List.mem_cons, forall_eq_or_imp] at ih ⊢
     by_cases hx : x = g
     · subst hx
-      have : ekosCompile (⟨.decided s, some x, x⟩ : EConflict C) x = ⟨.decided s, some x, x⟩ := by
+      have : ekosCompile (⟨.decided s, some x, x⟩ : EConflict) x = ⟨.decided s, some x, x⟩ := by
         simp [ekosCompile]
       rw [this]
       exact ⟨fun h => ⟨rfl, ih.mp h⟩, fun ⟨_, h⟩ => ih.mpr h⟩
-    · have : ekosCompile (⟨.decided s, some g, g⟩ : EConflict C) x = ⟨.isOpen, none, x⟩ := by
+    · have : ekosCompile (⟨.decided s, some g, g⟩ : EConflict) x = ⟨.isOpen, none, x⟩ := by
         simp [ekosCompile, Ne.symm hx]
       rw [this]
-      have := ekosAll_open (C := C) none x t
+      have := ekosAll_open none x t
       unfold ekosAll at this
       rw [this]
       simp [hx]
@@ -246,21 +246,21 @@ theorem ekos_holds_iff (cur : EConflict C) (s : Status) (hist : List C.Digest) :
 /-- **The transclusion is the carry-forward rule.** For a review taken when
 the header held signature `h.sig` (and EKOS's conflict had the same signature),
 the review's snapshot pin shows the same bytes iff EKOS's review still holds. -/
-theorem pin_agrees_with_ekos (h : HeaderAtom C) (cur : EConflict C) (hsig : cur.sig = h.sig)
+theorem pin_agrees_with_ekos (h : HeaderAtom) (cur : EConflict) (hsig : cur.sig = h.sig)
     (s : Status) (hist : List C.Digest) :
     renderHeaderPin h.rev (compileAll h hist) = .sameBytes ↔
       (ekosAll (ekosReview cur s) hist).status = .decided s := by
   rw [pin_sameBytes_iff, ekos_holds_iff, hsig]
 
 section status
-variable {P : C.SchemaId → Type} (R : ReviewSchema C P) (reg : Registry C P)
-  (d : ClaimIdDerivation C)
+variable {P : C.SchemaId → Type} (R : ReviewSchema P) (reg : Registry P)
+  [d : ClaimIdDerivation]
 
 /-- With one admitted review, the status is its decision at its core and
 `needsReview` at any other core. -/
-theorem statusAt_single (L : List (Receipt C P)) (k : ClaimKey C) (dg₀ : C.Digest)
-    (s₀ : Status) (h : admittedReviews R reg d L k = [(dg₀, s₀)]) (dg : C.Digest) :
-    statusAt R reg d L k dg = if dg = dg₀ then s₀ else .needsReview := by
+theorem statusAt_single (L : List (Receipt P)) (k : ClaimKey) (dg₀ : C.Digest)
+    (s₀ : Status) (h : admittedReviews R reg L k = [(dg₀, s₀)]) (dg : C.Digest) :
+    statusAt R reg L k dg = if dg = dg₀ then s₀ else .needsReview := by
   unfold statusAt
   rw [h]
   by_cases hd : dg₀ = dg
@@ -274,12 +274,12 @@ the revision read, with decision `s₀`. After any run of compiles, the status a
 the current core is `s₀` exactly when EKOS's review holds, and `needsReview`
 exactly when EKOS has reopened. -/
 theorem status_core_rev_agrees (revDigest : Nat → C.Digest) (hinj : Function.Injective revDigest)
-    (L : List (Receipt C P)) (k : ClaimKey C) (h : HeaderAtom C) (cur : EConflict C)
+    (L : List (Receipt P)) (k : ClaimKey) (h : HeaderAtom) (cur : EConflict)
     (hsig : cur.sig = h.sig) (s₀ : Status)
-    (hrev : admittedReviews R reg d L k = [(revDigest h.rev, s₀)]) (hist : List C.Digest) :
-    statusAt R reg d L k (revDigest (compileAll h hist).rev) =
+    (hrev : admittedReviews R reg L k = [(revDigest h.rev, s₀)]) (hist : List C.Digest) :
+    statusAt R reg L k (revDigest (compileAll h hist).rev) =
       if (ekosAll (ekosReview cur s₀) hist).status = .decided s₀ then s₀ else .needsReview := by
-  rw [statusAt_single R reg d L k _ s₀ hrev]
+  rw [statusAt_single R reg L k _ s₀ hrev]
   have hp := pin_agrees_with_ekos h cur hsig s₀ hist
   unfold renderHeaderPin at hp
   by_cases hr : (compileAll h hist).rev = h.rev
@@ -295,16 +295,16 @@ theorem status_core_rev_agrees (revDigest : Nat → C.Digest) (hinj : Function.I
 the signature goes from `a` to `b` and back to `a`, the pin says `moved` and
 EKOS has reopened, but a status keyed by signature finds the review at the
 current core `a` and reports the old decision. -/
-theorem core_sig_diverges (L : List (Receipt C P)) (k : ClaimKey C) (a b : C.Digest)
+theorem core_sig_diverges (L : List (Receipt P)) (k : ClaimKey) (a b : C.Digest)
     (hab : a ≠ b) (r : Nat) (s₀ : Status)
-    (hrev : admittedReviews R reg d L k = [(a, s₀)]) (cur : EConflict C) (hsig : cur.sig = a) :
-    statusAt R reg d L k (compileAll ⟨r, a⟩ [b, a]).sig = s₀ ∧
+    (hrev : admittedReviews R reg L k = [(a, s₀)]) (cur : EConflict) (hsig : cur.sig = a) :
+    statusAt R reg L k (compileAll ⟨r, a⟩ [b, a]).sig = s₀ ∧
       renderHeaderPin r (compileAll ⟨r, a⟩ [b, a]) = .moved ∧
       (ekosAll (ekosReview cur s₀) [b, a]).status = .isOpen := by
   refine ⟨?_, ?_, ?_⟩
-  · rw [statusAt_single R reg d L k a s₀ hrev, compileAll_sig]
+  · rw [statusAt_single R reg L k a s₀ hrev, compileAll_sig]
     simp
-  · have := (pin_moved_iff (⟨r, a⟩ : HeaderAtom C) [b, a]).mpr ⟨b, by simp, Ne.symm hab⟩
+  · have := (pin_moved_iff (⟨r, a⟩ : HeaderAtom) [b, a]).mpr ⟨b, by simp, Ne.symm hab⟩
     exact this
   · simp [ekosAll, ekosReview, hsig, ekosCompile, hab]
 

@@ -29,22 +29,24 @@ namespace World
 
 set_option autoImplicit false
 
-variable {C : Carriers} {P : C.SchemaId → Type} [∀ s, DecidableEq (P s)]
-variable (reg : Registry C P)
+section generic
+
+variable [C : Carriers] {P : C.SchemaId → Type} [∀ s, DecidableEq (P s)]
+variable (reg : Registry P)
 
 /-- The conflict keys of a claim set. -/
-def detect (cs : Finset (Claim C P)) : Finset (ConflictKey C) :=
+def detect (cs : Finset (Claim P)) : Finset (ConflictKey) :=
   ((cs ×ˢ cs).filter (fun p => p.1 ≠ p.2 ∧ sameSubject p.1 p.2)).biUnion fun p =>
     ((disagreeOn reg p.1 p.2).map fun a => (p.1.key.schema, p.1.key.subject, a)).toFinset
 
 /-- `detect` on a list: its set of distinct claims. -/
-def detectList (l : List (Claim C P)) : Finset (ConflictKey C) :=
+def detectList (l : List (Claim P)) : Finset (ConflictKey) :=
   detect reg l.toFinset
 
 /-- **Exact characterization of `detect`.** A key is detected iff two
 different claims in the set, about the same schema and subject, state
 different values for that attribute. -/
-theorem mem_detect (cs : Finset (Claim C P)) (k : ConflictKey C) :
+theorem mem_detect (cs : Finset (Claim P)) (k : ConflictKey) :
     k ∈ detect reg cs ↔
       ∃ c₁ ∈ cs, ∃ c₂ ∈ cs, c₁ ≠ c₂ ∧ sameSubject c₁ c₂ ∧
         ∃ a v₁ v₂, (a, v₁) ∈ c₁.stated reg ∧ (a, v₂) ∈ c₂.stated reg ∧ v₁ ≠ v₂ ∧
@@ -61,21 +63,21 @@ theorem mem_detect (cs : Finset (Claim C P)) (k : ConflictKey C) :
       (mem_disagreeOn reg c₁ c₂ a).mpr ⟨v₁, v₂, hv₁, hv₂, hv⟩, rfl⟩
 
 /-- **The list detector of `WorldCore` computes `detectList`.** -/
-theorem detectL_toFinset (l : List (Claim C P)) : (detectL reg l).toFinset = detectList reg l := by
+theorem detectL_toFinset (l : List (Claim P)) : (detectL reg l).toFinset = detectList reg l := by
   ext k
   rw [List.mem_toFinset, mem_detectL, detectList, mem_detect]
   simp only [List.mem_toFinset]
 
 /-- **Coverage.** Every disagreement between two different claims about the
 same subject is detected, under the key (schema, subject, attribute). -/
-theorem coverage (cs : Finset (Claim C P)) (c₁ c₂ : Claim C P)
+theorem coverage (cs : Finset (Claim P)) (c₁ c₂ : Claim P)
     (h₁ : c₁ ∈ cs) (h₂ : c₂ ∈ cs) (hne : c₁ ≠ c₂) (hsame : sameSubject c₁ c₂)
     (a v₁ v₂ : C.Digest) (hv₁ : (a, v₁) ∈ c₁.stated reg) (hv₂ : (a, v₂) ∈ c₂.stated reg)
     (hv : v₁ ≠ v₂) : (c₁.key.schema, c₁.key.subject, a) ∈ detect reg cs :=
   (mem_detect reg cs _).mpr ⟨c₁, h₁, c₂, h₂, hne, hsame, a, v₁, v₂, hv₁, hv₂, hv, rfl⟩
 
 /-- **Soundness.** Nothing is detected without two claims that disagree. -/
-theorem soundness (cs : Finset (Claim C P)) (k : ConflictKey C) (hk : k ∈ detect reg cs) :
+theorem soundness (cs : Finset (Claim P)) (k : ConflictKey) (hk : k ∈ detect reg cs) :
     ∃ c₁ ∈ cs, ∃ c₂ ∈ cs, c₁ ≠ c₂ ∧ sameSubject c₁ c₂ ∧
       ∃ a v₁ v₂, (a, v₁) ∈ c₁.stated reg ∧ (a, v₂) ∈ c₂.stated reg ∧ v₁ ≠ v₂ ∧
         k = (c₁.key.schema, c₁.key.subject, a) :=
@@ -83,7 +85,7 @@ theorem soundness (cs : Finset (Claim C P)) (k : ConflictKey C) (hk : k ∈ dete
 
 /-- **Order independence.** Two lists with the same members (in any order,
 with any repetitions) have the same conflicts. -/
-theorem detectList_congr (l₁ l₂ : List (Claim C P)) (h : ∀ c, c ∈ l₁ ↔ c ∈ l₂) :
+theorem detectList_congr (l₁ l₂ : List (Claim P)) (h : ∀ c, c ∈ l₁ ↔ c ∈ l₂) :
     detectList reg l₁ = detectList reg l₂ := by
   unfold detectList
   congr 1
@@ -91,13 +93,13 @@ theorem detectList_congr (l₁ l₂ : List (Claim C P)) (h : ∀ c, c ∈ l₁ �
   simp [h c]
 
 /-- **Permutation invariance**, the special case of reordering. -/
-theorem detectList_perm (l₁ l₂ : List (Claim C P)) (h : l₁.Perm l₂) :
+theorem detectList_perm (l₁ l₂ : List (Claim P)) (h : l₁.Perm l₂) :
     detectList reg l₁ = detectList reg l₂ :=
   detectList_congr reg l₁ l₂ fun _ => h.mem_iff
 
 /-- Adding claims never removes a conflict: what is detected stays detected
 until one of the disagreeing claims leaves the set. -/
-theorem detect_mono (cs cs' : Finset (Claim C P)) (h : cs ⊆ cs') :
+theorem detect_mono (cs cs' : Finset (Claim P)) (h : cs ⊆ cs') :
     detect reg cs ⊆ detect reg cs' := by
   intro k hk
   obtain ⟨c₁, h₁, c₂, h₂, rest⟩ := (mem_detect reg cs k).mp hk
@@ -106,11 +108,13 @@ theorem detect_mono (cs cs' : Finset (Claim C P)) (h : cs ⊆ cs') :
 /-- The pins of the conflict claim for key `k`: one claim pin, at its core,
 for every claim in the set that states a value for the key's attribute about
 the key's subject. -/
-def conflictPins (d : ClaimIdDerivation C) (cs : Finset (Claim C P)) (k : ConflictKey C) :
-    Finset (Pin C) :=
+def conflictPins [d : ClaimIdDerivation] (cs : Finset (Claim P)) (k : ConflictKey) :
+    Finset (Pin) :=
   (cs.filter (fun c => c.key.schema = k.1 ∧ c.key.subject = k.2.1 ∧
       (c.stated reg).any (fun av => decide (av.1 = k.2.2)) = true)).image
-    fun c => ⟨.claim (c.id d), .core (c.core reg), 1000⟩
+    fun c => ⟨.claim (c.id), .core (c.core reg), 1000⟩
+
+end generic
 
 /-! ## A concrete schema: tables with typed columns
 
@@ -140,7 +144,7 @@ def Sch.code : Sch → Nat
 
 /-- Carriers for the example. A claim id is (schema code, subject, sources),
 which determines the key. -/
-def C₀ : Carriers where
+scoped instance C₀ : Carriers where
   SchemaId := Sch
   SourceId := Nat
   Range := Nat
@@ -188,7 +192,7 @@ def normType (t : Nat) : Nat := if t = tText then tVarchar else t
 
 /-- The table schema. The core digest is a stand-in (the column count); no
 theorem here depends on it. -/
-def tableSchema : Schema C₀ Cols Sch.table where
+def tableSchema : Schema Cols Sch.table where
   core := fun cols => cols.length
   structural := false
   initial := .observed
@@ -198,7 +202,7 @@ def tableSchema : Schema C₀ Cols Sch.table where
 
 /-- The review schema's own registry entry: reviews are observed facts that
 nobody reviews. -/
-def reviewEntry : Schema C₀ Cols Sch.review where
+def reviewEntry : Schema Cols Sch.review where
   core := fun _ => (0 : Nat)
   structural := true
   initial := .observed
@@ -208,7 +212,7 @@ def reviewEntry : Schema C₀ Cols Sch.review where
 
 /-- An edge-like schema with no stated attributes (used in `World.Examples`). -/
 def edgeEntry (s : Sch) (init : Status) (fact : Status → Bool)
-    (may : PrincipalKind → Status → Bool) : Schema C₀ Cols s where
+    (may : PrincipalKind → Status → Bool) : Schema Cols s where
   core := fun _ => (0 : Nat)
   structural := true
   initial := init
@@ -216,7 +220,7 @@ def edgeEntry (s : Sch) (init : Status) (fact : Status → Bool)
   mayDecide := may
   stated := fun _ => []
 
-def reg₀ : Registry C₀ Cols := fun
+def reg₀ : Registry Cols := fun
   | .table => tableSchema
   | .review => reviewEntry
   -- a foreign key: observed, a fact unless rejected; humans decide
@@ -231,18 +235,18 @@ def reg₀ : Registry C₀ Cols := fun
       (fun _ _ => true)
 
 /-- A table claim about `customers` from one source file. -/
-def tableClaim (file : Nat) (cols : List (Nat × Nat)) : Claim C₀ Cols where
+def tableClaim (file : Nat) (cols : List (Nat × Nat)) : Claim Cols where
   key := ⟨Sch.table, [customers], [file]⟩
   payload := cols
   pins := [⟨.source file none, .atoms [], 1000⟩]
   valid := ⟨none, none⟩
 
 /-- File A: `email varchar`. -/
-def cA : Claim C₀ Cols := tableClaim fileA [(colId, tInt), (colEmail, tVarchar)]
+def cA : Claim Cols := tableClaim fileA [(colId, tInt), (colEmail, tVarchar)]
 /-- File B: `email int` — a real disagreement with A. -/
-def cB : Claim C₀ Cols := tableClaim fileB [(colId, tInt), (colEmail, tInt)]
+def cB : Claim Cols := tableClaim fileB [(colId, tInt), (colEmail, tInt)]
 /-- File C: `email text` — the same type as A after normalization. -/
-def cC : Claim C₀ Cols := tableClaim fileC [(colEmail, tText)]
+def cC : Claim Cols := tableClaim fileC [(colEmail, tText)]
 
 /-- A and B conflict on `customers.email`. -/
 example : (Sch.table, [customers], colEmail) ∈ detect reg₀ {cA, cB} := by decide

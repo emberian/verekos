@@ -63,8 +63,8 @@ def carriers : Carriers where
 key to bytes (`encode`, supplied by the deployment; minidregg has no encoder
 for our keys), wrap it in the v1 `element` preimage envelope, and digest it
 with the deployment's `DigestDerivation`. -/
-def claimIdDerivation (dd : DigestDerivation) (encode : ClaimKey carriers → List UInt8) :
-    ClaimIdDerivation carriers where
+def claimIdDerivation (dd : DigestDerivation) (encode : ClaimKey → List UInt8) :
+    ClaimIdDerivation where
   claimId k := (deriveIdentifier dd (⟨encode k⟩ : IdPreimage .v1 .element) : ElementId)
 
 /-- **Where the injectivity premise comes from.** If the key encoder is
@@ -76,7 +76,7 @@ The digest premise is an idealization: a real hash is not injective, and
 minidregg deliberately attaches no such property to `DigestDerivation`. Every
 theorem in `World.Status` that needs injective ids takes it as a hypothesis,
 and this theorem says what would discharge it. -/
-theorem claimId_injective (dd : DigestDerivation) (encode : ClaimKey carriers → List UInt8)
+theorem claimId_injective (dd : DigestDerivation) (encode : ClaimKey → List UInt8)
     (hdd : Function.Injective dd.digestBytes) (henc : Function.Injective encode) :
     Function.Injective (claimIdDerivation dd encode).claimId := by
   intro k₁ k₂ h

@@ -34,22 +34,24 @@ namespace World
 
 set_option autoImplicit false
 
-variable {C : Carriers} {P : C.SchemaId → Type} [∀ s, DecidableEq (P s)]
-variable (reg : Registry C P)
+section generic
 
-variable (κ : Clash C)
+variable [C : Carriers] {P : C.SchemaId → Type} [∀ s, DecidableEq (P s)]
+variable (reg : Registry P)
+
+variable (κ : Clash)
 
 /-- The conflict keys of a claim set under `κ`. -/
-def detectBy (cs : Finset (Claim C P)) : Finset (ConflictKey C) :=
+def detectBy (cs : Finset (Claim P)) : Finset (ConflictKey) :=
   ((cs ×ˢ cs).filter (fun p => p.1 ≠ p.2 ∧ sameSubject p.1 p.2)).biUnion fun p =>
     ((disagreeOnBy reg κ p.1 p.2).map fun a => (p.1.key.schema, p.1.key.subject, a)).toFinset
 
 /-- `detectBy` on a list: its set of distinct claims. -/
-def detectListBy (l : List (Claim C P)) : Finset (ConflictKey C) :=
+def detectListBy (l : List (Claim P)) : Finset (ConflictKey) :=
   detectBy reg κ l.toFinset
 
 /-- **Exact characterization of `detectBy`.** -/
-theorem mem_detectBy (cs : Finset (Claim C P)) (k : ConflictKey C) :
+theorem mem_detectBy (cs : Finset (Claim P)) (k : ConflictKey) :
     k ∈ detectBy reg κ cs ↔
       ∃ c₁ ∈ cs, ∃ c₂ ∈ cs, c₁ ≠ c₂ ∧ sameSubject c₁ c₂ ∧
         ∃ a v₁ v₂, (a, v₁) ∈ c₁.stated reg ∧ (a, v₂) ∈ c₂.stated reg ∧
@@ -67,14 +69,14 @@ theorem mem_detectBy (cs : Finset (Claim C P)) (k : ConflictKey C) :
       (mem_disagreeOnBy reg κ c₁ c₂ a).mpr ⟨v₁, v₂, hv₁, hv₂, hk⟩, rfl⟩
 
 /-- **The list detector of `WorldCore` computes `detectListBy`.** -/
-theorem detectLBy_toFinset (l : List (Claim C P)) :
+theorem detectLBy_toFinset (l : List (Claim P)) :
     (detectLBy reg κ l).toFinset = detectListBy reg κ l := by
   ext k
   rw [List.mem_toFinset, mem_detectLBy, detectListBy, mem_detectBy]
   simp only [List.mem_toFinset]
 
 /-- **Coverage** under any clash table. -/
-theorem coverageBy (cs : Finset (Claim C P)) (c₁ c₂ : Claim C P)
+theorem coverageBy (cs : Finset (Claim P)) (c₁ c₂ : Claim P)
     (h₁ : c₁ ∈ cs) (h₂ : c₂ ∈ cs) (hne : c₁ ≠ c₂) (hsame : sameSubject c₁ c₂)
     (a v₁ v₂ : C.Digest) (hv₁ : (a, v₁) ∈ c₁.stated reg) (hv₂ : (a, v₂) ∈ c₂.stated reg)
     (hk : κ c₁.key.schema (c₁.key.sources, v₁) (c₂.key.sources, v₂) = true) :
@@ -82,7 +84,7 @@ theorem coverageBy (cs : Finset (Claim C P)) (c₁ c₂ : Claim C P)
   (mem_detectBy reg κ cs _).mpr ⟨c₁, h₁, c₂, h₂, hne, hsame, a, v₁, v₂, hv₁, hv₂, hk, rfl⟩
 
 /-- **Soundness** under any clash table. -/
-theorem soundnessBy (cs : Finset (Claim C P)) (k : ConflictKey C) (hk : k ∈ detectBy reg κ cs) :
+theorem soundnessBy (cs : Finset (Claim P)) (k : ConflictKey) (hk : k ∈ detectBy reg κ cs) :
     ∃ c₁ ∈ cs, ∃ c₂ ∈ cs, c₁ ≠ c₂ ∧ sameSubject c₁ c₂ ∧
       ∃ a v₁ v₂, (a, v₁) ∈ c₁.stated reg ∧ (a, v₂) ∈ c₂.stated reg ∧
         κ c₁.key.schema (c₁.key.sources, v₁) (c₂.key.sources, v₂) = true ∧
@@ -90,19 +92,19 @@ theorem soundnessBy (cs : Finset (Claim C P)) (k : ConflictKey C) (hk : k ∈ de
   (mem_detectBy reg κ cs k).mp hk
 
 /-- **Order independence** under any clash table. -/
-theorem detectListBy_congr (l₁ l₂ : List (Claim C P)) (h : ∀ c, c ∈ l₁ ↔ c ∈ l₂) :
+theorem detectListBy_congr (l₁ l₂ : List (Claim P)) (h : ∀ c, c ∈ l₁ ↔ c ∈ l₂) :
     detectListBy reg κ l₁ = detectListBy reg κ l₂ := by
   unfold detectListBy
   congr 1
   ext c
   simp [h c]
 
-theorem detectListBy_perm (l₁ l₂ : List (Claim C P)) (h : l₁.Perm l₂) :
+theorem detectListBy_perm (l₁ l₂ : List (Claim P)) (h : l₁.Perm l₂) :
     detectListBy reg κ l₁ = detectListBy reg κ l₂ :=
   detectListBy_congr reg κ l₁ l₂ fun _ => h.mem_iff
 
 /-- **Monotonicity** under any clash table. -/
-theorem detectBy_mono (cs cs' : Finset (Claim C P)) (h : cs ⊆ cs') :
+theorem detectBy_mono (cs cs' : Finset (Claim P)) (h : cs ⊆ cs') :
     detectBy reg κ cs ⊆ detectBy reg κ cs' := by
   intro k hk
   obtain ⟨c₁, h₁, c₂, h₂, rest⟩ := (mem_detectBy reg κ cs k).mp hk
@@ -110,7 +112,7 @@ theorem detectBy_mono (cs cs' : Finset (Claim C P)) (h : cs ⊆ cs') :
 
 /-- **The default clash table is exactly `detect`.** Every theorem about
 `detect` is the default instance of the theorems here. -/
-theorem detectBy_differ (cs : Finset (Claim C P)) : detectBy reg Clash.differ cs = detect reg cs := by
+theorem detectBy_differ (cs : Finset (Claim P)) : detectBy reg Clash.differ cs = detect reg cs := by
   unfold detectBy detect
   simp only [disagreeOnBy_differ]
 
@@ -121,7 +123,7 @@ iff two different claims about the same subject state labels for that
 attribute whose source sets share no source and whose word sets share no
 word. -/
 theorem mem_detectBy_label (label : C.SchemaId) (wordsOf : C.Digest → List C.KeyPart)
-    (cs : Finset (Claim C P)) (subj : List C.KeyPart) (a : C.Digest) :
+    (cs : Finset (Claim P)) (subj : List C.KeyPart) (a : C.Digest) :
     (label, subj, a) ∈ detectBy reg (labelClash label wordsOf) cs ↔
       ∃ c₁ ∈ cs, ∃ c₂ ∈ cs, c₁ ≠ c₂ ∧ c₁.key.schema = label ∧ c₂.key.schema = label ∧
         c₁.key.subject = subj ∧ c₂.key.subject = subj ∧
@@ -146,12 +148,14 @@ theorem mem_detectBy_label (label : C.SchemaId) (wordsOf : C.Digest → List C.K
     simp only [Bool.and_eq_true, disjointB_iff]
     exact ⟨hsrc, hw⟩
 
+end generic
+
 /-! ## Example: the label rule firing and not firing -/
 
 namespace ClashExample
 
 /-- Carriers: one schema; everything else numbers. -/
-def C₁ : Carriers where
+scoped instance C₁ : Carriers where
   SchemaId := Unit
   SourceId := Nat
   Range := Nat
@@ -180,7 +184,7 @@ instance (s : C₁.SchemaId) : DecidableEq (Pay s) :=
   inferInstanceAs (DecidableEq (List (Nat × Nat)))
 
 /-- The `EnumMeaning` schema: it states its labels. -/
-def enumMeaning : Schema C₁ Pay () where
+def enumMeaning : Schema Pay () where
   core := fun _ => (0 : Nat)
   structural := false
   initial := .hypothesis
@@ -188,7 +192,7 @@ def enumMeaning : Schema C₁ Pay () where
   mayDecide := fun k _ => k == .human
   stated := fun xs => xs
 
-def reg₁ : Registry C₁ Pay := fun _ => enumMeaning
+def reg₁ : Registry Pay := fun _ => enumMeaning
 
 -- Codes. The attribute "label":
 def attrLabel : Nat := 1
@@ -205,16 +209,16 @@ def wordsOf₁ (v : C₁.Digest) : List C₁.KeyPart :=
 def srcComment : Nat := 1
 def srcCase : Nat := 2
 
-def κ₁ : Clash C₁ := labelClash () wordsOf₁
+def κ₁ : Clash := labelClash () wordsOf₁
 
 /-- One label of the `EnumMeaning` for subject 7, asserted by `srcs`. -/
-def lbl (srcs : List Nat) (v : Nat) : Claim C₁ Pay where
+def lbl (srcs : List Nat) (v : Nat) : Claim Pay where
   key := ⟨(), [(7 : Nat)], srcs⟩
   payload := [(attrLabel, v)]
   pins := [⟨.source (srcs.headD 0) none, .atoms [], 1000⟩]
   valid := ⟨none, none⟩
 
-def k₁ : ConflictKey C₁ := ((), [(7 : Nat)], (1 : Nat))
+def k₁ : ConflictKey := ((), [(7 : Nat)], (1 : Nat))
 
 /-- `asset account` vs `asset`, from two sources: they share a word, so no
 conflict — though plain `≠` would say there is one. -/

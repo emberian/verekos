@@ -26,17 +26,17 @@ namespace World
 
 set_option autoImplicit false
 
-variable {C : Carriers} {P : C.SchemaId → Type} (d : ClaimIdDerivation C)
+variable [C : Carriers] {P : C.SchemaId → Type} [d : ClaimIdDerivation]
 
 /-- Transaction numbers strictly increase along the log. -/
-def TxMonotone (L : List (Receipt C P)) : Prop := L.Pairwise fun r s => r.tx < s.tx
+def TxMonotone (L : List (Receipt P)) : Prop := L.Pairwise fun r s => r.tx < s.tx
 
-instance (L : List (Receipt C P)) : Decidable (TxMonotone L) := by
+instance (L : List (Receipt P)) : Decidable (TxMonotone L) := by
   unfold TxMonotone; infer_instance
 
 /-- In a monotone log, every receipt is numbered at most the last one. -/
-theorem tx_le_last (L : List (Receipt C P)) (h : TxMonotone L) (last : Receipt C P)
-    (hl : L.getLast? = some last) (r : Receipt C P) (hr : r ∈ L) : r.tx ≤ last.tx := by
+theorem tx_le_last (L : List (Receipt P)) (h : TxMonotone L) (last : Receipt P)
+    (hl : L.getLast? = some last) (r : Receipt P) (hr : r ∈ L) : r.tx ≤ last.tx := by
   obtain ⟨ys, rfl⟩ := List.getLast?_eq_some_iff.mp hl
   rcases List.mem_append.mp hr with hy | hy
   · unfold TxMonotone at h
@@ -46,9 +46,9 @@ theorem tx_le_last (L : List (Receipt C P)) (h : TxMonotone L) (last : Receipt C
 
 /-- **`write` keeps the log monotone** when the new receipt is numbered after
 the last one (or the log is empty). -/
-theorem txMonotone_write [∀ s, DecidableEq (P s)] (L : List (Receipt C P)) (r : Receipt C P)
+theorem txMonotone_write [∀ s, DecidableEq (P s)] (L : List (Receipt P)) (r : Receipt P)
     (h : TxMonotone L) (hr : ∀ last, L.getLast? = some last → last.tx < r.tx) :
-    TxMonotone (write d L r) := by
+    TxMonotone (write L r) := by
   unfold write
   split
   · exact h
@@ -61,7 +61,7 @@ theorem txMonotone_write [∀ s, DecidableEq (P s)] (L : List (Receipt C P)) (r 
     | some last => exact Nat.lt_of_le_of_lt (tx_le_last L h last hlast x hx) (hr last hlast)
 
 /-- In a monotone log, the receipts numbered `t` or less are a prefix. -/
-theorem filter_eq_takeWhile (L : List (Receipt C P)) (h : TxMonotone L) (t : Nat) :
+theorem filter_eq_takeWhile (L : List (Receipt P)) (h : TxMonotone L) (t : Nat) :
     L.filter (fun r => decide (r.tx ≤ t)) = L.takeWhile (fun r => decide (r.tx ≤ t)) := by
   induction L with
   | nil => rfl
@@ -80,30 +80,30 @@ theorem filter_eq_takeWhile (L : List (Receipt C P)) (h : TxMonotone L) (t : Nat
 
 /-- **The state at `t` is the replay of the longest prefix numbered `t` or
 less.** -/
-theorem state_eq_replay_takeWhile (L : List (Receipt C P)) (h : TxMonotone L) (t : Nat) :
-    state d L t = replay d (L.takeWhile fun r => decide (r.tx ≤ t)) := by
+theorem state_eq_replay_takeWhile (L : List (Receipt P)) (h : TxMonotone L) (t : Nat) :
+    state L t = replay (L.takeWhile fun r => decide (r.tx ≤ t)) := by
   unfold state
   rw [filter_eq_takeWhile L h t]
 
 /-- That prefix is a prefix. -/
-theorem takeWhile_prefix_log (L : List (Receipt C P)) (t : Nat) :
+theorem takeWhile_prefix_log (L : List (Receipt P)) (t : Nat) :
     (L.takeWhile fun r => decide (r.tx ≤ t)) <+: L :=
   List.takeWhile_prefix _
 
 /-- The segment `(a, b]`: after the prefix numbered `a` or less, the receipts
 up to `b`. -/
-def segment (L : List (Receipt C P)) (a b : Nat) : List (Receipt C P) :=
+def segment (L : List (Receipt P)) (a b : Nat) : List (Receipt P) :=
   (L.dropWhile fun r => decide (r.tx ≤ a)).takeWhile fun r => decide (r.tx ≤ b)
 
 /-- **The segment is contiguous:** the log is the prefix up to `a`, then the
 segment, then the rest. -/
-theorem segment_contiguous (L : List (Receipt C P)) (a b : Nat) :
+theorem segment_contiguous (L : List (Receipt P)) (a b : Nat) :
     L = (L.takeWhile fun r => decide (r.tx ≤ a)) ++ segment L a b ++
       ((L.dropWhile fun r => decide (r.tx ≤ a)).dropWhile fun r => decide (r.tx ≤ b)) := by
   unfold segment
   rw [List.append_assoc, List.takeWhile_append_dropWhile, List.takeWhile_append_dropWhile]
 
-theorem filter_window_eq_segment (L : List (Receipt C P)) (h : TxMonotone L) (a b : Nat) :
+theorem filter_window_eq_segment (L : List (Receipt P)) (h : TxMonotone L) (a b : Nat) :
     L.filter (fun r => decide (a < r.tx ∧ r.tx ≤ b)) = segment L a b := by
   induction L with
   | nil => rfl
@@ -144,8 +144,8 @@ theorem filter_window_eq_segment (L : List (Receipt C P)) (h : TxMonotone L) (a 
 
 /-- **Under monotone numbers, `diff a b` is exactly the ids of the contiguous
 segment `(a, b]`, in log order.** -/
-theorem diff_eq_segment (L : List (Receipt C P)) (h : TxMonotone L) (a b : Nat) :
-    diff d L a b = (segment L a b).map fun r => r.op.id d := by
+theorem diff_eq_segment (L : List (Receipt P)) (h : TxMonotone L) (a b : Nat) :
+    diff L a b = (segment L a b).map fun r => r.op.id := by
   unfold diff
   rw [filter_window_eq_segment L h a b]
 

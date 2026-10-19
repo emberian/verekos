@@ -34,7 +34,7 @@ namespace World
 
 set_option autoImplicit false
 
-variable {C : Carriers} {P : C.SchemaId → Type}
+variable [C : Carriers] {P : C.SchemaId → Type}
 
 /-! ## Rule 3: sources sorted and duplicate-free -/
 
@@ -42,24 +42,24 @@ section keys
 variable [LinearOrder C.SourceId]
 
 /-- A key's sources are strictly increasing: sorted, with no repeats. -/
-def ClaimKey.Canonical (k : ClaimKey C) : Prop := k.sources.Pairwise (· < ·)
+def ClaimKey.Canonical (k : ClaimKey) : Prop := k.sources.Pairwise (· < ·)
 
 /-- Put a key's sources into canonical form. -/
-def ClaimKey.normalize (k : ClaimKey C) : ClaimKey C :=
+def ClaimKey.normalize (k : ClaimKey) : ClaimKey :=
   { k with sources := k.sources.toFinset.sort }
 
-theorem ClaimKey.normalize_canonical (k : ClaimKey C) : k.normalize.Canonical := by
+theorem ClaimKey.normalize_canonical (k : ClaimKey) : k.normalize.Canonical := by
   unfold ClaimKey.Canonical ClaimKey.normalize
   exact (Finset.sortedLT_sort k.sources.toFinset).pairwise
 
-theorem ClaimKey.mem_normalize (k : ClaimKey C) (s : C.SourceId) :
+theorem ClaimKey.mem_normalize (k : ClaimKey) (s : C.SourceId) :
     s ∈ k.normalize.sources ↔ s ∈ k.sources := by
   simp [ClaimKey.normalize]
 
 /-- **Canonical keys are equal iff they have the same schema, subject and set
 of sources.** Order and repetition of sources cannot make two keys (and so,
 under any derivation, two ids) for one source set. -/
-theorem ClaimKey.eq_iff_of_canonical (k₁ k₂ : ClaimKey C) (h₁ : k₁.Canonical)
+theorem ClaimKey.eq_iff_of_canonical (k₁ k₂ : ClaimKey) (h₁ : k₁.Canonical)
     (h₂ : k₂.Canonical) :
     k₁ = k₂ ↔ k₁.schema = k₂.schema ∧ k₁.subject = k₂.subject ∧
       ∀ s, s ∈ k₁.sources ↔ s ∈ k₂.sources := by
@@ -71,7 +71,7 @@ theorem ClaimKey.eq_iff_of_canonical (k₁ k₂ : ClaimKey C) (h₁ : k₁.Canon
     simp_all
 
 /-- Normalization identifies exactly the keys with the same source set. -/
-theorem ClaimKey.normalize_eq_iff (k₁ k₂ : ClaimKey C) :
+theorem ClaimKey.normalize_eq_iff (k₁ k₂ : ClaimKey) :
     k₁.normalize = k₂.normalize ↔ k₁.schema = k₂.schema ∧ k₁.subject = k₂.subject ∧
       ∀ s, s ∈ k₁.sources ↔ s ∈ k₂.sources := by
   rw [ClaimKey.eq_iff_of_canonical _ _ (normalize_canonical _) (normalize_canonical _)]
@@ -79,26 +79,26 @@ theorem ClaimKey.normalize_eq_iff (k₁ k₂ : ClaimKey C) :
   rfl
 
 /-- Normalizing a canonical key changes nothing. -/
-theorem ClaimKey.normalize_of_canonical (k : ClaimKey C) (h : k.Canonical) :
+theorem ClaimKey.normalize_of_canonical (k : ClaimKey) (h : k.Canonical) :
     k.normalize = k :=
   (ClaimKey.eq_iff_of_canonical _ _ (normalize_canonical _) h).mpr
     ⟨rfl, rfl, fun s => mem_normalize k s⟩
 
 /-- A well-formed claim: nonempty pins and a canonical key. (Acyclicity is a
 property of a state, not of one claim: see `Ranked`.) -/
-def Claim.WellFormed (c : Claim C P) : Prop := c.PinsNonempty ∧ c.key.Canonical
+def Claim.WellFormed (c : Claim P) : Prop := c.PinsNonempty ∧ c.key.Canonical
 
 /-- A log puts only well-formed claims. -/
-def LogWellFormed (L : List (Receipt C P)) : Prop :=
+def LogWellFormed (L : List (Receipt P)) : Prop :=
   ∀ r ∈ L, ∀ c, r.op = .put c → c.WellFormed
 
-theorem foldl_apply_wellFormed (d : ClaimIdDerivation C) :
-    ∀ (L : List (Receipt C P)) (s : View C P),
+theorem foldl_apply_wellFormed [d : ClaimIdDerivation] :
+    ∀ (L : List (Receipt P)) (s : View P),
       (∀ i c, s i = some c → c.WellFormed) → LogWellFormed L →
-      ∀ i c, (L.foldl (apply d) s) i = some c → c.WellFormed
+      ∀ i c, (L.foldl (apply) s) i = some c → c.WellFormed
   | [], s, hs, _, i, c, h => hs i c h
   | r :: L, s, hs, hL, i, c, h => by
-    refine foldl_apply_wellFormed d L (apply d s r) ?_
+    refine foldl_apply_wellFormed L (apply s r) ?_
       (fun r' hr' => hL r' (List.mem_cons_of_mem _ hr')) i c h
     intro j c' hj
     unfold apply at hj
@@ -117,10 +117,10 @@ theorem foldl_apply_wellFormed (d : ClaimIdDerivation C) :
       · exact hs j c' hj
 
 /-- **A well-formed log has a well-formed state.** -/
-theorem latest_wellFormed (d : ClaimIdDerivation C) (L : List (Receipt C P))
-    (h : LogWellFormed L) (i : C.ClaimId) (c : Claim C P)
-    (hc : latest d L i = some c) : c.WellFormed :=
-  foldl_apply_wellFormed d L View.empty (by intro _ _ h; cases h) h i c hc
+theorem latest_wellFormed [d : ClaimIdDerivation] (L : List (Receipt P))
+    (h : LogWellFormed L) (i : C.ClaimId) (c : Claim P)
+    (hc : latest L i = some c) : c.WellFormed :=
+  foldl_apply_wellFormed L View.empty (by intro _ _ h; cases h) h i c hc
 
 end keys
 

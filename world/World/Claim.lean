@@ -31,7 +31,7 @@ model compares values. `World.Minidregg` fills them with minidregg's types.
 key is the separate `ClaimIdDerivation`, and whether that computation is
 injective is a premise each theorem states when it needs it (the same stance
 as minidregg's `DigestDerivation`, which carries no injectivity proof). -/
-structure Carriers where
+class Carriers where
   /-- Which kind of claim (Table, ForeignKey, Review, Conflict, …). -/
   SchemaId : Type
   /-- One imported source document. -/
@@ -64,11 +64,18 @@ structure Carriers where
   [decName : DecidableEq Name]
   [decClaimId : DecidableEq ClaimId]
 
-attribute [instance] Carriers.decSchemaId Carriers.decSourceId Carriers.decRange
-  Carriers.decDigest Carriers.decTime Carriers.decKeyPart Carriers.decAtomRev
-  Carriers.decName Carriers.decClaimId
+/-- The carriers' decidable equalities, as instances. -/
+instance [C : Carriers] : DecidableEq C.SchemaId := C.decSchemaId
+instance [C : Carriers] : DecidableEq C.SourceId := C.decSourceId
+instance [C : Carriers] : DecidableEq C.Range := C.decRange
+instance [C : Carriers] : DecidableEq C.Digest := C.decDigest
+instance [C : Carriers] : DecidableEq C.Time := C.decTime
+instance [C : Carriers] : DecidableEq C.KeyPart := C.decKeyPart
+instance [C : Carriers] : DecidableEq C.AtomRev := C.decAtomRev
+instance [C : Carriers] : DecidableEq C.Name := C.decName
+instance [C : Carriers] : DecidableEq C.ClaimId := C.decClaimId
 
-variable (C : Carriers)
+variable [C : Carriers]
 
 /-- What a claim's identity is computed from. It holds no run, no time, no
 range and no revision, so an id cannot depend on any of them.
@@ -83,9 +90,9 @@ structure ClaimKey where
 
 /-- How a deployment computes a claim id from a key. No injectivity is
 attached: theorems that need "different keys give different ids" take
-`Function.Injective d.claimId` as a hypothesis. -/
-structure ClaimIdDerivation where
-  claimId : ClaimKey C → C.ClaimId
+`Function.Injective ClaimIdDerivation.claimId` as a hypothesis. -/
+class ClaimIdDerivation where
+  claimId : ClaimKey → C.ClaimId
 
 /-- What a pin points at: part of a source document (`none` = the whole
 document), or another claim. -/
@@ -104,8 +111,8 @@ inductive PinRevision where
 /-- A pin. `weight` is per mille (0–1000); EKOS stores it as a float
 (`KirEvidence.confidence`). Nothing here bounds it by 1000. -/
 structure Pin where
-  target : PinTarget C
-  revision : PinRevision C
+  target : PinTarget
+  revision : PinRevision
   weight : Nat
   deriving DecidableEq
 
@@ -119,16 +126,16 @@ structure Window where
 nonempty" is not part of the type; `World.Visible` treats an unpinned claim as
 hidden, so breaking the law fails closed. -/
 structure Claim (P : C.SchemaId → Type) where
-  key : ClaimKey C
+  key : ClaimKey
   payload : P key.schema
-  pins : List (Pin C)
-  valid : Window C
+  pins : List (Pin)
+  valid : Window
 
 section claimDecEq
 variable {C} {P : C.SchemaId → Type} [∀ s, DecidableEq (P s)]
 
 /-- Claims are equal when key, payload, pins and window are equal. -/
-instance Claim.decEq : DecidableEq (Claim C P) := fun a b =>
+instance Claim.decEq : DecidableEq (Claim P) := fun a b =>
   match a, b with
   | ⟨k₁, x₁, p₁, w₁⟩, ⟨k₂, x₂, p₂, w₂⟩ =>
     if hk : k₁ = k₂ then by
@@ -161,7 +168,7 @@ inductive PrincipalKind where
   are never merge candidates (EKOS `structurally_keyed`).
 - `initial`: the status before any admitted review.
 - `isFact`: may a traversal cross a claim in this status?
-- `mayDecide k d`: may a principal of kind `k` move a claim of this schema to
+- `mayDecide k`: may a principal of kind `k` move a claim of this schema to
   status `d`?
 - `stated`: the (attribute, normalized value) pairs the payload states
   outright; conflicts compare only these. -/
@@ -174,18 +181,18 @@ structure Schema (P : C.SchemaId → Type) (s : C.SchemaId) where
   stated : P s → List (C.Digest × C.Digest)
 
 /-- The schema table: one `Schema` per schema id. -/
-abbrev Registry (P : C.SchemaId → Type) := (s : C.SchemaId) → Schema C P s
+abbrev Registry (P : C.SchemaId → Type) := (s : C.SchemaId) → Schema P s
 
 /-- A log operation: install a claim value, or remove the claim with this id. -/
 inductive Op (P : C.SchemaId → Type) where
-  | put (c : Claim C P)
+  | put (c : Claim P)
   | retract (id : C.ClaimId)
 
 /-- A log entry. Provenance and observation time live here, never on the
 claim. -/
 structure Receipt (P : C.SchemaId → Type) where
   tx : Nat
-  op : Op C P
+  op : Op P
   author : PrincipalKind × C.Name
   run : C.RunId
   stage : C.Stage
@@ -193,16 +200,16 @@ structure Receipt (P : C.SchemaId → Type) where
 variable {C}
 
 /-- The id a claim is stored under. -/
-def Claim.id {P : C.SchemaId → Type} (d : ClaimIdDerivation C) (c : Claim C P) : C.ClaimId :=
-  d.claimId c.key
+def Claim.id {P : C.SchemaId → Type} [d : ClaimIdDerivation] (c : Claim P) : C.ClaimId :=
+  ClaimIdDerivation.claimId c.key
 
 /-- The id an operation touches. -/
-def Op.id {P : C.SchemaId → Type} (d : ClaimIdDerivation C) : Op C P → C.ClaimId
-  | .put c => c.id d
+def Op.id {P : C.SchemaId → Type} [d : ClaimIdDerivation] : Op P → C.ClaimId
+  | .put c => c.id
   | .retract i => i
 
 /-- A claim's core digest, read through its schema. -/
-def Claim.core {P : C.SchemaId → Type} (reg : Registry C P) (c : Claim C P) : C.Digest :=
+def Claim.core {P : C.SchemaId → Type} (reg : Registry P) (c : Claim P) : C.Digest :=
   (reg c.key.schema).core c.payload
 
 end World

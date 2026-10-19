@@ -54,12 +54,12 @@ namespace World
 
 set_option autoImplicit false
 
-variable {C : Carriers} {P : C.SchemaId → Type}
+variable [C : Carriers] {P : C.SchemaId → Type}
 
 /-! ## The shape -/
 
 /-- The meta atom of an evidence container (`ekos/evidence-meta/v1`). -/
-structure EvidenceMeta (C : Carriers) where
+structure EvidenceMeta [C : Carriers] where
   /-- Confidence per mille (`confidence_milli`). -/
   weight : Nat
   /-- The range of the source the pin covers (`none` = the whole document). -/
@@ -68,95 +68,95 @@ structure EvidenceMeta (C : Carriers) where
 
 /-- A snapshot-transclusion pin: the source document and the atoms read, each
 with its revision. -/
-structure SnapshotPin (C : Carriers) where
+structure SnapshotPin [C : Carriers] where
   source : C.SourceId
   atoms : List C.AtomRev
   deriving DecidableEq
 
 /-- One evidence container. -/
-structure Evidence (C : Carriers) where
-  info : EvidenceMeta C
-  pin : SnapshotPin C
+structure Evidence [C : Carriers] where
+  info : EvidenceMeta
+  pin : SnapshotPin
   deriving DecidableEq
 
 /-- A premise link: the claim pinned, and the core digest read. -/
-structure PremiseLink (C : Carriers) where
+structure PremiseLink [C : Carriers] where
   target : C.ClaimId
   core : C.Digest
   weight : Nat
   deriving DecidableEq
 
 /-- The cell encoding of one claim. -/
-structure Cell (C : Carriers) (P : C.SchemaId → Type) where
-  header : ClaimKey C
+structure Cell [C : Carriers] (P : C.SchemaId → Type) where
+  header : ClaimKey
   properties : P header.schema
-  window : Window C
-  evidence : List (Evidence C)
-  premises : List (PremiseLink C)
+  window : Window
+  evidence : List (Evidence)
+  premises : List (PremiseLink)
 
 /-- One edge container: the edge's cell, and the link to where it points. -/
-structure EdgeContainer (C : Carriers) (P : C.SchemaId → Type) where
-  edge : Cell C P
+structure EdgeContainer [C : Carriers] (P : C.SchemaId → Type) where
+  edge : Cell P
   link : C.ClaimId
 
 /-- An `ekos/object/v1` document: the object's cell and its outgoing edges. -/
-structure ObjectDocument (C : Carriers) (P : C.SchemaId → Type) where
-  object : Cell C P
-  edges : List (EdgeContainer C P)
+structure ObjectDocument [C : Carriers] (P : C.SchemaId → Type) where
+  object : Cell P
+  edges : List (EdgeContainer P)
 
 /-! ## Claim ↔ cell -/
 
 /-- A pin has the right shape: a source target read as atoms, or a claim
 target read as a core digest. -/
-def Pin.wellTyped (p : Pin C) : Bool :=
+def Pin.wellTyped (p : Pin) : Bool :=
   match p.target, p.revision with
   | .source _ _, .atoms _ => true
   | .claim _, .core _ => true
   | _, _ => false
 
 /-- A source pin as an evidence container. -/
-def Pin.toEvidence (p : Pin C) : Option (Evidence C) :=
+def Pin.toEvidence (p : Pin) : Option (Evidence) :=
   match p.target, p.revision with
   | .source doc r, .atoms read => some ⟨⟨p.weight, r⟩, ⟨doc, read⟩⟩
   | _, _ => none
 
 /-- A claim pin as a premise link. -/
-def Pin.toPremise (p : Pin C) : Option (PremiseLink C) :=
+def Pin.toPremise (p : Pin) : Option (PremiseLink) :=
   match p.target, p.revision with
   | .claim i, .core dg => some ⟨i, dg, p.weight⟩
   | _, _ => none
 
 /-- An evidence container back as a pin. -/
-def Evidence.toPin (e : Evidence C) : Pin C :=
+def Evidence.toPin (e : Evidence) : Pin :=
   ⟨.source e.pin.source e.info.range, .atoms e.pin.atoms, e.info.weight⟩
 
 /-- A premise link back as a pin. -/
-def PremiseLink.toPin (l : PremiseLink C) : Pin C := ⟨.claim l.target, .core l.core, l.weight⟩
+def PremiseLink.toPin (l : PremiseLink) : Pin := ⟨.claim l.target, .core l.core, l.weight⟩
 
 /-- Encode a claim as a cell; `none` if any pin has the wrong shape. -/
-def encode (c : Claim C P) : Option (Cell C P) :=
+def encode (c : Claim P) : Option (Cell P) :=
   if c.pins.all Pin.wellTyped then
     some ⟨c.key, c.payload, c.valid, c.pins.filterMap Pin.toEvidence,
       c.pins.filterMap Pin.toPremise⟩
   else none
 
 /-- Decode a cell as a claim: evidence pins first, then premise pins. -/
-def decode (cell : Cell C P) : Claim C P :=
+def decode (cell : Cell P) : Claim P :=
   ⟨cell.header, cell.properties, cell.evidence.map Evidence.toPin ++
     cell.premises.map PremiseLink.toPin, cell.window⟩
 
 /-- Is this a source pin? -/
-def Pin.isSource (p : Pin C) : Bool :=
+def Pin.isSource (p : Pin) : Bool :=
   match p.target with
   | .source _ _ => true
   | .claim _ => false
 
-theorem toEvidence_map (p : Pin C) (h : p.wellTyped = true) :
+theorem toEvidence_map (p : Pin) (h : p.wellTyped = true) :
     (p.toEvidence).map Evidence.toPin = if p.isSource then some p else none := by
   obtain ⟨t, r, w⟩ := p
   cases t <;> cases r <;> simp_all [Pin.wellTyped, Pin.toEvidence, Pin.isSource, Evidence.toPin]
 
-theorem toPremise_map (p : Pin C) (h : p.wellTyped = true) :
+theorem toPremise_map (p : Pin) (h : p.wellTyped = true) :
     (p.toPremise).map PremiseLink.toPin = if p.isSource then none else some p := by
   obtain ⟨t, r, w⟩ := p
   cases t <;> cases r <;> simp_all [Pin.wellTyped, Pin.toPremise, Pin.isSource, PremiseLink.toPin]
@@ -189,7 +189,7 @@ theorem filterMap_map_eq_filter {α β : Type} (f : α → Option β) (g : β �
 /-- **Decoding an encoded claim gives back the same claim up to the order of
 its pins**: same key, payload and window; its pins are a permutation of the
 original (source pins first). -/
-theorem decode_encode (c : Claim C P) (cell : Cell C P) (h : encode c = some cell) :
+theorem decode_encode (c : Claim P) (cell : Cell P) (h : encode c = some cell) :
     ∃ ps, decode cell = { c with pins := ps } ∧ ps.Perm c.pins := by
   unfold encode at h
   split at h
@@ -205,7 +205,7 @@ theorem decode_encode (c : Claim C P) (cell : Cell C P) (h : encode c = some cel
   · cases h
 
 /-- **Encoding a decoded cell gives back exactly the same cell.** -/
-theorem encode_decode (cell : Cell C P) : encode (decode cell) = some cell := by
+theorem encode_decode (cell : Cell P) : encode (decode cell) = some cell := by
   obtain ⟨k, x, w, ev, pr⟩ := cell
   unfold encode decode
   have hwt : (ev.map Evidence.toPin ++ pr.map PremiseLink.toPin).all Pin.wellTyped = true := by
@@ -213,7 +213,7 @@ theorem encode_decode (cell : Cell C P) : encode (decode cell) = some cell := by
   rw [if_pos hwt]
   simp only [List.filterMap_append, List.filterMap_map]
   have h1 : ev.filterMap (Pin.toEvidence ∘ Evidence.toPin) = ev := by
-    have : (Pin.toEvidence ∘ Evidence.toPin : Evidence C → Option (Evidence C)) = some := by
+    have : (Pin.toEvidence ∘ Evidence.toPin : Evidence → Option (Evidence)) = some := by
       funext e; simp [Pin.toEvidence, Evidence.toPin]
     rw [this, List.filterMap_some]
   have h2 : ev.filterMap (Pin.toPremise ∘ Evidence.toPin) = [] := by
@@ -221,7 +221,7 @@ theorem encode_decode (cell : Cell C P) : encode (decode cell) = some cell := by
   have h3 : pr.filterMap (Pin.toEvidence ∘ PremiseLink.toPin) = [] := by
     simp [Pin.toEvidence, PremiseLink.toPin]
   have h4 : pr.filterMap (Pin.toPremise ∘ PremiseLink.toPin) = pr := by
-    have : (Pin.toPremise ∘ PremiseLink.toPin : PremiseLink C → Option (PremiseLink C)) = some := by
+    have : (Pin.toPremise ∘ PremiseLink.toPin : PremiseLink → Option (PremiseLink)) = some := by
       funext l; simp [Pin.toPremise, PremiseLink.toPin]
     rw [this, List.filterMap_some]
   rw [h1, h2, h3, h4]
@@ -230,24 +230,24 @@ theorem encode_decode (cell : Cell C P) : encode (decode cell) = some cell := by
 /-! ## The (source document, atom revision) pins -/
 
 /-- Every (source document, atom revision) a claim's pins read. -/
-def claimAtomPins (c : Claim C P) : List (C.SourceId × C.AtomRev) :=
+def claimAtomPins (c : Claim P) : List (C.SourceId × C.AtomRev) :=
   c.pins.flatMap fun p =>
     match p.target, p.revision with
     | .source doc _, .atoms read => read.map (doc, ·)
     | _, _ => []
 
 /-- Every (source document, atom revision) a cell's evidence containers pin. -/
-def cellAtomPins (cell : Cell C P) : List (C.SourceId × C.AtomRev) :=
+def cellAtomPins (cell : Cell P) : List (C.SourceId × C.AtomRev) :=
   cell.evidence.flatMap fun e => e.pin.atoms.map (e.pin.source, ·)
 
-theorem claimAtomPins_perm (c c' : Claim C P) (h : c'.pins.Perm c.pins) (x : C.SourceId × C.AtomRev) :
+theorem claimAtomPins_perm (c c' : Claim P) (h : c'.pins.Perm c.pins) (x : C.SourceId × C.AtomRev) :
     x ∈ claimAtomPins c' ↔ x ∈ claimAtomPins c := by
   unfold claimAtomPins
   simp only [List.mem_flatMap]
   exact ⟨fun ⟨p, hp, hx⟩ => ⟨p, h.subset hp, hx⟩, fun ⟨p, hp, hx⟩ => ⟨p, h.symm.subset hp, hx⟩⟩
 
 /-- Decoding keeps exactly the cell's atom pins. -/
-theorem claimAtomPins_decode (cell : Cell C P) (x : C.SourceId × C.AtomRev) :
+theorem claimAtomPins_decode (cell : Cell P) (x : C.SourceId × C.AtomRev) :
     x ∈ claimAtomPins (decode cell) ↔ x ∈ cellAtomPins cell := by
   simp only [claimAtomPins, cellAtomPins, decode, List.mem_flatMap, List.mem_append, List.mem_map]
   constructor
@@ -258,7 +258,7 @@ theorem claimAtomPins_decode (cell : Cell C P) (x : C.SourceId × C.AtomRev) :
     exact ⟨e.toPin, Or.inl ⟨e, he, rfl⟩, by simpa [Evidence.toPin] using hx⟩
 
 /-- **Encoding keeps exactly the claim's atom pins.** -/
-theorem cellAtomPins_encode (c : Claim C P) (cell : Cell C P) (h : encode c = some cell)
+theorem cellAtomPins_encode (c : Claim P) (cell : Cell P) (h : encode c = some cell)
     (x : C.SourceId × C.AtomRev) : x ∈ cellAtomPins cell ↔ x ∈ claimAtomPins c := by
   obtain ⟨ps, hd, hperm⟩ := decode_encode c cell h
   rw [← claimAtomPins_decode, hd]
@@ -267,11 +267,11 @@ theorem cellAtomPins_encode (c : Claim C P) (cell : Cell C P) (h : encode c = so
 /-! ## Object documents -/
 
 section document
-variable (d : ClaimIdDerivation C) (E : EdgeView C P)
+variable [d : ClaimIdDerivation] (E : EdgeView P)
 
 /-- Encode the outgoing edges of the object with id `from`. Refuses an edge
 that is ill-shaped or does not start at `from`. -/
-def encodeEdges (from_ : C.ClaimId) : List (Claim C P) → Option (List (EdgeContainer C P))
+def encodeEdges (from_ : C.ClaimId) : List (Claim P) → Option (List (EdgeContainer P))
   | [] => some []
   | e :: es =>
     match encode e, E.ends e, encodeEdges from_ es with
@@ -279,21 +279,21 @@ def encodeEdges (from_ : C.ClaimId) : List (Claim C P) → Option (List (EdgeCon
     | _, _, _ => none
 
 /-- Lay out a claim and its outgoing edge claims as an object document. -/
-def toDocument (c : Claim C P) (outgoing : List (Claim C P)) : Option (ObjectDocument C P) :=
-  match encode c, encodeEdges E (c.id d) outgoing with
+def toDocument (c : Claim P) (outgoing : List (Claim P)) : Option (ObjectDocument P) :=
+  match encode c, encodeEdges E (c.id) outgoing with
   | some cell, some edges => some ⟨cell, edges⟩
   | _, _ => none
 
 /-- Read an object document back as the object and its edge claims. -/
-def fromDocument (D : ObjectDocument C P) : Claim C P × List (Claim C P) :=
+def fromDocument (D : ObjectDocument P) : Claim P × List (Claim P) :=
   (decode D.object, D.edges.map fun ec => decode ec.edge)
 
 /-- Every (source document, atom revision) a document pins. -/
-def docAtomPins (D : ObjectDocument C P) : List (C.SourceId × C.AtomRev) :=
+def docAtomPins (D : ObjectDocument P) : List (C.SourceId × C.AtomRev) :=
   cellAtomPins D.object ++ D.edges.flatMap fun ec => cellAtomPins ec.edge
 
 theorem encodeEdges_atomPins (from_ : C.ClaimId) :
-    ∀ (es : List (Claim C P)) (ecs : List (EdgeContainer C P)),
+    ∀ (es : List (Claim P)) (ecs : List (EdgeContainer P)),
       encodeEdges E from_ es = some ecs → ∀ x,
         x ∈ ecs.flatMap (fun ec => cellAtomPins ec.edge) ↔ ∃ e ∈ es, x ∈ claimAtomPins e
   | [], ecs, h, x => by
@@ -314,8 +314,8 @@ theorem encodeEdges_atomPins (from_ : C.ClaimId) :
 
 /-- **Laying out a claim as a document keeps exactly its atom pins and those
 of its outgoing edges.** -/
-theorem toDocument_atomPins (c : Claim C P) (outgoing : List (Claim C P))
-    (D : ObjectDocument C P) (h : toDocument d E c outgoing = some D)
+theorem toDocument_atomPins (c : Claim P) (outgoing : List (Claim P))
+    (D : ObjectDocument P) (h : toDocument E c outgoing = some D)
     (x : C.SourceId × C.AtomRev) :
     x ∈ docAtomPins D ↔ x ∈ claimAtomPins c ∨ ∃ e ∈ outgoing, x ∈ claimAtomPins e := by
   unfold toDocument at h
@@ -324,11 +324,11 @@ theorem toDocument_atomPins (c : Claim C P) (outgoing : List (Claim C P))
     injection h with h
     subst h
     rw [docAtomPins, List.mem_append, cellAtomPins_encode c cell hc,
-      encodeEdges_atomPins E (c.id d) outgoing edges he x]
+      encodeEdges_atomPins E (c.id) outgoing edges he x]
   · cases h
 
 /-- **Reading a document back keeps exactly its atom pins.** -/
-theorem fromDocument_atomPins (D : ObjectDocument C P) (x : C.SourceId × C.AtomRev) :
+theorem fromDocument_atomPins (D : ObjectDocument P) (x : C.SourceId × C.AtomRev) :
     x ∈ docAtomPins D ↔
       x ∈ claimAtomPins (fromDocument D).1 ∨ ∃ e ∈ (fromDocument D).2, x ∈ claimAtomPins e := by
   simp only [docAtomPins, fromDocument, List.mem_append, List.mem_flatMap, List.mem_map,
@@ -357,7 +357,7 @@ inductive TranscludeRefusal where
 /-- Admission of one evidence container: the writer must read the source, and
 must have held every revision pinned. -/
 def admitEvidence (writerReads : C.SourceId → Bool) (held : C.SourceId → C.AtomRev → Bool)
-    (e : Evidence C) : Option TranscludeRefusal :=
+    (e : Evidence) : Option TranscludeRefusal :=
   if !writerReads e.pin.source then some .sourceNotCovered
   else if !(e.pin.atoms.all (held e.pin.source)) then some .staleOpening
   else none
@@ -376,13 +376,13 @@ inductive PinView where
 /-- The view: no grant gives the placeholder; otherwise the same bytes when
 every atom is still at its pinned revision, else `moved`. -/
 def viewEvidence (readable : C.SourceId → Bool) (current : C.SourceId → C.AtomRev → Bool)
-    (e : Evidence C) : PinView :=
+    (e : Evidence) : PinView :=
   if !readable e.pin.source then .noGrant e.pin.atoms.length
   else if e.pin.atoms.all (current e.pin.source) then .sameBytes else .moved
 
 /-- **A reader without a grant gets only the placeholder, never bytes.** -/
 theorem viewEvidence_noGrant (readable : C.SourceId → Bool)
-    (current : C.SourceId → C.AtomRev → Bool) (e : Evidence C) :
+    (current : C.SourceId → C.AtomRev → Bool) (e : Evidence) :
     readable e.pin.source = false ↔ viewEvidence readable current e = .noGrant e.pin.atoms.length := by
   unfold viewEvidence
   constructor
@@ -396,7 +396,7 @@ theorem viewEvidence_noGrant (readable : C.SourceId → Bool)
 /-- **Same bytes or `moved`, never other bytes.** A reader with a grant sees
 `sameBytes` exactly when every pinned atom is still at its pinned revision. -/
 theorem viewEvidence_sameBytes (readable : C.SourceId → Bool)
-    (current : C.SourceId → C.AtomRev → Bool) (e : Evidence C)
+    (current : C.SourceId → C.AtomRev → Bool) (e : Evidence)
     (hr : readable e.pin.source = true) :
     viewEvidence readable current e = .sameBytes ↔ ∀ a ∈ e.pin.atoms, current e.pin.source a = true := by
   unfold viewEvidence
@@ -410,7 +410,7 @@ theorem viewEvidence_sameBytes (readable : C.SourceId → Bool)
 
 /-- **An admitted container was read by its writer at revisions it held.** -/
 theorem admitEvidence_none (writerReads : C.SourceId → Bool)
-    (held : C.SourceId → C.AtomRev → Bool) (e : Evidence C) :
+    (held : C.SourceId → C.AtomRev → Bool) (e : Evidence) :
     admitEvidence writerReads held e = none ↔
       writerReads e.pin.source = true ∧ ∀ a ∈ e.pin.atoms, held e.pin.source a = true := by
   unfold admitEvidence
@@ -419,12 +419,12 @@ theorem admitEvidence_none (writerReads : C.SourceId → Bool)
 /-! ## Visibility agrees with the per-room audience rule (exploration 01 §2.5) -/
 
 section audience
-variable (d : ClaimIdDerivation C) (σ : C.ClaimId → Option (Claim C P))
+variable [d : ClaimIdDerivation] (σ : C.ClaimId → Option (Claim P))
 
 /-- The scope of a reader who can read exactly the source documents
 `readable`: it allows those origins, denies nothing, and allows no id
 outright. -/
-def readerScope (readable : C.SourceId → Bool) : Scope C :=
+def readerScope (readable : C.SourceId → Bool) : Scope :=
   ⟨fun _ => false, fun _ => false, fun doc _ => readable doc, fun _ _ => false⟩
 
 /-- **Visibility is "may read every transcluded source".** For a claim whose
@@ -436,13 +436,13 @@ The two hypotheses are needed. Without "at least one pin", an unpinned claim
 is hidden while "every source is readable" holds vacuously. With a claim pin,
 visibility also depends on the premise's visibility, which the cell's
 evidence alone does not show. -/
-theorem visibleR_iff_readable (rank : Claim C P → Nat) (readable : C.SourceId → Bool)
-    (c : Claim C P) (cell : Cell C P) (hc : encode c = some cell)
+theorem visibleR_iff_readable (rank : Claim P → Nat) (readable : C.SourceId → Bool)
+    (c : Claim P) (cell : Cell P) (hc : encode c = some cell)
     (hne : c.PinsNonempty) (hsrc : ∀ p ∈ c.pins, ∃ doc r, p.target = .source doc r) :
-    visibleR d σ (readerScope readable) rank c = true ↔
+    visibleR σ (readerScope readable) rank c = true ↔
       ∀ e ∈ cell.evidence, readable e.pin.source = true := by
   unfold visibleR
-  rw [visible_iff_sourcePins d σ (readerScope readable) (rank c) c hne hsrc rfl rfl]
+  rw [visible_iff_sourcePins σ (readerScope readable) (rank c) c hne hsrc rfl rfl]
   unfold encode at hc
   split at hc
   · rename_i hwt
@@ -478,15 +478,15 @@ theorem visibleR_iff_readable (rank : Claim C P → Nat) (readable : C.SourceId 
 let a reader read exactly the sources of the rooms it holds a grant for. A
 compiled claim whose pins (at least one) all name sources in room `ρ` is
 visible to the reader exactly when the reader holds `ρ`'s grant. -/
-theorem visibleR_iff_room {Room : Type} (rank : Claim C P → Nat) (roomOf : C.SourceId → Room)
-    (grants : Room → Bool) (ρ : Room) (c : Claim C P) (cell : Cell C P)
+theorem visibleR_iff_room {Room : Type} (rank : Claim P → Nat) (roomOf : C.SourceId → Room)
+    (grants : Room → Bool) (ρ : Room) (c : Claim P) (cell : Cell P)
     (hc : encode c = some cell) (hne : c.PinsNonempty)
     (hroom : ∀ p ∈ c.pins, ∃ doc r, p.target = .source doc r ∧ roomOf doc = ρ) :
-    visibleR d σ (readerScope fun doc => grants (roomOf doc)) rank c = true ↔
+    visibleR σ (readerScope fun doc => grants (roomOf doc)) rank c = true ↔
       grants ρ = true := by
   have hsrc : ∀ p ∈ c.pins, ∃ doc r, p.target = .source doc r := fun p hp => by
     obtain ⟨doc, r, ht, -⟩ := hroom p hp; exact ⟨doc, r, ht⟩
-  rw [visibleR_iff_readable d σ rank _ c cell hc hne hsrc]
+  rw [visibleR_iff_readable σ rank _ c cell hc hne hsrc]
   unfold encode at hc
   split at hc
   · injection hc with hc

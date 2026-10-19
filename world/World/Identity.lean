@@ -140,15 +140,15 @@ end classes
 
 /-! ## Links from `SameAs` claims -/
 
-variable {C : Carriers} {P : C.SchemaId → Type}
+variable [C : Carriers] {P : C.SchemaId → Type}
 
 /-- Which schemas are `SameAs` schemas (fuzzy candidates and exact merges may
 be different schemas). -/
-structure SameAsView (C : Carriers) where
+structure SameAsView [C : Carriers] where
   isSameAs : C.SchemaId → Bool
 
 /-- If `c` is a `SameAs` claim, the two ids it pins. -/
-def asSameAs (V : SameAsView C) (c : Claim C P) : Option (C.ClaimId × C.ClaimId) :=
+def asSameAs (V : SameAsView) (c : Claim P) : Option (C.ClaimId × C.ClaimId) :=
   if V.isSameAs c.key.schema then
     match c.pins with
     | [⟨.claim a, _, _⟩, ⟨.claim b, _, _⟩] => some (a, b)
@@ -156,40 +156,40 @@ def asSameAs (V : SameAsView C) (c : Claim C P) : Option (C.ClaimId × C.ClaimId
   else none
 
 /-- `SameAs` claims read as edges, so traversal treats them like any edge. -/
-def sameAsEdges (V : SameAsView C) : EdgeView C P := ⟨asSameAs V⟩
+def sameAsEdges (V : SameAsView) : EdgeView P := ⟨asSameAs V⟩
 
 variable [∀ s, DecidableEq (P s)]
-variable (R : ReviewSchema C P) (reg : Registry C P) (d : ClaimIdDerivation C)
-  (V : SameAsView C)
+variable (R : ReviewSchema P) (reg : Registry P) [d : ClaimIdDerivation]
+  (V : SameAsView)
 
 /-- The link a `SameAs` claim makes: when it is current and confirmed, the
 keys of the two claims it pins (both must be present). -/
-def linkOf (L : List (Receipt C P)) (c : Claim C P) : Option (ClaimKey C × ClaimKey C) :=
-  if latest d L (c.id d) = some c ∧ status R reg d L c = .confirmed then
+def linkOf (L : List (Receipt P)) (c : Claim P) : Option (ClaimKey × ClaimKey) :=
+  if latest L (c.id) = some c ∧ status R reg L c = .confirmed then
     match asSameAs V c with
     | some (a, b) =>
-      match latest d L a, latest d L b with
+      match latest L a, latest L b with
       | some ca, some cb => some (ca.key, cb.key)
       | _, _ => none
     | none => none
   else none
 
 /-- The links made by a finite set of candidate `SameAs` claims. -/
-def links (L : List (Receipt C P)) (cands : Finset (Claim C P)) :
-    Finset (ClaimKey C × ClaimKey C) :=
-  cands.biUnion fun c => (linkOf R reg d V L c).toFinset
+def links (L : List (Receipt P)) (cands : Finset (Claim P)) :
+    Finset (ClaimKey × ClaimKey) :=
+  cands.biUnion fun c => (linkOf R reg V L c).toFinset
 
-theorem links_congr (L L' : List (Receipt C P)) (cands : Finset (Claim C P))
-    (h : ∀ c ∈ cands, linkOf R reg d V L c = linkOf R reg d V L' c) :
-    links R reg d V L cands = links R reg d V L' cands := by
+theorem links_congr (L L' : List (Receipt P)) (cands : Finset (Claim P))
+    (h : ∀ c ∈ cands, linkOf R reg V L c = linkOf R reg V L' c) :
+    links R reg V L cands = links R reg V L' cands := by
   unfold links
   exact Finset.biUnion_congr rfl fun c hc => by rw [h c hc]
 
 /-- Order of candidates does not matter: lists with the same members give the
 same links. -/
-theorem links_list_congr (L : List (Receipt C P)) (l₁ l₂ : List (Claim C P))
+theorem links_list_congr (L : List (Receipt P)) (l₁ l₂ : List (Claim P))
     (h : ∀ c, c ∈ l₁ ↔ c ∈ l₂) :
-    links R reg d V L l₁.toFinset = links R reg d V L l₂.toFinset := by
+    links R reg V L l₁.toFinset = links R reg V L l₂.toFinset := by
   congr 1; ext c; simp [h c]
 
 /-! ## Fuzzy candidates make no link and are not crossed -/
@@ -197,62 +197,62 @@ theorem links_list_congr (L : List (Receipt C P)) (l₁ l₂ : List (Claim C P))
 /-- **An unreviewed fuzzy candidate makes no link.** If a `SameAs` claim's
 schema starts in a status other than `confirmed` and no admitted review of it
 exists, it identifies nothing. -/
-theorem fuzzy_no_link (L : List (Receipt C P)) (c : Claim C P)
+theorem fuzzy_no_link (L : List (Receipt P)) (c : Claim P)
     (hinit : (reg c.key.schema).initial ≠ .confirmed)
-    (hnone : admittedReviews R reg d L c.key = []) : linkOf R reg d V L c = none := by
+    (hnone : admittedReviews R reg L c.key = []) : linkOf R reg V L c = none := by
   unfold linkOf
   rw [if_neg]
   rintro ⟨-, hs⟩
-  rw [status_of_no_reviews R reg d L c hnone] at hs
+  rw [status_of_no_reviews R reg L c hnone] at hs
   exact hinit hs
 
 omit [∀ s, DecidableEq (P s)] in
 /-- **An unreviewed fuzzy candidate is not crossed** by a traversal that
 reads `SameAs` claims as edges, when its schema's initial status is not a
 fact. -/
-theorem fuzzy_not_crossed (T : C.SchemaId → Bool) (L : List (Receipt C P)) (c : Claim C P)
+theorem fuzzy_not_crossed (T : C.SchemaId → Bool) (L : List (Receipt P)) (c : Claim P)
     (a b : C.ClaimId)
     (hinit : (reg c.key.schema).isFact (reg c.key.schema).initial = false)
-    (hnone : admittedReviews R reg d L c.key = []) :
-    ¬ Crosses R reg d (sameAsEdges V) T L c a b :=
-  unreviewed_hypothesis_edge_not_crossed R reg d (sameAsEdges V) T L c a b hinit hnone
+    (hnone : admittedReviews R reg L c.key = []) :
+    ¬ Crosses R reg (sameAsEdges V) T L c a b :=
+  unreviewed_hypothesis_edge_not_crossed R reg (sameAsEdges V) T L c a b hinit hnone
 
 /-! ## Exact merges take effect and are reversible -/
 
 omit [∀ s, DecidableEq (P s)] in
-theorem latest_snoc (L : List (Receipt C P)) (r : Receipt C P) :
-    latest d (L ++ [r]) = apply d (latest d L) r := by
+theorem latest_snoc (L : List (Receipt P)) (r : Receipt P) :
+    latest (L ++ [r]) = apply (latest L) r := by
   simp [latest, replay, List.foldl_append]
 
 /-- **An exact merge takes effect.** Put the `SameAs` claim `m` (pinning ids
 `a` and `b`, holding `ca` and `cb`), then a review `rv` of `m` that its schema
 admits — for an exact merge, by the compiler — confirming at `m`'s core. Then
 `ca`'s and `cb`'s keys are linked, hence the same. -/
-theorem merge_takes_effect (L : List (Receipt C P)) (cands : Finset (Claim C P))
-    (m rv ca cb : Claim C P) (a b : C.ClaimId) (r₁ r₂ : Receipt C P)
+theorem merge_takes_effect (L : List (Receipt P)) (cands : Finset (Claim P))
+    (m rv ca cb : Claim P) (a b : C.ClaimId) (r₁ r₂ : Receipt P)
     (hm : m ∈ cands) (h₁ : r₁.op = .put m) (h₂ : r₂.op = .put rv)
     (hends : asSameAs V m = some (a, b))
-    (hrev : reviewOf R reg d m.key r₂ = some (m.core reg, .confirmed))
-    (hne : rv.id d ≠ m.id d)
-    (ha : latest d L a = some ca) (hb : latest d L b = some cb)
-    (ha' : a ≠ m.id d ∧ a ≠ rv.id d) (hb' : b ≠ m.id d ∧ b ≠ rv.id d) :
-    (ca.key, cb.key) ∈ links R reg d V (L ++ [r₁, r₂]) cands ∧
-      Same (links R reg d V (L ++ [r₁, r₂]) cands) ca.key cb.key := by
+    (hrev : reviewOf R reg m.key r₂ = some (m.core reg, .confirmed))
+    (hne : rv.id ≠ m.id)
+    (ha : latest L a = some ca) (hb : latest L b = some cb)
+    (ha' : a ≠ m.id ∧ a ≠ rv.id) (hb' : b ≠ m.id ∧ b ≠ rv.id) :
+    (ca.key, cb.key) ∈ links R reg V (L ++ [r₁, r₂]) cands ∧
+      Same (links R reg V (L ++ [r₁, r₂]) cands) ca.key cb.key := by
   have hL : L ++ [r₁, r₂] = (L ++ [r₁]) ++ [r₂] := by simp
-  have hlat : ∀ j, j ≠ m.id d → j ≠ rv.id d → latest d (L ++ [r₁, r₂]) j = latest d L j := by
+  have hlat : ∀ j, j ≠ m.id → j ≠ rv.id → latest (L ++ [r₁, r₂]) j = latest L j := by
     intro j hj₁ hj₂
     rw [hL, latest_snoc, latest_snoc]
     simp [apply, h₁, h₂, hj₁, hj₂]
-  have hcur : latest d (L ++ [r₁, r₂]) (m.id d) = some m := by
+  have hcur : latest (L ++ [r₁, r₂]) (m.id) = some m := by
     rw [hL, latest_snoc, latest_snoc]
     simp [apply, h₁, h₂, Ne.symm hne]
-  have hst : status R reg d (L ++ [r₁, r₂]) m = .confirmed := by
-    rw [hL]; exact reviewTakesEffect R reg d (L ++ [r₁]) m r₂ _ hrev
-  have hlink : linkOf R reg d V (L ++ [r₁, r₂]) m = some (ca.key, cb.key) := by
+  have hst : status R reg (L ++ [r₁, r₂]) m = .confirmed := by
+    rw [hL]; exact reviewTakesEffect R reg (L ++ [r₁]) m r₂ _ hrev
+  have hlink : linkOf R reg V (L ++ [r₁, r₂]) m = some (ca.key, cb.key) := by
     unfold linkOf
     rw [if_pos ⟨hcur, hst⟩, hends]
     simp only [hlat a ha'.1 ha'.2, hlat b hb'.1 hb'.2, ha, hb]
-  have hmem : (ca.key, cb.key) ∈ links R reg d V (L ++ [r₁, r₂]) cands := by
+  have hmem : (ca.key, cb.key) ∈ links R reg V (L ++ [r₁, r₂]) cands := by
     unfold links
     exact Finset.mem_biUnion.mpr ⟨m, hm, by rw [hlink]; simp⟩
   exact ⟨hmem, Relation.EqvGen.rel _ _ hmem⟩
@@ -270,39 +270,39 @@ Hypotheses, each needed:
   `m` is not itself a review;
 - `rv` is not a `SameAs` claim and is not pinned by any candidate (a review is
   not an identity member). -/
-theorem merge_reversible (L : List (Receipt C P)) (cands : Finset (Claim C P))
-    (m rv : Claim C P) (r₁ r₂ r₃ : Receipt C P)
-    (h₁ : r₁.op = .put m) (h₂ : r₂.op = .put rv) (h₃ : r₃.op = .retract (m.id d))
-    (hmFresh : latest d L (m.id d) = none) (hrvFresh : latest d L (rv.id d) = none)
-    (hne : rv.id d ≠ m.id d)
+theorem merge_reversible (L : List (Receipt P)) (cands : Finset (Claim P))
+    (m rv : Claim P) (r₁ r₂ r₃ : Receipt P)
+    (h₁ : r₁.op = .put m) (h₂ : r₂.op = .put rv) (h₃ : r₃.op = .retract (m.id))
+    (hmFresh : latest L (m.id) = none) (hrvFresh : latest L (rv.id) = none)
+    (hne : rv.id ≠ m.id)
     (hmNotRev : asReview R m = none)
-    (hrvOf : ∃ dg s, asReview R rv = some (m.id d, dg, s))
+    (hrvOf : ∃ dg s, asReview R rv = some (m.id, dg, s))
     (hrvNotSameAs : asSameAs V rv = none)
-    (hends : ∀ c ∈ cands, ∀ a b, asSameAs V c = some (a, b) → a ≠ rv.id d ∧ b ≠ rv.id d) :
-    links R reg d V (L ++ [r₁, r₂, r₃]) cands = links R reg d V L cands := by
+    (hends : ∀ c ∈ cands, ∀ a b, asSameAs V c = some (a, b) → a ≠ rv.id ∧ b ≠ rv.id) :
+    links R reg V (L ++ [r₁, r₂, r₃]) cands = links R reg V L cands := by
   have hL : L ++ [r₁, r₂, r₃] = ((L ++ [r₁]) ++ [r₂]) ++ [r₃] := by simp
   -- The state after the three receipts.
-  have hlat : ∀ j, j ≠ rv.id d → latest d (L ++ [r₁, r₂, r₃]) j = latest d L j := by
+  have hlat : ∀ j, j ≠ rv.id → latest (L ++ [r₁, r₂, r₃]) j = latest L j := by
     intro j hj
     rw [hL, latest_snoc, latest_snoc, latest_snoc]
-    by_cases hjm : j = m.id d
+    by_cases hjm : j = m.id
     · subst hjm; simp [apply, h₃, hmFresh]
     · simp [apply, h₁, h₂, h₃, hjm, hj]
-  have hlatrv : latest d (L ++ [r₁, r₂, r₃]) (rv.id d) = some rv := by
+  have hlatrv : latest (L ++ [r₁, r₂, r₃]) (rv.id) = some rv := by
     rw [hL, latest_snoc, latest_snoc, latest_snoc]
     simp [apply, h₂, h₃, hne]
   -- No added receipt is an admitted review of a claim with another id than `m`.
-  have hnorev : ∀ c : Claim C P, c.id d ≠ m.id d →
-      ∀ r ∈ [r₁, r₂, r₃], reviewOf R reg d c.key r = none := by
+  have hnorev : ∀ c : Claim P, c.id ≠ m.id →
+      ∀ r ∈ [r₁, r₂, r₃], reviewOf R reg c.key r = none := by
     intro c hc r hr
     obtain ⟨dg₀, s₀, hrv⟩ := hrvOf
     simp only [List.mem_cons, List.not_mem_nil, or_false] at hr
     rcases hr with rfl | rfl | rfl
     · simp [reviewOf, h₁, hmNotRev]
-    · cases hk : reviewOf R reg d c.key r with
+    · cases hk : reviewOf R reg c.key r with
       | none => rfl
       | some v =>
-        obtain ⟨c', hop, has, -⟩ := (reviewOf_eq_some R reg d c.key r v.1 v.2).mp hk
+        obtain ⟨c', hop, has, -⟩ := (reviewOf_eq_some R reg c.key r v.1 v.2).mp hk
         rw [h₂] at hop; cases hop
         rw [hrv] at has
         simp only [Option.some.injEq, Prod.mk.injEq] at has
@@ -310,20 +310,20 @@ theorem merge_reversible (L : List (Receipt C P)) (cands : Finset (Claim C P))
     · simp [reviewOf, h₃]
   apply links_congr
   intro c hc
-  by_cases hcm : c.id d = m.id d
+  by_cases hcm : c.id = m.id
   · -- `m`'s id: absent before and after.
-    have h0 : latest d L (c.id d) = none := by rw [hcm]; exact hmFresh
-    have h2 : latest d (L ++ [r₁, r₂, r₃]) (c.id d) = none := by
+    have h0 : latest L (c.id) = none := by rw [hcm]; exact hmFresh
+    have h2 : latest (L ++ [r₁, r₂, r₃]) (c.id) = none := by
       rw [hlat _ (by rw [hcm]; exact Ne.symm hne), h0]
     unfold linkOf
     rw [if_neg (by rintro ⟨h, -⟩; rw [h2] at h; cases h),
       if_neg (by rintro ⟨h, -⟩; rw [h0] at h; cases h)]
-  · by_cases hcrv : c.id d = rv.id d
+  · by_cases hcrv : c.id = rv.id
     · -- `rv`'s id: absent before; after, only `rv` is there, and it is not a `SameAs`.
-      have h0 : latest d L (c.id d) = none := by rw [hcrv]; exact hrvFresh
+      have h0 : latest L (c.id) = none := by rw [hcrv]; exact hrvFresh
       unfold linkOf
-      rw [if_neg (show ¬ (latest d L (c.id d) = some c ∧
-          status R reg d L c = .confirmed) by rintro ⟨h, -⟩; rw [h0] at h; cases h)]
+      rw [if_neg (show ¬ (latest L (c.id) = some c ∧
+          status R reg L c = .confirmed) by rintro ⟨h, -⟩; rw [h0] at h; cases h)]
       split
       · rename_i hcond
         have : c = rv := by
@@ -332,11 +332,11 @@ theorem merge_reversible (L : List (Receipt C P)) (cands : Finset (Claim C P))
         rw [hrvNotSameAs]
       · rfl
     · -- Any other id: same state, same status, same endpoints.
-      have hcur : latest d (L ++ [r₁, r₂, r₃]) (c.id d) = latest d L (c.id d) :=
+      have hcur : latest (L ++ [r₁, r₂, r₃]) (c.id) = latest L (c.id) :=
         hlat _ hcrv
-      have hst : status R reg d (L ++ [r₁, r₂, r₃]) c = status R reg d L c := by
+      have hst : status R reg (L ++ [r₁, r₂, r₃]) c = status R reg L c := by
         unfold status
-        exact statusAt_append_of_no_review R reg d L _ c.key _ (hnorev c hcm)
+        exact statusAt_append_of_no_review R reg L _ c.key _ (hnorev c hcm)
       unfold linkOf
       rw [hcur, hst]
       split
@@ -350,20 +350,20 @@ theorem merge_reversible (L : List (Receipt C P)) (cands : Finset (Claim C P))
 
 /-- **The classes and canonical keys are restored** after the merge is
 retracted. -/
-theorem merge_reversible_canonical [LinearOrder (ClaimKey C)]
-    (L : List (Receipt C P)) (cands : Finset (Claim C P))
-    (m rv : Claim C P) (r₁ r₂ r₃ : Receipt C P)
-    (h₁ : r₁.op = .put m) (h₂ : r₂.op = .put rv) (h₃ : r₃.op = .retract (m.id d))
-    (hmFresh : latest d L (m.id d) = none) (hrvFresh : latest d L (rv.id d) = none)
-    (hne : rv.id d ≠ m.id d)
+theorem merge_reversible_canonical [LinearOrder (ClaimKey)]
+    (L : List (Receipt P)) (cands : Finset (Claim P))
+    (m rv : Claim P) (r₁ r₂ r₃ : Receipt P)
+    (h₁ : r₁.op = .put m) (h₂ : r₂.op = .put rv) (h₃ : r₃.op = .retract (m.id))
+    (hmFresh : latest L (m.id) = none) (hrvFresh : latest L (rv.id) = none)
+    (hne : rv.id ≠ m.id)
     (hmNotRev : asReview R m = none)
-    (hrvOf : ∃ dg s, asReview R rv = some (m.id d, dg, s))
+    (hrvOf : ∃ dg s, asReview R rv = some (m.id, dg, s))
     (hrvNotSameAs : asSameAs V rv = none)
-    (hends : ∀ c ∈ cands, ∀ a b, asSameAs V c = some (a, b) → a ≠ rv.id d ∧ b ≠ rv.id d)
-    (k : ClaimKey C) :
-    canonical (links R reg d V (L ++ [r₁, r₂, r₃]) cands) k =
-      canonical (links R reg d V L cands) k := by
-  rw [merge_reversible R reg d V L cands m rv r₁ r₂ r₃ h₁ h₂ h₃ hmFresh hrvFresh hne
+    (hends : ∀ c ∈ cands, ∀ a b, asSameAs V c = some (a, b) → a ≠ rv.id ∧ b ≠ rv.id)
+    (k : ClaimKey) :
+    canonical (links R reg V (L ++ [r₁, r₂, r₃]) cands) k =
+      canonical (links R reg V L cands) k := by
+  rw [merge_reversible R reg V L cands m rv r₁ r₂ r₃ h₁ h₂ h₃ hmFresh hrvFresh hne
     hmNotRev hrvOf hrvNotSameAs hends]
 
 end World
