@@ -31,45 +31,49 @@
       "assurance": "design target",
       "measures": "ScopedStore — the RFC 0181 store wrapper — over a real (temp SQLite) Ledger built through ekos_ledger's public API: the eight store tests of scope.rs:1041 on as ordered step scenarios — filtered object/relationship/history/at/fact/audit reads, both-ends relationship visibility, evidence gating through visible objects, search and retrieval filtering, scoped counts and diff, write/event/vacuum refusal, multi-scope intersection and set_scopes replacement.",
       "does_not_measure": "the MCP/CLI surface over a compiled project (the read_scope.rs leak suite: marker words through every tool shape, the result cache, --read-scope flag and process scope) — that needs the fixture pipeline (run_fixture.py), not built; the every_store_method_has_a_decision_here meta-test (source inspection, nothing to replay); scale (the world is four objects)."
+    },
+    "ledger.ecommerce": {
+      "kernel": "Ledger",
+      "panel_file": "panels/ledger/items.jsonl",
+      "assurance": "design target",
+      "status": "controls committed (controls/ledger.ecommerce.{graph.ndjson,objects.jsonl,relationships.jsonl,status.json,conflicts.json,sidecar.json}) but not self-scored here: they are whole-fixture artifacts, not the item-keyed JSONL score.py's diff code consumes, and wiring them into regen_controls.py means either a control-dump subcommand (lane W12's tree) or a new fixture-runner entry kind — registration left to the root (notes/W18-fixture-pipeline.md)",
+      "measures": "the six-stage ekos pipeline (init, build, recover, resolve, compile, commit --yes) on ecommerce.sql through the release binary in a scratch workspace: the control is the graph export ndjson (8 nodes — 2 File plus exactly the 6 Tables the integration test counts — and 6 ForeignKey edges), the EKL object and relationship rows sorted by id, status and conflicts json (0 conflicts), pinned by a sidecar (binary sha256, EKOS commit 8e3c178, fixture sha256, per-stage timings); a second fresh-workspace run reproduced ids and content identically, differing only in named volatile fields.",
+      "does_not_measure": "evidence and its randomly-minted v4 ids (EKOS#10 — no evidence field in the export, none in the EKL default returns; the 14 evidence entries appear as a count in status only); relationship ids and edge properties in the export (edges are s/t node indexes; the EKL rows carry ids but no status, so a pending SameAs is invisible); object properties (columns, check_constraints, sources — the export drops them unless named one by one); versions/history, events and session objects; content signatures (pub(crate) in EKOS — the control-dump's job); the re-commit append-only claim (needs a second commit on the same workspace); mysql_hash_comments, sample_project, sample_docs and git_fixture (not run in W18)."
+    },
+    "ledger.northwind": {
+      "kernel": "Ledger",
+      "panel_file": "panels/ledger/items.jsonl",
+      "assurance": "design target",
+      "status": "controls committed (controls/ledger.northwind.{graph.ndjson,objects.jsonl,relationships.jsonl,status.json,conflicts.json,sidecar.json}) but not self-scored here: they are whole-fixture artifacts, not the item-keyed JSONL score.py's diff code consumes, and wiring them into regen_controls.py means either a control-dump subcommand (lane W12's tree) or a new fixture-runner entry kind — registration left to the root (notes/W18-fixture-pipeline.md)",
+      "measures": "the six-stage ekos pipeline on northwind.sql through the release binary in a scratch workspace: the control is the graph export ndjson (15 nodes — 2 File plus the 13 real Tables the integration test counts — and 13 ForeignKey edges), the EKL object and relationship rows sorted by id, status json (56 entries, 28 evidence) and conflicts json (0 conflicts), pinned by the same sidecar shape as ledger.ecommerce.",
+      "does_not_measure": "everything listed for ledger.ecommerce (same control shapes, same blind spots — evidence ids, relationship ids in the export, edge properties, object properties, versions, events, content signatures, the re-commit claim); reproducibility was measured on ecommerce only (W18 ran northwind once)."
+    },
+    "identity.unit": {
+      "kernel": "Identity",
+      "panel_file": "panels/identity/identity.unit.jsonl",
+      "control_file": "controls/identity.unit.control.jsonl",
+      "assurance": "design target",
+      "measures": "DefaultResolver::resolve on named objects (ekos/crates/identity/src/lib.rs): merge proposals as member sets with exact_name_match and confidence, SameNameDifferentKind conflict groups against the five expected-coexistence narrowings, structurally-keyed Custom-kind exclusion through the ekos_kir::custom_kinds registry, and the name_for_similarity rules (Table schema qualifier, GitHub owner/repo#n prefix) — 58 items from 45 tests.",
+      "does_not_measure": "the structural_score columns/rows signals on their own (four not-transcribed test families, a future structural-score panel); the stats/threshold/serde API tests; every_pipeline_custom_kind_is_registered (walks the EKOS source tree, no object inputs); merge execution (resolve proposes, the ledger merges — that is branch.unit); fixtures-scale resolve."
+    },
+    "branch.unit": {
+      "kernel": "Branch",
+      "panel_file": "panels/branch/items.jsonl",
+      "control_file": "controls/branch.unit.control.jsonl",
+      "assurance": "design target",
+      "measures": "merge_branch over two real temp SQLite ledgers (ekos/crates/ledger/src/lib.rs:1621): clean additions from branch, content-signature no-ops for identical objects (created_at stripped before hashing), and same-id diverged objects recorded as conflicts rather than overwritten — 3 items from the 3 merge_branch tests.",
+      "does_not_measure": "relationship merging (no transcribed test appends a relationship, so that half of merge_branch is unmeasured); objects removed in branch (EKOS never looks for absences); three-way merges; evidence propagation into main; persisted conflicts (the report only, EKOS does not store them)."
+    },
+    "impact.unit": {
+      "kernel": "Impact",
+      "panel_file": "panels/impact/items.jsonl",
+      "control_file": "controls/impact.control.jsonl",
+      "assurance": "design target",
+      "measures": "the Runtime graph walks (ekos/crates/runtime/src/lib.rs) over a real temp SQLite ledger: load_neighborhood and load_neighborhood_bounded (truncation reporting, no dangling edges after a cut), trace_impact both directions with kind filters and hop bounds, dependents()/related(), the pending-review exclusion (unconfirmed SameAs), the RFC 0151 session-memory exclusions, and the RFC 0144 doc-mention rule — 26 items from 15 tests.",
+      "does_not_measure": "named_graph_ops_respect_direction_edge_kind_and_hops and the kind-prefilter test (not walk-shaped items); the relationship-read session filters outside these walks (session_edges_are_absent_from_every_relationship_read_path); search-quality aspects of dependents ranking; fixture-scale graphs (needs run_fixture.py)."
     }
   },
   "placeholders": [
-    {
-      "kernel": "Branch",
-      "panel": "branch.unit",
-      "items": 3,
-      "status": "panel exists (panels/branch/, lane W6); no control in controls/ yet — the merge_stores/merge_branch dump is not built",
-      "assurance": "design target",
-      "measures": "(planned) merge_stores vs the kernel on object additions, property divergence and no-ops with fixed re-keyed ids; main's version never overwritten.",
-      "does_not_measure": "removed-in-branch objects (EKOS never looks for absences); three-way merges; evidence copied into main; persisted conflicts."
-    },
-    {
-      "kernel": "Identity",
-      "panel": "identity.unit",
-      "items": 58,
-      "status": "panel exists (panels/identity/, lane W3); no control in controls/ yet — the DefaultResolver::resolve dump is not built",
-      "assurance": "design target",
-      "measures": "(planned) DefaultResolver::resolve merge groups, conflict groups and pending-edge sets on named objects with assigned ids.",
-      "does_not_measure": "confidence floats beyond 1e-6 tolerance; overlay-versus-re-key choices (design §7); fixtures-scale resolve."
-    },
-    {
-      "kernel": "Ledger",
-      "panel": "ledger.ecommerce / ledger.northwind",
-      "items": null,
-      "status": "no panel; needs run_fixture.py (the fixture→workspace→graph pipeline) and the ledger dump",
-      "assurance": "design target",
-      "measures": "(planned) current (id, content_signature) sets, object_at cuts, diff touched ids, re-commit append-only behaviour.",
-      "does_not_measure": "events (no lister exists, §2.4); unreferenced evidence; entry rowids and written_at volatility."
-    },
-    {
-      "kernel": "Impact",
-      "panel": "impact.ecommerce / impact.northwind",
-      "items": null,
-      "status": "no panel; needs the fixture pipeline and the impact dump",
-      "assurance": "design target",
-      "measures": "(planned) trace_impact hop lists both directions, hops 1..5, confirmed-edge exclusion of pending SameAs.",
-      "does_not_measure": "search-quality aspects of dependents ranking."
-    },
     {
       "kernel": "Time",
       "panel": "time.ecommerce",
