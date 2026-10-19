@@ -39,6 +39,52 @@ NO_CANDIDATE = ("No VerEKOS candidate is scored yet. Until one is, the Agree col
                 "(from the last `regen_controls.py` run recorded in controls/MANIFEST.json).")
 
 
+CANDIDATE_NOTE = ("The **Candidate** column is the Lean model itself answering the panel: "
+                  "`check/` runs a `world/` definition on each item (`check/run.py`), and "
+                  "`score.py` scores it against EKOS's control. A row whose verdict is fresh "
+                  "(candidate, panel and control hashes match the files) with 0 unexplained and "
+                  "0 verekos_defect shows the label it earned, `executable property`, in place of "
+                  "`design target`; panels/LABELS.json is not edited. Rows without a verdict in "
+                  "controls/check/ have no candidate.")
+
+
+def candidate_verdict(key, score, panel_file=None):
+    """controls/check/<panel>.verdict.json, checked against the files it names
+    and against the row's current panel file.
+
+    Returns (verdict, stale reason or None), or (None, None) when there is none."""
+    path = ROOT / "controls/check" / f"{key}.verdict.json"
+    if not path.is_file():
+        return None, None
+    v = json.loads(path.read_text())
+    for field, rel in (("candidate_sha256", v.get("candidate")),
+                       ("control_sha256", v.get("control")),
+                       ("panel_sha256", panel_file)):
+        f = ROOT / rel if rel else None
+        if f is None or not f.is_file():
+            return v, f"{field}: {rel} is missing"
+        if score.sha256_of(f.read_text()) != v.get(field):
+            return v, f"{rel} changed since the verdict"
+    return v, None
+
+
+def candidate_cell(v, stale):
+    if v is None:
+        return "—"
+    if stale:
+        return f"stale ({esc(stale)})"
+    return (f"{v['agree']} / {v['items']} agree, {v['classified']} classified, "
+            f"{v['unexplained']} unexplained")
+
+
+def earned_label(label, v, stale):
+    if v is None or stale or v["unexplained"] or v["verekos_defect"]:
+        return label
+    if label == "design target":
+        return "executable property"
+    return label
+
+
 def load_score():
     spec = importlib.util.spec_from_file_location("verekos_score", HERE / "score.py")
     mod = importlib.util.module_from_spec(spec)
@@ -129,11 +175,17 @@ def main() -> int:
                  f"{len(labels['panels']) - scored} rows with inputs but no item-keyed control, "
                  f"{len(labels['placeholders'])} placeholder rows (no panel yet)")
     lines.append(f"- {STANDING}")
-    lines.append(f"- {NO_CANDIDATE}")
+    with_candidate = [k for k in labels["panels"] if candidate_verdict(k, score)[0] is not None]
+    if with_candidate:
+        lines.append(f"- Candidates scored: {', '.join(f'`{k}`' for k in with_candidate)}. "
+                     "On every other row " + NO_CANDIDATE[0].lower() + NO_CANDIDATE[1:])
+        lines.append(f"- {CANDIDATE_NOTE}")
+    else:
+        lines.append(f"- {NO_CANDIDATE}")
     lines.append("")
 
-    lines.append("| Kernel | Panel | Items | Test asserts | Agree | Classified (E / V / N) | Unexplained | Assurance | Scope: what this panel measures | Does NOT measure |")
-    lines.append("|---|---|---|---|---|---|---|---|---|---|")
+    lines.append("| Kernel | Panel | Items | Test asserts | Agree | Candidate (check/) | Classified (E / V / N) | Unexplained | Assurance | Scope: what this panel measures | Does NOT measure |")
+    lines.append("|---|---|---|---|---|---|---|---|---|---|---|")
     detail = []
     for key, row in labels["panels"].items():
         if row.get("control_file"):
@@ -144,22 +196,25 @@ def main() -> int:
                 sys.exit(f"{key}: the control self-score is not clean: {r}")
             classes = [e["class"] for _, _, e, _ in r["_classified"]]
             n_e, n_v, n_n = (classes.count(c) for c in ("ekos_defect", "verekos_defect", "non_goal"))
+            cv, stale = candidate_verdict(key, score, row.get("panel_file"))
+            label = earned_label(row["assurance"], cv, stale)
             lines.append(f"| {row['kernel']} | `{key}` | {r['items']} | "
                          f"{asserts_cell(runs.get(row['control_file']), row.get('expected_file', True))} | {r['agree']} | "
-                         f"{n_e} / {n_v} / {n_n} | {r['unexplained']} (law: 0) | {row['assurance']} | "
+                         f"{candidate_cell(cv, stale)} | "
+                         f"{n_e} / {n_v} / {n_n} | {r['unexplained']} (law: 0) | {label} | "
                          f"{esc(row['measures'])} | {esc(row['does_not_measure'])} |")
             matched = [e for _, _, e, _ in r["_classified"]]
             detail.append((key, row, r, matched))
         else:
             n = panel_item_count(ROOT / row["panel_file"], key) if row.get("panel_file") else None
             lines.append(f"| {row['kernel']} | `{key}` | {n if n is not None else '—'} | "
-                         f"{asserts_cell(None, row.get('expected_file'))} | — | — | — | {row['assurance']} | "
+                         f"{asserts_cell(None, row.get('expected_file'))} | — | — | — | — | {row['assurance']} | "
                          f"{esc(row['measures'])} | {esc(row['does_not_measure'])} |")
             detail.append((key, row, None, []))
     for row in labels["placeholders"]:
         items = row.get("items")
         items_cell = str(items) if items is not None else "—"
-        lines.append(f"| {row['kernel']} | `{row['panel']}` ({esc(row['status'])}) | {items_cell} | — | — | — | — | "
+        lines.append(f"| {row['kernel']} | `{row['panel']}` ({esc(row['status'])}) | {items_cell} | — | — | — | — | — | "
                      f"{row['assurance']} | {esc(row['measures'])} | {esc(row['does_not_measure'])} |")
 
     lines.append("")
@@ -172,6 +227,22 @@ def main() -> int:
             lines.append(f"Self-score (the control is the candidate, §3.5-1) run at render time: "
                          f"{r['items']} items, {r['agree']} agree, {r['mismatch']} mismatch, "
                          f"{r['missing']} missing, {r['extra']} extra, {r['unexplained']} unexplained.")
+            cv, stale = candidate_verdict(key, score, row.get("panel_file"))
+            if cv is not None:
+                lines.append("")
+                b = cv.get("check_build", {})
+                lines.append(
+                    f"Candidate (`{cv['candidate']}`, `sha256:{cv['candidate_sha256'][:12]}…`) "
+                    f"scored against `{cv['control']}` (`sha256:{cv['control_sha256'][:12]}…`), "
+                    f"panel `sha256:{cv['panel_sha256'][:12]}…`, recorded {cv['recorded']}: "
+                    f"{cv['items']} items, {cv['agree']} agree, {cv['mismatch']} mismatch, "
+                    f"{cv['missing']} missing, {cv['extra']} extra, {cv['classified']} classified, "
+                    f"{cv['verekos_defect']} verekos_defect, {cv['unexplained']} unexplained. "
+                    f"Built by `verekos-check` `sha256:{b.get('exe_sha256', '?')[:12]}…` from "
+                    f"`check/` tree `{b.get('check_tree', '?')[:12]}`"
+                    + (" (dirty)" if b.get("check_dirty") else "")
+                    + f", world `{(b.get('world_rev') or '?')[:12]}`."
+                    + (f" **Stale:** {stale}." if stale else ""))
         else:
             lines.append(f"Placeholder: {row.get('status', 'no control yet')}.")
         lines.append("")

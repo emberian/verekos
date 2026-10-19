@@ -43,15 +43,20 @@ OUT = ROOT / "controls/check"
 SCORE = ROOT / "tools/scoreboard/score.py"
 PROJECT = ROOT / "tools/scoreboard/project_conflict_keys.py"
 
+# Panel and control paths come from panels/LABELS.json, the board's own source.
+LABELS = json.loads((ROOT / "panels/LABELS.json").read_text())["panels"]
+SCOPE_PANEL = LABELS["scope.decision"]["panel_file"]
+SCOPE_CONTROL = LABELS["scope.decision"]["control_file"]
+CONFLICTS_PANEL = LABELS["conflicts.unit"]["panel_file"]
+CONFLICTS_CONTROL = LABELS["conflicts.unit"]["control_file"]
 PANELS = [
     # panel, kernel, runner args, panel inputs, control the candidate is scored against
-    ("scope.decision", "scope", ["scope"], "panels/scope/decision.jsonl",
-     "controls/scope.decision.control.jsonl"),
-    ("conflicts.unit", "conflicts", ["conflicts"], "panels/conflicts/unit.jsonl",
+    ("scope.decision", "scope", ["scope"], SCOPE_PANEL, SCOPE_CONTROL),
+    ("conflicts.unit", "conflicts", ["conflicts"], CONFLICTS_PANEL,
      "controls/check/conflicts.unit.keys.control.jsonl"),
 ]
 MUTANT = ("scope.decision.mutant-deny-ignored", "scope", ["scope", "--mutant", "deny-ignored"],
-          "panels/scope/decision.jsonl", "controls/scope.decision.control.jsonl")
+          SCOPE_PANEL, SCOPE_CONTROL)
 
 
 def sha256_file(p: Path) -> str:
@@ -109,8 +114,8 @@ def main() -> int:
         sys.exit(f"{EXE} is missing: cd check && nice -n 10 lake build")
     OUT.mkdir(parents=True, exist_ok=True)
     p = subprocess.run([sys.executable, "-I", str(PROJECT), "--panel",
-                        str(ROOT / "panels/conflicts/unit.jsonl"), "--control",
-                        str(ROOT / "controls/conflicts.unit.control.jsonl"), "--out",
+                        str(ROOT / CONFLICTS_PANEL), "--control",
+                        str(ROOT / CONFLICTS_CONTROL), "--out",
                         str(OUT / "conflicts.unit.keys.control.jsonl")])
     if p.returncode != 0:
         sys.exit("key projection failed")
