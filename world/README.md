@@ -38,8 +38,11 @@ nice -n 10 lake build
 | `World/Status.lean` | Status is computed from the admitted reviews in the log. If one is pinned at the claim's current core, the status is the last such decision. If reviews exist only at other cores, it is `needsReview`. Otherwise it is the schema's initial status. | `compilerCannotDecide`, `decision_has_author`, `reviewSurvives`, `reviewSurvives_put`, `needsReviewOnCoreChange`, `reviewTakesEffect`, `decided_stays_decided` |
 | `World/Conflicts.lean` | `detect` takes a `Finset` of claims and returns the (schema, subject, attribute) keys on which two different claims state different values. Includes a concrete table schema with typed columns. | `mem_detect` (exact characterization), `coverage`, `soundness`, `detectList_congr` (order and repeats do not matter), `detectList_perm`, `detect_mono`; four `decide` examples |
 | `World/Visible.lean` | Visibility under a reader's scope, computed on an explicit pin-depth bound. A claim is visible when it is allowed and not denied. Denial flows along pins. | `deny_wins_id`, `deny_wins_origin`, `deny_through_premise`, `conflict_hidden_of_alternative_denied`, `unpinned_hidden`, `visible_pins`, `visible_mono` |
+| `World/WellFormed.lean` | The three rules. **Pins are nonempty.** **No pin cycles**: a *rank* drops from every claim to each claim it pins, so the pin graph is well founded with finite depth. **Sources are sorted and duplicate-free** (`ClaimKey.Canonical`, and `ClaimKey.normalize` to get there). | `eq_iff_of_canonical` (keys equal iff same schema, subject and source *set*), `normalize_eq_iff`, `latest_wellFormed`, `Ranked.wellFounded`, `visible_stable` (every bound above a claim's rank gives the same visibility), `visibleR_rank_irrelevant`, `visible_iff_sourcePins`, `reviewSurvives_put_acyclic` (the self-review hypothesis replaced by acyclicity) |
+| `World/Traverse.lean` | Reachability from a seed over typed edge claims, within a hop bound. It crosses an edge only if the edge and both endpoints are current facts (`Schema.isFact` of their status). | `pending_edge_never_crossed`, `reach_trivial_of_all_pending`, `unreviewed_hypothesis_edge_not_crossed`, `unreviewed_hypothesis_node_blocks`, `reach_mono_confirm` (a confirming review only adds), `reach_mono_hops`, `reach_mono_hops_le` |
+| `World/Identity.lean` | Identity as an overlay. A `SameAs` claim pins two claims. Current, confirmed ones link their keys. `Same` is the equivalence closure of those links, and the canonical key is the least key of a class. | `same_equivalence`, `canonical_eq_iff`, `canonical_congr` (depends only on the classes), `links_list_congr`, `fuzzy_no_link`, `fuzzy_not_crossed`, `merge_takes_effect`, `merge_reversible`, `merge_reversible_canonical` |
 | `World/Minidregg.lean` | The carriers filled with minidregg's types. `claimIdDerivation` derives ids the way minidregg derives identifiers. Source-pin freshness is checked against `AtomRecord.revision`. | `claimId_injective` (from an injective encoder and digest, using minidregg's `preimageCodec_encode_injective`), `sourcePinFresh_iff`, `stale_of_moved` |
-| `World/Examples.lean` | The theorems run on the table example, so their hypotheses are shown to be satisfiable. A human review confirms. A compiler-written review changes nothing. A core change gives `needsReview`, and restoring the core restores the decision. `diff` over-approximates. A reader denied one file does not see the conflict. | `d₀_injective`; thirteen `decide` examples |
+| `World/Examples.lean` | The theorems run on the table example (extended with a foreign key, a fuzzy `SameAs` and an exact `SameAs` schema, and a total order on keys), so their hypotheses are shown to be satisfiable. A human review confirms. A compiler-written review changes nothing. A core change gives `needsReview`, and restoring the core restores the decision. `diff` over-approximates. A reader denied one file does not see the conflict. The example state has a rank. The foreign key is crossed; the fuzzy candidate is not, until a human confirms it. The compiler's exact merge links two tables and is undone by retracting it. | `d₀_injective`, `ranked₀`, `keyCode_injective`, `same_empty`; about thirty examples checked by `decide` or by the theorems |
 
 ## Quoted from minidregg (never redefined)
 
@@ -55,17 +58,27 @@ nice -n 10 lake build
   would discharge it: an injective key encoder plus an injective digest. A real
   hash is not injective, so that premise is an idealization. minidregg itself
   attaches no injectivity to `DigestDerivation`.
-- **Laws are not yet in the types.** Three are missing: "pins are nonempty",
-  "pins form no cycle", and "`sources` is sorted and duplicate-free". Visibility
-  fails closed on an unpinned claim. `reviewSurvives_put` excludes a claim that
-  reviews itself by hypothesis.
+- **The rules are predicates, not types.** `Claim.WellFormed` (nonempty pins
+  and canonical sources) and `Ranked` (no pin cycles) are hypotheses that
+  theorems use. Nothing makes an ill-formed claim impossible to write.
+  `latest_wellFormed` shows a log that puts only well-formed claims keeps a
+  well-formed state. No theorem yet shows that a log keeps its pin graph
+  ranked, because a put can pin anything.
+- **No ranks are computed.** A rank is supplied as a witness. Nothing computes
+  one from a state, or proves one exists for every acyclic finite state.
 - **Reviews cannot be retracted.** Status ignores retract receipts, so a change
   of mind is a new review.
-- **No traversal.** Staleness of claim pins (exploration 02 §2b, for claims),
-  traversal over facts (§2d), and identity (§3 G) are not here yet. Only source
-  pins have a freshness check, in `World.Minidregg`.
-- **The concrete schema's core digest is a stand-in.** It is the column count.
-  No theorem depends on it.
-- **The visibility bound is not tied to the pin graph's depth.** That would
-  need the acyclicity law. `visible_mono` shows that a bound that is too small
-  only hides more.
+- **Traversal and identity take their candidates as given.** Traversal works
+  over what the state holds. Identity works over a finite candidate set
+  (`cands`) that a caller supplies, such as the manifest. The canonical key is
+  noncomputable, because it uses classical choice to filter a class; the
+  examples prove canonical keys rather than evaluate them.
+- **Several hypotheses are specific to one operation.**
+  - `reach_mono_confirm` needs the review put under a fresh id, pinned at the
+    current core, with a decision that is a fact. Without each one the theorem
+    is false; the docstring gives the counterexample.
+  - `merge_reversible` needs fresh distinct ids for the merge and its review,
+    and a review that no candidate pins.
+- **Claim-pin staleness is not checked.** It is only implicit in `status`.
+- **The example schemas' core digests are stand-ins.** They are the column
+  count, or `0`.
