@@ -8,4 +8,5 @@ import World.WellFormed
 import World.Traverse
 import World.Identity
 import World.Admission
+import World.Document
 import World.Examples
