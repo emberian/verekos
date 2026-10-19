@@ -1,0 +1,16 @@
+{"item":"type_aliases_are_one_type#1","same":true}
+{"item":"type_aliases_are_one_type#2","same":true}
+{"item":"type_aliases_are_one_type#3","same":true}
+{"item":"type_aliases_are_one_type#4","same":true}
+{"item":"type_aliases_are_one_type#5","same":true}
+{"item":"type_aliases_are_one_type#6","same":true}
+{"item":"type_aliases_are_one_type#7","same":false}
+{"item":"type_aliases_are_one_type#8","same":false}
+{"item":"a_table_defined_twice_differently_is_a_conflict_and_collapses_to_the_last#1","keys":[["t:user_preference","columns"]]}
+{"item":"identical_duplicates_collapse_silently#1","keys":[]}
+{"item":"a_column_type_disagreement_is_its_own_conflict#1","keys":[["t:t","columns.amount.data_type"]]}
+{"item":"detection_is_independent_of_input_order_and_ids_are_stable#1","keys":[["t:t","columns.x.data_type"]],"permuted_stable":true}
+{"item":"merge_groups_report_what_the_merge_would_drop#1","keys":[["t:orders","columns.total.data_type"]]}
+{"item":"merge_groups_report_what_the_merge_would_drop#2","keys":[]}
+{"item":"labels_from_different_sources_that_share_no_word_conflict#1","keys":[["enum:a","label"]]}
+{"item":"spellings_of_one_label_and_same_source_variants_do_not#1","keys":[]}
