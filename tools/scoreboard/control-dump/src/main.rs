@@ -239,7 +239,7 @@ fn main() {
     match result {
         Ok(report) => {
             eprintln!(
-                "{{\"panel\":{},\"items\":{},\"agree\":{},\"mismatch\":{},\"missing\":{}}}",
+                "{{\"panel\":\"{}\",\"items\":{},\"agree\":{},\"mismatch\":{},\"missing\":{}}}",
                 report.panel, report.items, report.agree, report.mismatch, report.missing
             );
             if report.failures() > 0 {

@@ -1,21 +1,20 @@
 {
-  "note": "W5 partial manifest: only the scope.decision and conflicts.unit controls exist yet; the full manifest of exploration 03 \u00a72.1 is written by regen_controls.py, which does not exist yet.",
   "ekos": {
     "repo": "/Users/ember/dev/EKOS",
     "commit": "8e3c178fc45741c7e2b1576e936646e0c461e75c",
+    "tree": "8719103d4703b3b43f8294497fa446f7320d7362",
     "dirty": false
   },
   "dump_binary": {
     "path": "tools/scoreboard/control-dump/target/debug/control-dump",
-    "sha256": "7ee741d567dee83c84d84e2b9e09a60650edf34967920870c6cfc8c2ca5fb559",
-    "source_tree_sha256": "aac816f098d320d45c0d2d4ad004e5a9b6e789f422c1a5af8af8ae5f067a8fd8",
+    "sha256": "1419d112436d2c8f5503715a3ba8ecca69405624cc583e1fb8cb9c90dd0211bb",
+    "source_tree_sha256": "8d0a08fb90cfd8cc4b65071a69e98f1761a24bd8f83729ee63c98dd9a4cc5b27",
     "source_files": [
-      "tools/scoreboard/control-dump/Cargo.toml",
-      "tools/scoreboard/control-dump/Cargo.lock",
+      "tools/scoreboard/control-dump/src/conflicts_dump.rs",
       "tools/scoreboard/control-dump/src/main.rs",
-      "tools/scoreboard/control-dump/src/scope_dump.rs",
-      "tools/scoreboard/control-dump/src/conflicts_dump.rs"
-    ]
+      "tools/scoreboard/control-dump/src/scope_dump.rs"
+    ],
+    "build_log": "var/w9/build-20261019T191014Z.log"
   },
   "panels": {
     "panels/scope/decision.jsonl": "43c3119e3f7a56a258f1bc58f871172ab6e7529b69595e7a90875fb82449d136",
@@ -27,8 +26,50 @@
     "controls/conflicts.unit.expected.jsonl": "63dc35d5b8544ac6afbb1342521bc91aeeee641fffe8125ddb85209c27221e50",
     "controls/conflicts.unit.control.jsonl": "07533414d14b19e3a5c6e46e0042c31c9010a7af39688f69db6298b1895c4494"
   },
+  "runs": [
+    {
+      "control": "controls/scope.decision.control.jsonl",
+      "panel": "panels/scope/decision.jsonl",
+      "items": 59,
+      "agree": 59,
+      "reproducible": true,
+      "committed_control": "identical",
+      "moved_items": []
+    },
+    {
+      "control": "controls/conflicts.unit.control.jsonl",
+      "panel": "panels/conflicts/unit.jsonl",
+      "items": 16,
+      "agree": 16,
+      "reproducible": true,
+      "committed_control": "identical",
+      "moved_items": []
+    }
+  ],
+  "drift_checks": [
+    {
+      "cmd": "python3 -I panels/transcribed/drift_check.py --ekos /Users/ember/dev/EKOS --record panels/transcribed/scope_drift.json",
+      "exit": 0,
+      "out": "{\"record\": \"panels/transcribed/scope_drift.json\", \"functions\": 17, \"drifted\": 0, \"failures\": []}"
+    },
+    {
+      "cmd": "python3 -I panels/transcribed/drift_check.py --ekos /Users/ember/dev/EKOS --record panels/transcribed/conflicts_drift.json",
+      "exit": 0,
+      "out": "{\"record\": \"panels/transcribed/conflicts_drift.json\", \"functions\": 8, \"drifted\": 0, \"failures\": []}"
+    },
+    {
+      "cmd": "python3 -I panels/branch/drift.py --ekos /Users/ember/dev/EKOS",
+      "exit": 0,
+      "out": "{\"record\": \"/Users/ember/dev/verekos/panels/branch/drift.json\", \"functions\": 3, \"drifted\": 0, \"failures\": []}"
+    },
+    {
+      "cmd": "python3 -I panels/identity/drift.py",
+      "exit": 0,
+      "out": "drift check passed: 45 functions unchanged (ekos 8e3c178fc457)"
+    }
+  ],
   "volatile_fields_stripped": [
     "created_at"
   ],
-  "recorded": "2026-10-19T14:50:00Z"
+  "recorded": "2026-10-19T19:10:15Z"
 }
