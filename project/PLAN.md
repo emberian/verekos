@@ -104,7 +104,7 @@ Then M1a, the reader-local compile, against the world W17 leaves on hbox.
 |---|---|---|---|
 | B | `check/`, `var/check/`, a candidate column in `board.py`, a conflicts key projection, `notes/B-check.md` | Opus (fresh) | **`verekos check`**: the Lean model answers `scope.decision` through `World.visible` and `conflicts.unit` through `detectList`; every difference classified; a planted mutant scores worse; `verekos check laws` over a slice-1 run root (synthetic if W17's is not there yet). Root decisions: `check/` may link Mathlib; the allowed-id rule stays (RFC 0181); authorship from the signer |
 | C | redact and EKL dumps, `controls/redact.*`, `controls/ekl.*`, regen + run_fixture (S3: regenerate workspaces when `var/` is missing), the one-layout migration, LABELS, README, board render, `notes/C-controls-layout.md` | GLM (compaction set) | controls for the last two panels; a clone can regenerate every control; one panel layout |
-| W21 | `world/` | the Opus veteran | `TxMonotone` and its prefix/segment theorems (R1 finding M9, additive only) |
+| W21 | `world/` | the Opus veteran | **done, verified by the root** (build green, 2,978 jobs; 8 theorems in `TxOrder.lean` on standard axioms): `TxMonotone` (decidable), `txMonotone_write`, `state_eq_replay_takeWhile` (state at t is the replay of the longest prefix numbered ≤ t), `diff_eq_segment` with `segment_contiguous` |
 | A | (held) | — | M1a, the reader-local compile, after W17 leaves its world on hbox |
 
 Attribution rule from R1: commits name the model that wrote them (Opus 5.5, GLM 5.3, Grok 4.7, Fable 5.1), so git shows who did what.
