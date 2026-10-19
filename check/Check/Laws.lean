@@ -60,7 +60,7 @@ namespace Check.Laws
 
 open Lean
 
-def LC : World.Carriers where
+scoped instance LC : World.Carriers where
   SchemaId := String
   SourceId := String
   Range := String
@@ -86,11 +86,11 @@ def LC : World.Carriers where
 abbrev LP : LC.SchemaId → Type := fun _ => String
 
 /-- A claim id is the JSON text of its key, which is injective on keys. -/
-def keyText (k : World.ClaimKey LC) : String :=
+def keyText (k : World.ClaimKey) : String :=
   (Json.arr #[.str k.schema, .arr (k.subject.map Json.str).toArray,
     .arr (k.sources.map Json.str).toArray]).compress
 
-def derive : World.ClaimIdDerivation LC := ⟨keyText⟩
+scoped instance derive : World.ClaimIdDerivation := ⟨keyText⟩
 
 def statusOfName : String → Option World.Status
   | "observed" => some .observed | "hypothesis" => some .hypothesis
@@ -109,7 +109,7 @@ def statusName : World.Status → String
 /-- The schemas a run uses. Conflicts open and are decided by humans only
 (EKOS RFC 0172: `resolve` is human-only); every other schema is observed
 and decided by humans. Reviews decide nothing about themselves. -/
-def reg : World.Registry LC LP := fun s =>
+def reg : World.Registry LP := fun s =>
   { core := fun _ => ""
     structural := s == "Review"
     initial := if s == "Conflict" then .open else .observed
@@ -119,7 +119,7 @@ def reg : World.Registry LC LP := fun s =>
 
 /-- Review claims have schema `Review`; the decision is the payload's
 `decision` field. -/
-def review : World.ReviewSchema LC LP where
+def review : World.ReviewSchema LP where
   sid := "Review"
   decision := fun (p : String) =>
     match Json.parse p with
@@ -154,10 +154,10 @@ def getStrList (j : Json) (k : String) : Except String (List String) :=
   | .error _ => .ok []
   | _ => .error s!"{k}: not a list"
 
-def keyOf (j : Json) : Except String (World.ClaimKey LC) := do
+def keyOf (j : Json) : Except String (World.ClaimKey) := do
   pure ⟨← getStr j "schema", ← getStrList j "subject", ← getStrList j "sources"⟩
 
-def pinOf (j : Json) : Except String (World.Pin LC) := do
+def pinOf (j : Json) : Except String (World.Pin) := do
   let weight := match j.getObjVal? "weight" with
     | .ok (.num n) => n.mantissa.toNat
     | _ => 1000
@@ -173,7 +173,7 @@ def pinOf (j : Json) : Except String (World.Pin LC) := do
       | .error _ => getStr j "claim"
     pure ⟨.claim target, .core ((getStr j "core").toOption.getD ""), weight⟩
 
-def claimOf (j : Json) : Except String (World.Claim LC LP) := do
+def claimOf (j : Json) : Except String (World.Claim LP) := do
   let key ← keyOf j
   let pins ← match j.getObjVal? "pins" with
     | .ok (.arr a) => a.toList.mapM pinOf
@@ -184,7 +184,7 @@ def claimOf (j : Json) : Except String (World.Claim LC LP) := do
 
 /-- One log line, with what the model's receipt leaves out. -/
 structure Line where
-  receipt : World.Receipt LC LP
+  receipt : World.Receipt LP
   signer : String
   headerRev : Option String
   payloadAuthor : Option String
@@ -221,22 +221,22 @@ def lineOf (principals : List (String × String)) (authorFromPayload : Bool) (j 
 
 /-! ## The report -/
 
-def keyJson (k : World.ClaimKey LC) : Json :=
+def keyJson (k : World.ClaimKey) : Json :=
   Json.mkObj [("schema", .str k.schema), ("subject", .arr (k.subject.map Json.str).toArray),
     ("sources", .arr (k.sources.map Json.str).toArray)]
 
 /-- The header revision last written for a conflict id, up to log prefix `n`. -/
 def headerRevAt (lines : List Line) (id : String) : Option String :=
   (lines.filterMap fun l => match l.receipt.op with
-    | .put c => if c.id derive == id then some l.headerRev else none
+    | .put c => if c.id == id then some l.headerRev else none
     | .retract _ => none).getLast?.join
 
 def report (lines : List Line) (expect : Option Json) : Json × Bool := Id.run do
   let L := lines.map (·.receipt)
-  let adm := decide (World.AdmLog derive L)
+  let adm := decide (World.AdmLog L)
   let firstBad : Option Nat := (List.range L.length).find? fun k =>
     match L[k]? with
-    | some r => !World.admissible derive (L.take k) r
+    | some r => !World.admissible (L.take k) r
     | none => false
   let compiled := L.filterMap fun r => match r.op with
     | .put c => if r.author.1 == .compiler then some (r.tx, c) else none
@@ -248,9 +248,9 @@ def report (lines : List Line) (expect : Option Json) : Json × Bool := Id.run d
     | some a => a != kindText l.receipt.author.1
     | none => false
   -- conflicts in the final state, and their status after every write
-  let final := World.latest derive L
+  let final := World.latest L
   let conflictIds := (L.filterMap fun r => match r.op with
-    | .put c => if c.key.schema == "Conflict" then some (c.id derive) else none
+    | .put c => if c.key.schema == "Conflict" then some (c.id) else none
     | .retract _ => none).eraseDups
   let mut conflicts : Array Json := #[]
   let mut statusOk := true
@@ -260,14 +260,14 @@ def report (lines : List Line) (expect : Option Json) : Json × Bool := Id.run d
     let mut last : Option String := none
     for n in List.range (L.length + 1) do
       let pre := L.take n
-      if (World.latest derive pre id).isNone then continue
+      if (World.latest pre id).isNone then continue
       let some hr := headerRevAt (lines.take n) id | continue
-      let s := statusName (World.statusAt review reg derive pre c.key hr)
+      let s := statusName (World.statusAt review reg pre c.key hr)
       if last != some s then
         timeline := timeline.push (Json.arr #[.num (pre.getLast?.map (·.tx) |>.getD 0), .str s])
         last := some s
     let some hr := headerRevAt lines id | continue
-    let s := statusName (World.statusAt review reg derive L c.key hr)
+    let s := statusName (World.statusAt review reg L c.key hr)
     let want : Option String := expect.bind fun e =>
       match e.getObjVal? "conflicts" with
       | .ok (.arr a) => a.toList.findSome? fun x =>

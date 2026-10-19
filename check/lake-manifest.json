@@ -7,10 +7,10 @@
    "url": "/Users/ember/dev/verekos",
    "subDir": "world",
    "scope": "",
-   "rev": "833eae5e9d24ad2a291172f209bd86ee1a480dfa",
+   "rev": "79b044570f273cdfb8cea996b93e3fc741846eed",
    "name": "world",
    "manifestFile": "lake-manifest.json",
-   "inputRev": "833eae5e9d24ad2a291172f209bd86ee1a480dfa",
+   "inputRev": "79b044570f273cdfb8cea996b93e3fc741846eed",
    "inherited": false,
    "configFile": "lakefile.toml"
   },

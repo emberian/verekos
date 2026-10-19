@@ -39,7 +39,7 @@ open Lean
 
 /-- Source ids are `Option String` (an origin may have no source); a range is
 a path; a claim id is the object's UUID text, lower-case and hyphenated. -/
-def SC : World.Carriers where
+scoped instance SC : World.Carriers where
   SchemaId := Unit
   SourceId := Option String
   Range := String
@@ -65,7 +65,7 @@ def SC : World.Carriers where
 abbrev SP : SC.SchemaId → Type := fun _ => Unit
 
 /-- The claim id is the key's single subject part (the object's id). -/
-def derive : World.ClaimIdDerivation SC := ⟨fun k => k.subject.headD ""⟩
+scoped instance derive : World.ClaimIdDerivation := ⟨fun k => k.subject.headD ""⟩
 
 /-! ## The ReadScope, as EKOS's serde derive reads it (UNTRUSTED) -/
 
@@ -285,7 +285,7 @@ inductive Mode where
   | faithful | denyIgnored
   deriving DecidableEq
 
-def toWorld (mode : Mode) (c : Compiled) : World.Scope SC where
+def toWorld (mode : Mode) (c : Compiled) : World.Scope where
   allowsId i := c.rules.any fun r => r.effect == .allow && r.object == some i
   deniesId i := mode == .faithful &&
     c.rules.any fun r => r.effect == .deny && r.object == some i
@@ -296,7 +296,7 @@ def toWorld (mode : Mode) (c : Compiled) : World.Scope SC where
 
 /-- An object as a claim: its id is the key's subject; one source pin per
 origin. -/
-def toClaim (id : String) (origins : List Origin) : World.Claim SC SP where
+def toClaim (id : String) (origins : List Origin) : World.Claim SP where
   key := ⟨(), [id], []⟩
   payload := ()
   pins := origins.map fun o => ⟨.source o.source o.path, .atoms [], 1000⟩
@@ -305,7 +305,7 @@ def toClaim (id : String) (origins : List Origin) : World.Claim SC SP where
 /-- The decision: `World.visible` at depth 1 with an empty state (no claim
 pins exist, so nothing is looked up). -/
 def decide (mode : Mode) (c : Compiled) (id : String) (origins : List Origin) : Bool :=
-  World.visible derive (fun _ => none) (toWorld mode c) 1 (toClaim id origins)
+  World.visible (fun _ => none) (toWorld mode c) 1 (toClaim id origins)
 
 /-- `origins()` (scope.rs:290): sources crossed with normalized paths. -/
 def crossOrigins (sources paths : List String) : List Origin :=

@@ -49,7 +49,7 @@ open Lean
 
 /-! ## Carriers and payloads -/
 
-def CC : World.Carriers where
+scoped instance CC : World.Carriers where
   SchemaId := String
   SourceId := String
   Range := Unit
@@ -172,7 +172,7 @@ def labelWords (label : String) : List String := Id.run do
   return ((low.split (fun c => !c.isAlphanum)).toList.map (·.toString)).filter (· ≠ "")
 
 /-- The registry: every schema states what `facts` or the label words say. -/
-def reg : World.Registry CC CP := fun _ =>
+def reg : World.Registry CP := fun _ =>
   { core := fun _ => ""
     structural := false
     initial := .open
@@ -185,7 +185,7 @@ def reg : World.Registry CC CP := fun _ =>
 /-! ## Panel objects → claims (UNTRUSTED) -/
 
 def claim (schema : String) (subject : List String) (source : String) (p : Payload) :
-    World.Claim CC CP :=
+    World.Claim CP :=
   { key := ⟨schema, subject, [source]⟩
     payload := p
     pins := [⟨.source source none, .atoms [], 1000⟩]
@@ -234,10 +234,10 @@ def objOf (o : Json) : Obj :=
   { key := (str? o "key").getD "", kind := kindOf o, path := (str? o "path").getD "",
     payload := tableOf o }
 
-def dupClaims (objs : List Obj) : List (World.Claim CC CP) :=
+def dupClaims (objs : List Obj) : List (World.Claim CP) :=
   objs.map fun o => claim o.kind [o.key] o.path o.payload
 
-def mergeClaims (objs : List Obj) (proposals : List Json) : List (World.Claim CC CP) :=
+def mergeClaims (objs : List Obj) (proposals : List Json) : List (World.Claim CP) :=
   -- EKOS's `by_id` is a map: a later object with the same key replaces an earlier one
   let byKey (k : String) : Option Obj := (objs.filter (·.key == k)).getLast?
   proposals.flatMap fun p =>
@@ -251,7 +251,7 @@ def mergeClaims (objs : List Obj) (proposals : List Json) : List (World.Claim CC
       if members.isEmpty then [] else
       (members ++ [canon]).map fun m => claim canon.kind [canonKey] m.path m.payload
 
-def labelClaims (enums : List Json) : List (World.Claim CC CP) :=
+def labelClaims (enums : List Json) : List (World.Claim CP) :=
   (enums.zipIdx).flatMap fun (e, i) =>
     if kindOf e != "EnumMeaning" then [] else
     let key := (str? e "key").getD ""
@@ -273,7 +273,7 @@ def labelClaims (enums : List Json) : List (World.Claim CC CP) :=
 `EnumMeaning` object, whose key's sources are the set of sources that gave
 that label (EKOS's `labels` map, conflicts.rs:390-405; a meaning without a
 `source` adds none). The schema's clash is `World.labelClash`. -/
-def labelClaimsByLabel (enums : List Json) : List (World.Claim CC CP) :=
+def labelClaimsByLabel (enums : List Json) : List (World.Claim CP) :=
   (enums.zipIdx).flatMap fun (e, i) =>
     if kindOf e != "EnumMeaning" then [] else
     let key := (str? e "key").getD ""
@@ -303,7 +303,7 @@ def wordsOfValue (v : String) : List String :=
   | _ => []
 
 /-- EKOS's label rule for `EnumMeaning`, values differ elsewhere. -/
-def κ : World.Clash CC := World.labelClash "EnumMeaning" wordsOfValue
+def κ : World.Clash := World.labelClash "EnumMeaning" wordsOfValue
 
 /-! ## One item → one candidate line -/
 

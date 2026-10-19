@@ -9,7 +9,7 @@ defaultTargets = ["verekos-check"]
 [[require]]
 name = "world"
 git = "/Users/ember/dev/verekos"
-rev = "833eae5e9d24ad2a291172f209bd86ee1a480dfa"
+rev = "79b044570f273cdfb8cea996b93e3fc741846eed"
 subDir = "world"
 
 # The runner: the untrusted parsers and mappers. It imports the model only
