@@ -26,8 +26,9 @@ namespace VerekosMap
 
 open World
 
-/-- The slice-1 carriers. -/
-abbrev MC : Carriers where
+/-- The slice-1 carriers: the one `Carriers` instance in scope here (map/ imports only WorldCore
+modules, not `World.Minidregg`, whose instance is minidregg's own record types). -/
+instance mapCarriers : Carriers where
   SchemaId := String
   SourceId := String
   Range := String
@@ -40,19 +41,28 @@ abbrev MC : Carriers where
   Name := String
   ClaimId := String
 
+/-- The carriers are strings; these let messages interpolate them. -/
+instance : ToString Carriers.KeyPart := inferInstanceAs (ToString String)
+instance : ToString Carriers.ClaimId := inferInstanceAs (ToString String)
+instance : ToString Carriers.SourceId := inferInstanceAs (ToString String)
+
 /-- A compiled claim's payload: a table's EKOS properties, or an edge. -/
 inductive Payload where
   | table (ekosId : String) (kind : String) (properties : J)
   | edge (kind : String) (toName : String)
   deriving Inhabited
 
-abbrev Pl : MC.SchemaId → Type := fun _ => Payload
+abbrev Pl : Carriers.SchemaId → Type := fun _ => Payload
 
-/-- Claim ids are the logical key: the subject's parts joined by `:`. -/
-def derivation : ClaimIdDerivation MC := ⟨fun k => ":".intercalate k.subject⟩
+/-- Claim ids are the logical key: the subject's parts joined by `:`. The one
+`ClaimIdDerivation` instance in scope. -/
+instance mapDerivation : ClaimIdDerivation := ⟨fun k => ":".intercalate k.subject⟩
+
+/-- The logical key of a claim key (the derivation above). -/
+def logicalKey (k : ClaimKey) : String := ClaimIdDerivation.claimId k
 
 /-- An edge claim's subject is `[from, kind, to]`. -/
-def edgeView : EdgeView MC Pl :=
+def edgeView : EdgeView Pl :=
   ⟨fun c => match c.key.subject with
     | [f, _, t] => some (f, t)
     | _ => none⟩
@@ -61,25 +71,25 @@ def tableKey (name : String) : String := s!"sql-analyzer-table:{name}"
 
 /-- A source pin of one statement atom: weight per mille 1000, the statement's
 structural key as the range. -/
-def statementPin (src structural atom rev : String) : Pin MC :=
+def statementPin (src structural atom rev : String) : Pin :=
   ⟨.source src (some structural), .atoms [(atom, rev)], 1000⟩
 
 /-- A Table claim. -/
 def tableClaim (name ekosId kind : String) (properties : J) (sources : List String)
-    (pins : List (Pin MC)) : Claim MC Pl :=
+    (pins : List (Pin)) : Claim Pl :=
   ⟨⟨kind, ["sql-analyzer-table", name], sources⟩, Payload.table ekosId kind properties, pins, ⟨none, none⟩⟩
 
 /-- An edge claim from `fromName` to `toName`. -/
-def edgeClaim (fromName kind toName : String) (sources : List String) (pins : List (Pin MC)) :
-    Claim MC Pl :=
+def edgeClaim (fromName kind toName : String) (sources : List String) (pins : List (Pin)) :
+    Claim Pl :=
   ⟨⟨kind, [tableKey fromName, kind, tableKey toName], sources⟩, Payload.edge kind toName, pins,
     ⟨none, none⟩⟩
 
 /-- The object document: `World.toDocument`. -/
-def objectDocument (c : Claim MC Pl) (edges : List (Claim MC Pl)) : Except String (ObjectDocument MC Pl) :=
-  match toDocument derivation edgeView c edges with
+def objectDocument (c : Claim Pl) (edges : List (Claim Pl)) : Except String (ObjectDocument Pl) :=
+  match toDocument edgeView c edges with
   | some d => pure d
-  | none => throw s!"World.toDocument refused {derivation.claimId c.key} (an ill-shaped pin or an edge not from it)"
+  | none => throw s!"World.toDocument refused {logicalKey c.key} (an ill-shaped pin or an edge not from it)"
 
 /-- `ekos_common::ContentHash::of_str` over `{"attribute":…,"claims":[[value,path,source],…]}`
 (EKOS `conflicts.rs` `signature`), here as the model's `sigOf`. `where_` gives each
@@ -92,21 +102,21 @@ def ekosSignature (where_ : String → String × String) (attr : String) (member
       .arr [.raw v, .str path, .str by_]))]))
 
 /-- The conflict document: `World.encodeConflict`, signature derived by the model. -/
-def conflictDocument (where_ : String → String × String) (k : Conflict MC) : ConflictDoc MC :=
+def conflictDocument (where_ : String → String × String) (k : Conflict) : ConflictDoc :=
   encodeConflict (ekosSignature where_) k
 
 /-- The manifest after a compile that emits `emitted`: `World.Manifest.compile`. -/
-def manifestAfter (current : Manifest MC) (emitted : List (List String × String)) : Manifest MC :=
+def manifestAfter (current : Manifest) (emitted : List (List String × String)) : Manifest :=
   current.compile emitted
 
 /-- A source document as imported: `World.importSource`. -/
-def importedSource (atomOf : List String → String) (h : SourceHeader MC) (stmts : List (Statement MC))
-    : SourceDoc MC String :=
+def importedSource (atomOf : List String → String) (h : SourceHeader) (stmts : List (Statement))
+    : SourceDoc String :=
   importSource atomOf h stmts 0
 
 /-- A source document re-imported at revision `r`: `World.reimport`. -/
-def reimportedSource (atomOf : List String → String) (d : SourceDoc MC String)
-    (stmts : List (Statement MC)) (r : Nat) : SourceDoc MC String :=
+def reimportedSource (atomOf : List String → String) (d : SourceDoc String)
+    (stmts : List (Statement)) (r : Nat) : SourceDoc String :=
   reimport atomOf d stmts r
 
 /-- The CLI's review verbs as model statuses. -/
@@ -125,7 +135,7 @@ def statusVerb : Status → String
   | _ => "unknown"
 
 /-- The attestation's label: `World.replayedDeterministic`, decided. -/
-def attestationLabel (run : CompileRunDoc MC) (att : ReplayAttestation MC) : Bool :=
+def attestationLabel (run : CompileRunDoc) (att : ReplayAttestation) : Bool :=
   decide (replayedDeterministic run [att])
 
 end VerekosMap

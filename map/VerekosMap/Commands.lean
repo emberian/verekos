@@ -141,7 +141,7 @@ def MAPPER_REDACTION : String :=
 
 /-- The source header as the model holds it. The empty `pipeline` digest is
 written `null` (the deployed header has no pipeline version). -/
-def sourceHeaderJ (cell : String) (h : SourceHeader MC) : J :=
+def sourceHeaderJ (cell : String) (h : SourceHeader) : J :=
   .obj [("cell", .str cell), ("source_key", .str (h.sourceKey.headD "")), ("path", .str h.path),
         ("importer", .str h.importer), ("redaction", .str h.redactionTable),
         ("pipeline_logic_version", if h.pipeline.isEmpty then .null else .str h.pipeline)]
@@ -154,8 +154,8 @@ def cmdImport (a : List (String × String)) : IO Unit := do
   let (root, headerId, headerRun, stmtRun) := idsForSource key path
   let atomOf := fun (k : List String) => num ["atom", key, path, k.headD ""]
   let stmts ← liftM (splitStatements data)
-  let statements : List (Statement MC) := stmts.map fun (k, t) => ⟨[k], t⟩
-  let h : SourceHeader MC := ⟨[key], path, MAPPER_REDACTION, MAPPER_VERSION, ""⟩
+  let statements : List (Statement) := stmts.map fun (k, t) => ⟨[k], t⟩
+  let h : SourceHeader := ⟨[key], path, MAPPER_REDACTION, MAPPER_VERSION, ""⟩
   let doc ← match arg? a "read" with
     | some p => some <$> Doc.load p
     | none => pure none
@@ -179,11 +179,11 @@ def cmdImport (a : List (String × String)) : IO Unit := do
     let wantIds := statements.map fun s => atomOf s.key
     if (wantIds.filter live.contains) != (live.filter wantIds.contains) then
       throw (IO.userError "import: statements were reordered; editElement .move is not implemented in slice 1")
-    let mut cur : Array (TextAtom MC String) := #[]
+    let mut cur : Array (TextAtom String) := #[]
     for x in live do
       let k ← liftM (keyOfAtom key path d x)
       cur := cur.push ⟨x, [k], (d.revision x).toNat!, ← liftM (d.payload x)⟩
-    let D : SourceDoc MC String := ⟨h, cur.toList⟩
+    let D : SourceDoc String := ⟨h, cur.toList⟩
     let r := cur.foldl (fun m t => max m t.rev) 0 + 1
     let N := reimportedSource atomOf D statements r
     -- A statement the current document lacks is NOT written as `createAtom` + `insertRun`
@@ -250,7 +250,7 @@ def cmdRunrec (a : List (String × String)) : IO Unit := do
   let cell ← arg a "cell"
   let k := metaJ.s "sha256"
   let outputs := ((metaJ.get? "requests").bind J.arr? |>.getD []).map (·.s "cell")
-  let run : CompileRunDoc MC :=
+  let run : CompileRunDoc :=
     { compiler := "compiler"
       inputs := sources.map fun s => ⟨⟨s.key, [(s.headerAtom, s.doc.revision s.headerAtom)]⟩, 0⟩
       identity := ⟨(arg? a "ekos-version").getD "unknown", MAPPER_VERSION, "", ""⟩
@@ -292,8 +292,8 @@ def cmdAttest (a : List (String × String)) : IO Unit := do
       let r ← liftM (J.parse (← liftM (unhexText (x.s "payload"))))
       if r.s "commands_sha256" == want then found := some x; break
   let some rec_ := found | throw (IO.userError s!"no compile-run record with commands_sha256 {want}")
-  let run : CompileRunDoc MC := { compiler := "compiler", inputs := [], identity := ⟨"", "", "", ""⟩, outputs := [], command := want }
-  let att : ReplayAttestation MC := ⟨(arg? a "replayer").getD "verifier", [], replayed⟩
+  let run : CompileRunDoc := { compiler := "compiler", inputs := [], identity := ⟨"", "", "", ""⟩, outputs := [], command := want }
+  let att : ReplayAttestation := ⟨(arg? a "replayer").getD "verifier", [], replayed⟩
   let label := attestationLabel run att
   let same := run.command == att.command
   let rrun := num ["run", sourceCell, "run", want]
@@ -328,8 +328,8 @@ def cmdReview (a : List (String × String)) : IO Unit := do
   let header := num ["atom", cname, "header"]
   let hrun := num ["run", cname, "header"]
   let rev := cf.revision header
-  let entry : ReviewEntry MC := ⟨⟨status, "", (arg? a "note").getD ""⟩, cf.target, (header, rev)⟩
-  let D := (⟨cname, []⟩ : ReviewDoc MC).append entry
+  let entry : ReviewEntry := ⟨⟨status, "", (arg? a "note").getD ""⟩, cf.target, (header, rev)⟩
+  let D := (⟨cname, []⟩ : ReviewDoc).append entry
   let cur ← match arg? a "read" with
     | some p => some <$> Doc.load p
     | none => pure none

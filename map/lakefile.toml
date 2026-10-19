@@ -9,7 +9,7 @@ defaultTargets = ["verekos-map", "MapProofs"]
 [[require]]
 name = "world"
 git = "/Users/ember/dev/verekos"
-rev = "cd753c19b914b2a2ca01c70c66ae8dadf68e437f"
+rev = "79b044570f273cdfb8cea996b93e3fc741846eed"
 subDir = "world"
 
 # The mapper: imports only WorldCore modules (World.Document, World.Shapes),

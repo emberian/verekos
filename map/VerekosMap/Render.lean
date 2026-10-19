@@ -382,7 +382,7 @@ def Ctx.cellId (x : Ctx) (name : String) : Except String String :=
 
 /-- The Table claim and its outgoing ForeignKey edge claims, from the export. -/
 def tableClaims (x : Ctx) (node : Node) (edges : List Edge) :
-    Except String (Claim MC Pl × List (Claim MC Pl)) := do
+    Except String (Claim Pl × List (Claim Pl)) := do
   let d ← defining x.sources node.n
   let pins ← d.mapM fun (s, k) => do
     let (a, r) ← s.pin k
@@ -390,7 +390,7 @@ def tableClaims (x : Ctx) (node : Node) (edges : List Edge) :
   let c := tableClaim node.n node.id node.kind node.p (d.map (·.1.key)) pins
   let out := sortBy (·.dst.n) (edges.filter fun e => e.src.id == node.id && e.kind == "ForeignKey")
   let es ← out.mapM fun e => do
-    let mut epins : Array (Pin MC) := #[]
+    let mut epins : Array (Pin) := #[]
     let mut esrcs : Array String := #[]
     for (s, k) in d do
       let (a, r) ← s.pin k
@@ -400,15 +400,15 @@ def tableClaims (x : Ctx) (node : Node) (edges : List Edge) :
     pure (edgeClaim node.n e.kind e.dst.n esrcs.toList epins.toList)
   pure (c, es)
 
-def evRange (e : Evidence MC) : String := e.info.range.getD ""
+def evRange (e : Evidence) : String := e.info.range.getD ""
 
-def tableActions (x : Ctx) (D : ObjectDocument MC Pl) : BM Unit := do
+def tableActions (x : Ctx) (D : ObjectDocument Pl) : BM Unit := do
   let cell := D.object
   let .table ekosId kind props := (cell.properties : Payload) | throw "object cell without a table payload"
   let name := (cell.header.subject.getD 1 "")
   birth "ekos/object/v1"
   let _ ← atomAct (← bid ["atom", "header"]) (objKind "ekos/header/v1")
-    (J.compact (.obj [("kind", .str kind), ("name", .str name), ("logical_key", .str (derivation.claimId cell.header)),
+    (J.compact (.obj [("kind", .str kind), ("name", .str name), ("logical_key", .str (logicalKey cell.header)),
       ("ekos_id", .str ekosId), ("compiler", .str x.ekosVersion), ("mapper", .str MAPPER_VERSION),
       ("sources", .arr (cell.header.sources.map .str))]))
   let _ ← atomAct (← bid ["atom", "properties"]) (objKind "ekos/properties/v1") (J.compact props)
@@ -447,12 +447,12 @@ def tableActions (x : Ctx) (D : ObjectDocument MC Pl) : BM Unit := do
 
 /-- The conflict a ConflictingEvidence node states, as a `World.Conflict`; and
 each claim's (path, line, claimed_by), which the shape does not carry. -/
-def conflictOf (x : Ctx) (node : Node) : Except String (Conflict MC × List (String × String × J × String)) := do
+def conflictOf (x : Ctx) (node : Node) : Except String (Conflict × List (String × String × J × String)) := do
   let p := node.p
   let subjectName := p.s "subject_name"
   let structural := s!"create-table:{← lowerAscii subjectName}#0"
   let claims := sortBy (·.s "path") ((p.get? "claims").bind J.arr? |>.getD [])
-  let mut members : Array (ConflictMember MC) := #[]
+  let mut members : Array (ConflictMember) := #[]
   let mut side : Array (String × String × J × String) := #[]
   for c in claims do
     let path := c.s "path"
@@ -506,12 +506,12 @@ def conflictActions (x : Ctx) (node : Node) : BM Unit := do
 /-! ## The manifest -/
 
 /-- The manifest's live links, read back from its current document. -/
-def manifestOf (x : Ctx) (d : Option Doc) : Except String (Manifest MC) := do
+def manifestOf (x : Ctx) (d : Option Doc) : Except String (Manifest) := do
   let some d := d | pure ⟨[]⟩
   let names : List (String × String) := match x.cells with
     | .obj kvs => kvs.filterMap fun (k, v) => v.str?.map (·, k)
     | _ => []
-  let mut out : Array (ManifestLink MC) := #[]
+  let mut out : Array (ManifestLink) := #[]
   for (_, l) in d.links do
     let t := l.getD "target"
     if t.s "type" == "external" && t.s "scheme" == hexs "ekos-object" then
@@ -538,7 +538,8 @@ def manifestActions (x : Ctx) (plan : List Row) : BM Unit := do
   let after := manifestAfter current emitted
   for l in current.links do
     if l.live && !(after.current.contains (l.key, l.cell)) then
-      throw s!"manifest: {l.cell} is no longer emitted; World.Manifest.compile unlinks it, and the unlink action's spelling has no receipt here"
+      let cellName : String := l.cell
+      throw s!"manifest: {cellName} is no longer emitted; World.Manifest.compile unlinks it, and the unlink action's spelling has no receipt here"
   for l in after.links.drop current.links.length do
     let link ← bid ["link", "entry", l.cell]
     emit (.obj [("type", .str "link"), ("link", .str link), ("source", .null),
