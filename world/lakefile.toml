@@ -1,0 +1,18 @@
+name = "world"
+defaultTargets = ["World"]
+
+# minidregg, pinned to one commit and taken from the local checkout (no network).
+# Why not `path = "/Users/ember/dev/minidregg"`: a path dependency is built in
+# place, and minidregg's own .lake/build is older than its sources for the
+# modules we import (Theory.Hyperdocument and 10 of its imports changed after
+# the 2026-09-26 build). Lake would rebuild them INSIDE minidregg's tree, which
+# this project must never write to. A pinned clone under .lake/packages is
+# built here instead. The Mathlib-family packages in .lake/packages are
+# symlinks to the same warm checkouts minidregg itself uses (see README).
+[[require]]
+name = "minidregg"
+git = "/Users/ember/dev/minidregg"
+rev = "dcab86da8f6153ed2b522fc61c5064608694fd83"
+
+[[lean_lib]]
+name = "World"
