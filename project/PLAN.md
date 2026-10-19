@@ -46,14 +46,18 @@ definitions and theorems in `world/`.
 | Lane | Owns | Model | Deliverable |
 |---|---|---|---|
 | W1 | `world/` | Opus | **done, verified by the root 2026-10-19**: `nice -n 10 lake build` green (2,970 jobs; 77 s first time for minidregg's 18 modules, then seconds); every theorem statement read (`notes/W1-world-build.md` quotes them); no sorry/admit/axiom/native_decide. Deviation accepted: minidregg's own build was stale for `Theory.Hyperdocument`, so the lane cloned minidregg at `dcab86da` under `world/.lake/packages` and symlinked the Mathlib family, writing nothing into minidregg. Honest narrowings: `compilerCannotDecide` holds for schemas that never admit the compiler (an exact identity merge is a compiler-confirmed SameAs in EKOS's own model); `reviewSurvives_put` needs "the new claim is not a review of itself" until a no-cycles rule on pins exists; `diffIsFootprint` is one-directional (diff may over-list). Not yet in the types: pins nonempty, no pin cycles, sorted deduplicated sources. Originally: `World/{Claim,Log,Status,Conflicts,Visible,Minidregg}.lean` with real theorems (append-only, state-is-fold, idempotent put, diff-is-footprint, CompilerCannotDecide, ReviewSurvives, NeedsReviewOnCoreChange, coverage, deny-wins); `notes/W1-world-build.md` |
-| W2 | `var/w2/`, `notes/W2-transclusion-and-laws.md` | GLM | does `transclude` work on a scratch Store with the HEAD host binary (JDV / J12W); how a custom Pred law is installed from the client |
-| W3 | `panels/identity/`, `notes/W3-identity-panels.md` | Grok | EKOS identity tests as panel items + controls + drift checker |
-| W4 | `laws/`, `notes/W4-pred-laws.md` | Grok | L-src/L-obj/L-rev/L-run as client Pred JSON with a checker against the real constructors and slots |
-| W5 | `tools/scoreboard/`, `panels/scope/` (+ conflicts if time), `notes/W5-control-dump.md` | GLM | the `control-dump` Cargo workspace with path deps on EKOS at 8e3c178; the scope dump and panels; drift checker |
+| W2 | `var/w2/`, `notes/W2-transclusion-and-laws.md` | GLM | **done**: the host binary on disk is from 2026-09-19 (`66d74dd0`), before the `transclude` action (2026-10-01) and the Sep-30 genesis vocabulary, so every journey fails at J0 and transclusion is **untestable until a fresh host is built** (`scripts/build-native-host.sh` in a snapshot; a heavy Lean-native build, not run). Laws: arbitrary Pred JSON installs via `law ID REF @FILE` or `doc new NAME @FILE` (shell.rs:79, :1360-1372); slice-1 step 1 is unblocked. Rebuilt `minidregg-resource-client` (1m29s) under `native/target` |
+| W3 | `panels/identity/`, `notes/W3-identity-panels.md` | Grok, then GLM-flash after Grok died on context | EKOS identity tests as panel items + controls + drift checker |
+| W4 | `laws/`, `notes/W4-pred-laws.md` | Grok (drafts), root (checker + memo) | **done**: four laws pass `laws/check.py`; install paths recorded. Originally: L-src/L-obj/L-rev/L-run as client Pred JSON with a checker against the real constructors and slots |
+| W5 | `tools/scoreboard/`, `panels/{scope,conflicts}/`, `controls/`, `notes/W5-control-dump.md` | GLM | **done, root verification pending**: `control-dump` workspace (163 crates, 5.4 min cold); scope panel 59 items from 17 tests, 59/59 agree; conflicts panel 16 items from 8 tests, 16/16 agree; drift checkers; partial `controls/MANIFEST.json`. Not built: `score.py`, `board.py`, `regen_controls.py`, the leak-suite family, identity and branch dumps |
 
 Grok lanes run with `CLAUDE_CODE_MAX_CONTEXT_TOKENS=120000` and
 `CLAUDE_CODE_AUTO_COMPACT_WINDOW=90000` (set in `~/.local/bin/claude-grok`), because two
 earlier Grok lanes died with "Prompt is too long" before Claude Code compacted.
+
+| W6 | `panels/branch/`, `notes/W6-branch-panels.md` | Grok (live test of the corrected wrapper: 250k window, 120k compaction, 16k output) | `merge_branch_*` tests as panel items with fixed ids, controls, drift checker |
+
+**Open decision for ember:** build a fresh `minidregg-host` (heavy; hbox with `swarm-build`, or a local snapshot build) so transclusion can be tested, or take exploration 01 §4's fallback (evidence as a `link` with a `.range` target plus revision in the meta atom) for slice 1.
 
 ## Rules
 
