@@ -1,3 +1,4 @@
+<!-- R1 review, 2026-10-19 night: superseded. The Isabelle layer this memo surveys for was dropped the same evening; kept as a record. -->
 <!-- Scout memo, lane C (second run), 2026-10-19. Written by claude-grok (grok-4.7) with --add-dir grants; the first run was permission-blocked and refused to guess. Harvested verbatim. -->
 
 VerEKOS should import four small AFP sessions and keep two more in side sessions. The other surveyed entries are the wrong model, or they drag in Collections.

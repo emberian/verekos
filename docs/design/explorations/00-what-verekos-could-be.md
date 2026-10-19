@@ -1,5 +1,7 @@
 # 00. What VerEKOS could be
 
+> **Status (R1 review, 2026-10-19 night).** A dated record. Its open question about the Isabelle kernels was answered the same evening: dropped; every kernel is Lean in `world/`. Section numbers like §2.2 and §4 refer to design revision 2.
+
 The root's own note, 2026-10-19, written while four design lanes (01 to 04)
 explore the detailed angles. This is the picture I would want in my head
 before reading them. It makes claims about intent, not about anything built.

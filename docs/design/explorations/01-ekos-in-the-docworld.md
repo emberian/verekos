@@ -1,5 +1,7 @@
 # 01. EKOS inside the docworld: a law package, a schema, an import family
 
+> **Status (R1 review, 2026-10-19 night).** A dated record; the slice it proposes is being built. Where the build differs: the driver and fixture live in `slice1/` at the repo root, not `world/slice1/` and `world/fixtures/`; the laws are hand-written `Pred` JSON in `laws/`, not generated from Lean; the custom-law client path was found (`notes/W2-transclusion-and-laws.md`); step 0 is green (`notes/W7-hbox-transclusion.md`); there is no Isabelle kernel of any kind, so §5's Redact exception is moot; R5's "one kernel theorem" holds for conflicts only with the header revision as core (`world/World/CarryForward.lean`).
+
 Design lane, 2026-10-19. I only read files; nothing was built or run. Names marked
 **(new)** are my proposals. Every other name is quoted from source and cited as
 `path:line` against today's checkouts. Short forms: `HD` = `/Users/ember/dev/minidregg/Theory/Hyperdocument.lean`,

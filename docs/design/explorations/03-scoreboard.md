@@ -1,5 +1,7 @@
 # Exploration 03: the VerEKOS scoreboard (M0.5)
 
+> **Status (R1 review, 2026-10-19 night).** A dated spec, largely built. Where the build differs: panels live in per-family directories (`panels/<family>/items.jsonl`), not flat `panels/<panel>.jsonl`; the classification manifest is one file, `controls/classified.jsonl`, not `panels/classified/<kernel>.manifest.jsonl`; there are no kernel binaries, SML hashes or `--selftest` identities (Isabelle was dropped, so §5.3's kernel contract needs a Lean-runner rewrite: `docs/design/explorations/05-next-lanes.md`); `make_panels.py`, `classify.py` and `standins/` do not exist. The current account is `tools/scoreboard/README.md`.
+
 Design lane, 2026-10-19. Read-only except this file. Nothing here is built; every path marked "new" is a proposal.
 
 **Summary**
