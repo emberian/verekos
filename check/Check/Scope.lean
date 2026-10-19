@@ -3,7 +3,7 @@
 
 What is trusted and what is not:
 
-- **Model (trusted, proved about):** `World.visible` (`World/Visible.lean:58`)
+- **Model (trusted, proved about):** `World.visible` (`World/Visible.lean:66`)
   at depth 1. Its theorems (`deny_wins_id`, `deny_wins_origin`,
   `unpinned_hidden`, `visible_pins`) are about exactly the function called
   here.
@@ -12,7 +12,7 @@ What is trusted and what is not:
   (`Check.Glob`), and turns the scope into a `World.Scope` (the four
   predicates) and an item into a claim. The predicates are given EKOS's own
   rules from `ekos/crates/ledger/src/scope.rs` at the pin `8e3c178`:
-  `denies` (:216-227) for `deniesOrigin`, `allows` (:229-240) for
+  `denies` (:211) for `deniesOrigin`, `allows` (:224) for
   `allowsOrigin`, object rules for `deniesId`/`allowsId`, and the scope's
   `default` folded into `allowsOrigin` (a default-allow scope allows every
   origin). An object's `(source, path)` origins become source pins
@@ -162,7 +162,7 @@ def parseScope (text : String) : Except Err ReadScope := do
     | .ok _ => .error .parse
   pure { default, rules }
 
-/-- `normalize` (scope.rs:149): forward slashes, no leading `./`. -/
+/-- `normalize` (scope.rs:147): forward slashes, no leading `./`. -/
 def normalizePath (p : String) : String :=
   let p := p.replace "\\" "/"
   if p.startsWith "./" then (p.drop 2).toString else p
@@ -177,7 +177,7 @@ structure Compiled where
   default : Effect
   rules : List CRule
 
-/-- `Compiled::new` (scope.rs:156-188): `ScopeError::Rule` cases. -/
+/-- `Compiled::new` (scope.rs:153): `ScopeError::Rule` cases. -/
 def compileScope (s : ReadScope) : Except Err Compiled := do
   let rules ← s.rules.mapM fun r => do
     if r.object.isSome && (r.source.isSome || r.path.isSome) then .error .rule
@@ -192,14 +192,14 @@ def compileScope (s : ReadScope) : Except Err Compiled := do
 
 def readScope (text : String) : Except Err Compiled := parseScope text >>= compileScope
 
-/-! ## EKOS's per-origin rules (scope.rs:195-240), ported -/
+/-! ## EKOS's per-origin rules (scope.rs:195-235), ported -/
 
 structure Origin where
   source : Option String
   path : Option String
   deriving DecidableEq, Repr
 
-/-- `path_matches` (scope.rs:195-205): the path as recorded, or with its
+/-- `path_matches` (scope.rs:195): the path as recorded, or with its
 source in front removed. -/
 def pathMatches (pat : List Glob.Tok) (source : Option String) (path : String) : Bool :=
   Glob.globMatches pat path ||
@@ -262,7 +262,7 @@ pins exist, so nothing is looked up). -/
 def decide (mode : Mode) (c : Compiled) (id : String) (origins : List Origin) : Bool :=
   World.visible derive (fun _ => none) (toWorld mode c) 1 (toClaim id origins)
 
-/-- `origins()` (scope.rs:263-284): sources crossed with normalized paths. -/
+/-- `origins()` (scope.rs:290): sources crossed with normalized paths. -/
 def crossOrigins (sources paths : List String) : List Origin :=
   let ss : List (Option String) := if sources.isEmpty then [none] else sources.map some
   let ps : List (Option String) :=

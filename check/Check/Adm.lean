@@ -4,7 +4,7 @@
 `World/Admission.lean` imports `World.WellFormed`, which imports Mathlib, so
 calling `World.admissible` from the executable would link Mathlib. This file
 copies `pinRank`, `maxPinRank`, `newRank`, `rstep`, `rankMap` and
-`admissible` (Admission.lean:44-100) word for word, and decides `AdmLog` as a
+`admissible` (Admission.lean:44-95) word for word, and decides `AdmLog` as a
 `Bool`. `CheckProofs.Adm` proves `admissibleL = World.admissible` and
 `admLogB d L = true ↔ World.AdmLog d L`, and the same for the pins-nonempty
 rule (`World.Claim.PinsNonempty`). Built, never linked.

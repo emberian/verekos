@@ -4,13 +4,13 @@
 Rebuilds a run's accepted writes as `World.Receipt`s and checks, on the real
 log rather than on examples:
 
-1. **The pin law** `World.AdmLog` (`World/Admission.lean:103`), decided by
+1. **The pin law** `World.AdmLog` (`World/Admission.lean:97`), decided by
    `Check.admLogB` (proved equal in `CheckProofs.Adm.admLogB_iff`).
 2. **Pins nonempty** (`World.Claim.PinsNonempty`, the first half of
    `Claim.WellFormed`) for every claim the compiler puts (`pinsNonemptyB_iff`).
 3. **Transaction order** `World.TxMonotone` (`World/TxOrder.lean:32`).
 4. **Status** of every conflict claim in the final state, by
-   `World.statusAt` (`World/Status.lean:72`) with the core taken as the
+   `World.statusAt` (`World/Status.lean:71`) with the core taken as the
    conflict header's *revision* as read from the world, not a digest of the
    payload (design 3.1 §2, R1 finding S5: `status` itself cannot express
    that, `statusAt` with the revision supplied can). The status after every

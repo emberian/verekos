@@ -3,7 +3,7 @@
 
 What is trusted and what is not:
 
-- **Model (trusted):** `World.detectList` (`World/Conflicts.lean:68`),
+- **Model (trusted):** `World.detectList` (`World/Conflicts.lean:63`),
   computed by `Check.detectL`, which `CheckProofs.Detect.mem_detectL` proves
   has the same members. `World.mem_detect`, `coverage`, `soundness` and
   `detectList_perm` are about that function.

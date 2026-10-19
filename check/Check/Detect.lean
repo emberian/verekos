@@ -1,7 +1,7 @@
 /-
 # Check.Detect — `World.detectList` without Mathlib
 
-`World.detect` (`World/Conflicts.lean:63`) is stated over Mathlib's `Finset`,
+`World.detect` (`World/Conflicts.lean:58`) is stated over Mathlib's `Finset`,
 so an executable that called it would compile and link Mathlib. This file
 restates it over `List`, with no Mathlib import:
 
