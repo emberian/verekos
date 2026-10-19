@@ -15,7 +15,7 @@ in `world/`. Older text that says Isabelle, HOL, SML or AFP is history.
 | Path | What | Built by |
 |---|---|---|
 | `world/` | the Lean model (claims, receipts, status, visibility, admission, the document shapes); minidregg is a pinned Lake dependency | `cd world && nice -n 10 lake build` |
-| `slice1/` | slice 1: EKOS output landed as minidregg cells on hbox (driver scripts, ``verekos-map` (Lean, in `map/`)`) | runs on hbox, see the scripts' headers |
+| `slice1/` | slice 1: EKOS output landed as minidregg cells on hbox (driver scripts; the mapper is `verekos-map`, Lean, in `map/`) | runs on hbox, see the scripts' headers |
 | `laws/` | the four document laws as minidregg client `Pred` JSON; `check.py` checks spelling and slots | `python3 -I laws/check.py` |
 | `panels/<family>/` | panel inputs (EKOS tests transcribed as data, fixture references) and drift records | by hand, with a drift checker |
 | `controls/` | EKOS's own answers on each panel, the transcribed test assertions (`*.expected.jsonl`), `MANIFEST.json`, `classified.jsonl` | `tools/scoreboard/regen_controls.py` |
