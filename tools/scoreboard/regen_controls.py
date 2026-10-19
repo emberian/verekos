@@ -77,6 +77,24 @@ REGISTRY = [
 # REGISTRY when their dumps were built, W12.)
 OTHER_DRIFT: list[list[str]] = []
 
+# The ledger versions controls (W20) are a different entry kind: the dump
+# subcommand takes a WORKSPACE DIRECTORY — a real W18 fixture build whose
+# .ekos/ledger/facts is opened read-only — not a panel+expected pair. The
+# `panel` file supplies the fixture-sha provenance check the dump runs
+# itself; there is no expected file because the workspace IS the expectation
+# source (the committed control pins the one-commit state; the EKOS#10 fork
+# away from it is classified in controls/classified.jsonl). Everything else
+# below treats these exactly like REGISTRY entries: double run,
+# byte-identical or fatal, committed-control comparison, --accept to move.
+LEDGER_REGISTRY = [
+    {"run": "ledger", "workspace": "var/w18/ecommerce/ws",
+     "panel": "panels/ledger/items.jsonl",
+     "control": "controls/ledger.ecommerce.versions.control.jsonl"},
+    {"run": "ledger", "workspace": "var/w18/northwind/ws",
+     "panel": "panels/ledger/items.jsonl",
+     "control": "controls/ledger.northwind.versions.control.jsonl"},
+]
+
 
 def sha256_of(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
@@ -139,6 +157,29 @@ def run_dump(entry: dict, out: Path) -> dict:
     return report
 
 
+def run_ledger_dump(entry: dict, out: Path) -> dict:
+    """One ledger-versions dump run (workspace input, no expected file);
+    returns its stderr report (parsed). Same contract as run_dump."""
+    with out.open("w") as fh:
+        p = subprocess.run(
+            [str(DUMP / "target/debug/control-dump"), entry["run"],
+             str(ROOT / entry["workspace"]), "--panel", str(ROOT / entry["panel"])],
+            stdout=fh, stderr=subprocess.PIPE, text=True)
+    report = {}
+    for line in p.stderr.splitlines():
+        try:
+            v = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(v, dict) and "panel" in v:
+            report = v
+    if p.returncode != 0:
+        sys.exit(f"ledger dump {entry['workspace']} failed (exit {p.returncode}):\n{p.stderr}")
+    if not report or "items" not in report:
+        sys.exit(f"ledger dump {entry['workspace']}: no panel summary on stderr:\n{p.stderr}")
+    return report
+
+
 def moved_items(committed: Path, fresh: Path) -> list[str]:
     def by_item(path):
         out = {}
@@ -182,33 +223,40 @@ def main() -> int:
     print(json.dumps({"build": build, "binary_sha256": sha256_of(binary.read_bytes())}))
 
     results = []
+
+    def drive(entry: dict, runner) -> None:
+        """Double-run one entry, byte-compare, compare the committed control."""
+        run1, run2 = tmp / "run1.jsonl", tmp / "run2.jsonl"
+        report = runner(entry, run1)
+        runner(entry, run2)
+        repro = run1.read_bytes() == run2.read_bytes()
+        committed = ROOT / entry["control"]
+        if committed.is_file():
+            same = run1.read_bytes() == committed.read_bytes()
+            moved = [] if same else moved_items(committed, run1)
+            if not same and args.accept:
+                committed.write_bytes(run1.read_bytes())
+                same = True
+            status = "identical" if same else "moved"
+        else:
+            committed.write_bytes(run1.read_bytes())
+            moved, same, status = [], True, "written_new"
+        results.append({
+            "control": entry["control"], "panel": entry["panel"],
+            "items": report.get("items"), "agree": report.get("agree"),
+            "reproducible": repro, "committed_control": status, "moved_items": moved,
+        })
+        print(json.dumps(results[-1]))
+        if not repro:
+            sys.exit(f"{entry['control']}: two runs differ — the volatile-field list must grow "
+                     "before this control can be trusted")
+
     with tempfile.TemporaryDirectory(prefix="verekos-regen-", dir=str(ROOT / "var/w9")) as td:
         tmp = Path(td)
         for entry in REGISTRY:
-            run1, run2 = tmp / "run1.jsonl", tmp / "run2.jsonl"
-            report = run_dump(entry, run1)
-            run_dump(entry, run2)
-            repro = run1.read_bytes() == run2.read_bytes()
-            committed = ROOT / entry["control"]
-            if committed.is_file():
-                same = run1.read_bytes() == committed.read_bytes()
-                moved = [] if same else moved_items(committed, run1)
-                if not same and args.accept:
-                    committed.write_bytes(run1.read_bytes())
-                    same = True
-                status = "identical" if same else "moved"
-            else:
-                committed.write_bytes(run1.read_bytes())
-                moved, same, status = [], True, "written_new"
-            results.append({
-                "control": entry["control"], "panel": entry["panel"],
-                "items": report.get("items"), "agree": report.get("agree"),
-                "reproducible": repro, "committed_control": status, "moved_items": moved,
-            })
-            print(json.dumps(results[-1]))
-            if not repro:
-                sys.exit(f"{entry['control']}: two runs differ — the volatile-field list must grow "
-                         "before this control can be trusted")
+            drive(entry, run_dump)
+        for entry in LEDGER_REGISTRY:
+            drive(entry, run_ledger_dump)
 
     drift_results = []
     for entry in REGISTRY:
@@ -240,9 +288,12 @@ def main() -> int:
             "source_files": sorted(str(p.relative_to(ROOT)) for p in (DUMP / "src").glob("*.rs")),
             "build_log": build["log"],
         },
-        "panels": {e["panel"]: sha256_of((ROOT / e["panel"]).read_bytes()) for e in REGISTRY},
+        "panels": {e["panel"]: sha256_of((ROOT / e["panel"]).read_bytes())
+                   for e in REGISTRY + LEDGER_REGISTRY},
         "controls": {f: sha256_of((ROOT / f).read_bytes())
-                     for e in REGISTRY for f in (e["expected"], e["control"])},
+                     for e in REGISTRY for f in (e["expected"], e["control"])}
+                   | {e["control"]: sha256_of((ROOT / e["control"]).read_bytes())
+                      for e in LEDGER_REGISTRY},
         "runs": results,
         "drift_checks": drift_results,
         "volatile_fields_stripped": ["created_at"],

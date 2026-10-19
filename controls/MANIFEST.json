@@ -7,13 +7,14 @@
   },
   "dump_binary": {
     "path": "tools/scoreboard/control-dump/target/debug/control-dump",
-    "sha256": "c37199cb6df8c11116e5b91535622964778e80f2ff223ad69905278732c8c372",
-    "source_tree_sha256": "ae230c23a4b0e0f0adf210c6c566d5961a89411b500481b579d4dc170dc6c2d6",
+    "sha256": "dcc126955be69ffe408d6f79eb9485981cd2769e71dd48729a497cdc71a4fdc2",
+    "source_tree_sha256": "018bfe1d2a0d9fbf19a91058ac05907144458cff345c1a9c221a9452147a2674",
     "source_files": [
       "tools/scoreboard/control-dump/src/branch_dump.rs",
       "tools/scoreboard/control-dump/src/conflicts_dump.rs",
       "tools/scoreboard/control-dump/src/identity_dump.rs",
       "tools/scoreboard/control-dump/src/impact_dump.rs",
+      "tools/scoreboard/control-dump/src/ledger_dump.rs",
       "tools/scoreboard/control-dump/src/main.rs",
       "tools/scoreboard/control-dump/src/scope_dump.rs",
       "tools/scoreboard/control-dump/src/scope_store_dump.rs"
@@ -26,7 +27,8 @@
     "panels/scope/store.jsonl": "062ff6a5ab05b7d3186c26797d96b9979a9fb2bc39aa2fa4405687c2b22ef2c2",
     "panels/identity/identity.unit.jsonl": "45ce02d5f00cf228c4244a0698ecdc23dbb06de523744137a458121a4b946639",
     "panels/branch/items.jsonl": "d954076f16579f16a4940dbc728a0ec1fdb4060e052393f493fe107726902216",
-    "panels/impact/items.jsonl": "7f92fcfcf1a2efe0ad5517b046a3b29057c02333c836942220dec7211a23f11e"
+    "panels/impact/items.jsonl": "7f92fcfcf1a2efe0ad5517b046a3b29057c02333c836942220dec7211a23f11e",
+    "panels/ledger/items.jsonl": "ca648319f7da93a8f35988fc9b0a1f8ad7f590b99aebcfdc10f847d82d12383f"
   },
   "controls": {
     "controls/scope.decision.expected.jsonl": "071705f373d7391291fd67bdfe93b6f7ab6c050de941b35f213e569b3cd59020",
@@ -40,7 +42,9 @@
     "panels/branch/controls/expected.jsonl": "aa260b01c015f55e4bb1d559ade2c648d74230927dffb8e5c12a2b2d58f0fb2b",
     "controls/branch.unit.control.jsonl": "c13c20d925a18639f8ce91fb6d87c87564815dc1f4db1300cf52e9cd5ec4cf9b",
     "controls/impact.expected.jsonl": "2a26bb7ccc724d49981477315275c63d57010e0a39c6176b89cfdf44669c62cf",
-    "controls/impact.control.jsonl": "d3461ab754a9c974fc53fa815fefe3ece753dac78b18f9bcfbc01071b9c3d308"
+    "controls/impact.control.jsonl": "d3461ab754a9c974fc53fa815fefe3ece753dac78b18f9bcfbc01071b9c3d308",
+    "controls/ledger.ecommerce.versions.control.jsonl": "87407081ee89701f426e7b9e730358dcbeb260f8074acd3ee53c01c72829d8a7",
+    "controls/ledger.northwind.versions.control.jsonl": "93e443f9ee061854cd76e6a80390b9e4e9609cff9373de1f90b1ccef93b44b45"
   },
   "runs": [
     {
@@ -96,6 +100,24 @@
       "reproducible": true,
       "committed_control": "identical",
       "moved_items": []
+    },
+    {
+      "control": "controls/ledger.ecommerce.versions.control.jsonl",
+      "panel": "panels/ledger/items.jsonl",
+      "items": 1,
+      "agree": 1,
+      "reproducible": true,
+      "committed_control": "identical",
+      "moved_items": []
+    },
+    {
+      "control": "controls/ledger.northwind.versions.control.jsonl",
+      "panel": "panels/ledger/items.jsonl",
+      "items": 1,
+      "agree": 1,
+      "reproducible": true,
+      "committed_control": "identical",
+      "moved_items": []
     }
   ],
   "drift_checks": [
@@ -133,5 +155,5 @@
   "volatile_fields_stripped": [
     "created_at"
   ],
-  "recorded": "2026-10-19T19:36:52Z"
+  "recorded": "2026-10-19T19:50:08Z"
 }
