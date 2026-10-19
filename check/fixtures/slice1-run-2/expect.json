@@ -1,0 +1,21 @@
+{
+ "adm_log": true,
+ "pins_nonempty": true,
+ "tx_monotone": true,
+ "conflicts": [
+  {
+   "subject": [
+    "sql-analyzer-table:customers",
+    "columns.email.data_type"
+   ],
+   "status": "needsReview"
+  },
+  {
+   "subject": [
+    "sql-analyzer-table:customers",
+    "columns"
+   ],
+   "status": "open"
+  }
+ ]
+}

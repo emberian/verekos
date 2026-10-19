@@ -12,9 +12,10 @@ control (for `conflicts.unit`, against the join-view projection made by
 
 It runs `verekos-check laws` on the synthetic run roots in
 `check/fixtures/` (expected exit 0 for `synthetic-run`, 1 for
-`synthetic-run-bad` and for the `author-from-payload` mutant) and writes
-`laws.<root>[.<mutant>].json`. These are synthetic: slice 1's real run root
-is not wired in yet (notes/B-check.md).
+`synthetic-run-bad` and for the `author-from-payload` mutant), on slice 1's
+run-2 as converted by `check/slice1_log.py` into `check/fixtures/slice1-run-2`
+(expected 0), and on a copy of that log with the review re-signed by the
+compiler (expected 1), and writes `laws.<root>[.<mutant>].json`.
 
 It also runs the planted mutant (`scope --mutant deny-ignored`) and writes
 `scope.decision.mutant-deny-ignored.verdict.json`; the run fails if the
@@ -127,13 +128,28 @@ def main() -> int:
         v = run_one(*row, a.classified, info)
         faithful[row[0]] = v
         worst = max(worst, v["score_exit"])
+    # slice 1's real run, converted by check/slice1_log.py, and the same log
+    # with the review re-signed by the compiler (a planted change to real data)
+    real = ROOT / "check/fixtures/slice1-run-2"
+    resigned = ROOT / "var/check/slice1-run-2.review-signed-by-compiler"
+    resigned.mkdir(parents=True, exist_ok=True)
+    principals = json.loads((real / "principals.json").read_text())
+    for f in ("principals.json", "expect.json"):
+        (resigned / f).write_text((real / f).read_text())
+    (resigned / "log.jsonl").write_text("".join(
+        json.dumps({**l, "signer": principals["compiler"]} if l["stage"] == "review" else l) + "\n"
+        for l in map(json.loads, (real / "log.jsonl").read_text().splitlines())))
     for root, mutant, want in [("synthetic-run", None, 0), ("synthetic-run-bad", None, 1),
-                               ("synthetic-run", "author-from-payload", 1)]:
-        args = ["laws"] + (["--mutant", mutant] if mutant else []) + [
-            str(ROOT / "check/fixtures" / root)]
+                               ("synthetic-run", "author-from-payload", 1),
+                               ("slice1-run-2", None, 0),
+                               (resigned, None, 1)]:
+        path = root if isinstance(root, Path) else ROOT / "check/fixtures" / root
+        root = path.name
+        args = ["laws"] + (["--mutant", mutant] if mutant else []) + [str(path)]
         r = subprocess.run([str(EXE), *args], capture_output=True, text=True)
         name = f"laws.{root}.{mutant}" if mutant else f"laws.{root}"
-        out = {"root": f"check/fixtures/{root}", "synthetic": True, "mutant": mutant,
+        out = {"root": str(path.relative_to(ROOT)), "synthetic": root.startswith("synthetic"),
+               "mutant": mutant,
                "exit": r.returncode, "expected_exit": want,
                "report": json.loads(r.stdout) if r.stdout.strip() else None,
                "stderr": r.stderr.strip(), "check_build": info}
