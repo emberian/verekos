@@ -23,6 +23,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 mod conflicts_dump;
+mod identity_dump;
 mod scope_dump;
 mod scope_store_dump;
 
@@ -42,10 +43,10 @@ impl Item {
             .as_str()
             .ok_or_else(|| format!("line {number}: no item"))?
             .to_string();
-        let kind = v["kind"]
-            .as_str()
-            .ok_or_else(|| format!("line {number}: no kind"))?
-            .to_string();
+        // The scope/conflicts/store panels carry a `kind` envelope field; the
+        // identity/branch/impact panels (other lanes' layouts) dispatch on
+        // their input's own shape instead, so `kind` may be absent.
+        let kind = v["kind"].as_str().unwrap_or_default().to_string();
         if !v["input"].is_object() {
             return Err(format!("line {number}: input is not an object"));
         }
@@ -70,7 +71,10 @@ fn read_panel(path: &Path) -> Result<Vec<Item>, String> {
     Ok(out)
 }
 
-/// `{"item": ..., "assert": {...}}` per line, keyed by item id.
+/// `{"item": ..., "assert": {...}}` per line, keyed by item id. The
+/// identity/branch/impact expected files (their lanes' own layouts) carry the
+/// same assertions under `expect` (identity, impact) or at the top level
+/// (branch); those keys never collide with an assertion field.
 fn read_expected(path: &Path) -> Result<HashMap<String, serde_json::Value>, String> {
     let text = std::fs::read_to_string(path)
         .map_err(|e| format!("{}: {e}", path.display()))?;
@@ -85,10 +89,23 @@ fn read_expected(path: &Path) -> Result<HashMap<String, serde_json::Value>, Stri
             .as_str()
             .ok_or_else(|| format!("{} line {}: no item", path.display(), i + 1))?
             .to_string();
-        if !v["assert"].is_object() {
-            return Err(format!("{} line {i}: assert is not an object", path.display()));
+        let assert = if v["assert"].is_object() {
+            v["assert"].clone()
+        } else if v["expect"].is_object() {
+            v["expect"].clone()
+        } else {
+            let mut kept = serde_json::Map::new();
+            for (k, val) in v.as_object().into_iter().flatten() {
+                if !matches!(k.as_str(), "item" | "test" | "expect_from_test") {
+                    kept.insert(k.clone(), val.clone());
+                }
+            }
+            serde_json::Value::Object(kept)
+        };
+        if !assert.is_object() {
+            return Err(format!("{} line {i}: no assertions found", path.display()));
         }
-        out.insert(item, v["assert"].clone());
+        out.insert(item, assert);
     }
     Ok(out)
 }
@@ -165,7 +182,7 @@ fn parse_args() -> Result<(String, PathBuf, Option<PathBuf>), String> {
     let args: Vec<String> = std::env::args().collect();
     if args.len() < 3 {
         return Err(format!(
-            "usage: {} <scope|conflicts|store> <panel.jsonl> [--expected <expected.jsonl>] | selftest",
+            "usage: {} <scope|conflicts|store|identity|branch|impact> <panel.jsonl> [--expected <expected.jsonl>] | selftest",
             args.first().map(String::as_str).unwrap_or("control-dump")
         ));
     }
@@ -206,7 +223,7 @@ fn main() {
     let sub = args.next().unwrap_or_default();
     if sub == "selftest" {
         println!(
-            "{{\"kernel\":\"control-dump\",\"ekos_pin\":\"{EKOS_PIN}\",\"panels\":[\"scope.decision\",\"conflicts.unit\",\"scope.store\"],\"oracles\":0}}"
+            "{{\"kernel\":\"control-dump\",\"ekos_pin\":\"{EKOS_PIN}\",\"panels\":[\"scope.decision\",\"conflicts.unit\",\"scope.store\",\"identity.unit\",\"branch.unit\",\"impact.unit\"],\"oracles\":0}}"
         );
         return;
     }
@@ -238,6 +255,13 @@ fn main() {
             "scope.store",
             scope_store_dump::control_for,
             scope_store_dump::check_assert,
+        ),
+        "identity" => run_panel(
+            &panel,
+            expected.as_deref(),
+            "identity.unit",
+            identity_dump::control_for,
+            identity_dump::check_assert,
         ),
         other => {
             eprintln!("{me}: unknown subcommand {other}");
