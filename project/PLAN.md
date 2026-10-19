@@ -13,12 +13,14 @@ numbers or states that it has none yet; a green theory is not a number.
 
 | Lane | Deliverable | Owns | Status |
 |---|---|---|---|
-| A. Invariant census | `notes/A-invariants.md`: every stated invariant as a candidate theorem, with how it is enforced today | notes only | scout running (claude-glm, glm-5.3) |
-| B. minidregg mapping | `notes/B-minidregg-map.md`: primitive-to-primitive map, three biggest mismatches, where the world layer should live | notes only | scout running (claude-glm, glm-5.3) |
-| C. AFP survey | `notes/C-afp.md`: entries that fit, a recommended session structure, RC1 compatibility notes | notes only | scout running (claude-grok, grok-4.7) |
-| D. Upstream review | `notes/D-upstream-review.md`: ranked findings where EKOS's code falls short of its stated invariants, each with a proposed upstream change | notes only | scout running (claude-grok, grok-4.7) |
-| E. veri7vn lessons | `notes/E-veri7vn-lessons.md`: the sibling pattern distilled as rules | notes only | scout running (claude-glm, glm-5.3-flash) |
-| M1. Ledger kernel | `src/isabelle/ledger/`: `Ledger.thy`, `Ledger_Export.thy`, `ROOT`; a binary reading an EKOS ledger dump. Control dump: `ekos graph export --format ndjson [--as-of <rfc3339>]` (`~/dev/EKOS/ekos/crates/cli/src/commands/graph.rs`), objects and relationships only; evidence records need `ekos ledger audit`/a second path. No `ekos` binary is built in `~/dev/EKOS` yet (`cargo build -p ekos --release` first) | not started | after A, C |
+| A. Invariant census | `notes/A-invariants.md`: every stated invariant as a candidate theorem, with how it is enforced today | notes only | harvested (claude-glm, glm-5.3) |
+| B. minidregg mapping | `notes/B-minidregg-map.md`: primitive-to-primitive map, three biggest mismatches, where the world layer should live | notes only | harvested (claude-glm, glm-5.3; its EKOS reads were permission-blocked) |
+| C. AFP survey | `notes/C-afp.md`: entries that fit, a recommended session structure, RC1 compatibility notes | notes only | harvested on the second run (claude-grok, grok-4.7; first run permission-blocked) |
+| D. Upstream review | `notes/D1-upstream-review.md` (items 1-4, harvested) and `notes/D2-upstream-review.md` (items 5-8, running); verified drafts in `notes/upstream-issues.md` | notes only | split in two after the first run hit a context limit (claude-grok, grok-4.7) |
+| E. veri7vn lessons | `notes/E-veri7vn-lessons.md`: the sibling pattern distilled as rules | notes only | harvested (claude-glm, glm-5.3-flash) |
+| F. Revision system | `notes/F-revision-system.md`: what breadstuffs built, what minidregg kept, what it means here | notes only | harvested (Opus scout) |
+| M0.5. Scoreboard | panels, control dumps, the diff classifier (design §4) | `tools/scoreboard/` | not started; EKOS ships no scoreboard, so this comes before any kernel |
+| M1. Ledger + Branch kernels | `src/isabelle/ledger/`: `Ledger.thy`, `Branch.thy`, `Ledger_Export.thy`, `ROOT`; a binary reading an EKOS ledger dump. Control dump: `ekos graph export --format ndjson [--as-of <rfc3339>]` (`~/dev/EKOS/ekos/crates/cli/src/commands/graph.rs`), objects and relationships only; evidence records need `ekos ledger audit`/a second path. No `ekos` binary is built in `~/dev/EKOS` yet (`cargo build -p ekos --release` first) | not started | after A, C |
 | M2. Scope kernel | `src/isabelle/scope/` | not started | after A, C |
 | M5. The EKOS world | a law package and schema against minidregg's `Theory/Hyperdocument*.lean`; location decided by B | not started | after B |
 
