@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
-# slice1/s-import.sh TAG STEP — the importer imports both sources (exploration 01 §2.2): a signed
-# read of each source cell, the mapper's diff, and a submit only when there is something to submit.
+# slice1/s-import.sh TAG STEP — hbox side of slice1/import.sh: for each source cell, submit the request
+# the Mac's `verekos-map import` wrote ($RUN/import-TAG/CELL.req.json, with CELL.mapper.txt) as the
+# importer, or record that there was nothing to submit; then a signed read of the cell after.
 . "$(dirname "$0")/world-lib.sh"
-TAG=$1; STEP=$2; C=$(dirname "$0")
+TAG=$1; STEP=$2
 D=$RUN/import-$TAG; mkdir -p "$D"
-for spec in shop:src-shop:ecommerce.sql:$C/inputs/ecommerce.sql legacy:src-legacy:legacy_customers.sql:${LEGACY_FILE:-$C/fixtures/legacy_customers.sql}; do
-  IFS=: read -r key cell path file <<<"$spec"
+for cell in src-shop src-legacy; do
   t0=$(now)
-  read_to "$D/$cell-before.json" importer "$cell"
-  python3 -I "$C/mapper.py" import --source-key "$key" --path "$path" --file "$file" --cell "$cell" \
-    --read "$D/$cell-before.json" --out "$D/$cell.req.json" >"$D/$cell.mapper.txt" 2>&1 || { cat "$D/$cell.mapper.txt"; exit 1; }
+  [ -f "$D/$cell.mapper.txt" ] || { echo "no $D/$cell.mapper.txt (run slice1/import.sh on the Mac)" >&2; exit 1; }
   if [ -f "$D/$cell.req.json" ]; then
     submit_req "import-$TAG-$cell" importer "$D/$cell.req.json"
     row "$STEP" "import-$TAG-$cell" "${EXPECT:-installed}" "$(outcome "import-$TAG-$cell")" "$(since "$t0")" \

@@ -54,7 +54,7 @@ def named_sources(sync):
     for n, c in sorted(sync["cells"].items()):
         if c["role"] != "compiled":
             continue
-        d = lib.M.Doc(pathlib.Path(sync["dir"]) / "cells" / f"{n}.json")
+        d = lib.Doc(pathlib.Path(sync["dir"]) / "cells" / f"{n}.json")
         for aid, a in d.atoms.items():
             if lib.SCHEMAS.get(a.get("kind", {}).get("schema")) == "ekos/header/v1" and a.get("tombstonedAt") in (None, "null"):
                 h = json.loads(bytes.fromhex(a["payload"]))

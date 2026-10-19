@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # map/receipt.sh — run verekos-map on slice 1's run-2 inputs (var/w17/run-2, local and
-# git-ignored) and compare every file it writes with the file mapper.py / laws.py wrote then.
+# git-ignored) and compare every file it writes with the file the deleted twins (slice1/mapper.py,
+# slice1/laws.py) wrote then: the committed request files under var/w17/run-2, laws/L-*.json, and
+# map/fixtures/ (the twin's split, id, structural-key and table-cell outputs, recorded before it went).
 # Prints one row per file: same | DIFFERS, and the SHA-256 of the Lean output.
 # Usage: bash map/receipt.sh [OUT]   (OUT defaults to var/w24/receipt; never builds)
 set -uo pipefail
@@ -49,14 +51,14 @@ for t in compile-1 compile-2; do
   cmpf "$t/ws/src/legacy/legacy_customers.sql" "$D/ws/src/legacy/legacy_customers.sql" "$O/$t-ws/src/legacy/legacy_customers.sql"
 done
 
-# the compile-run appends. mapper_sha256 is the SHA-256 of --mapper-file: here the twin as it ran on
-# hbox (slice1/mapper.py at fc8c7e1, SHA-256 c9264a14...; the committed file differs in its docstring)
-git -C "$V" show fc8c7e1:slice1/mapper.py >"$O/mapper-as-run.py"
+# the compile-run appends. mapper_sha256 records the mapper that ran: on run-2 that was slice1/mapper.py
+# at fc8c7e1 (SHA-256 c9264a14...), given here as a value
+MAPPER_AS_RUN=c9264a14fdfb855b3819729248effdded5bff752a5a09b709b185c29ab67eae3
 for t in compile-1 compile-2; do
   D=$R/$t; rd=(); [ "$t" = compile-2 ] && rd=(--read "$D/compile-run-before.json")
   # shellcheck disable=SC2046
   out=$("$M" runrec --dir "$D/req" $(src "$D") --cell compile-run --ekos-version "$(cat "$D/ekos-version.txt")" \
-    --mapper-file "$O/mapper-as-run.py" --out "$O/$t-compile-run.req.json" "${rd[@]}")
+    --mapper-sha256 "$MAPPER_AS_RUN" --out "$O/$t-compile-run.req.json" "${rd[@]}")
   cmptext "$t runrec stdout" "$(cat "$D/runrec.txt")" "$out"
   cmpf "$t/compile-run.req.json" "$D/compile-run.req.json" "$O/$t-compile-run.req.json"
 done
@@ -95,14 +97,16 @@ pr() { python3 -I -c "import json,sys;print(json.loads(sys.argv[1])[sys.argv[2]]
 for f in "$O"/laws-deployed/*.json; do cmpf "run-2/laws/$(basename "$f")" "$R/laws/$(basename "$f")" "$f"; done
 "$M" laws --out "$O/laws" >/dev/null
 for f in "$O"/laws/*.json; do cmpf "laws/$(basename "$f")" "$V/laws/$(basename "$f")" "$f"; done
-# split and id (the drivers' `idof` helper calls mapper.num)
+# split, id, structural-key, table-cell: against the twin's outputs recorded in map/fixtures/
+F=$V/map/fixtures
 for f in slice1/inputs/ecommerce.sql slice1/fixtures/legacy_customers.sql slice1/inputs/legacy_customers.v2.sql; do
   "$M" split "$V/$f" >"$O/split-$(basename "$f").txt"
-  python3 -I "$O/mapper-as-run.py" split "$V/$f" >"$O/split-$(basename "$f").py.txt"
-  cmpf "split $f" "$O/split-$(basename "$f").py.txt" "$O/split-$(basename "$f").txt"
+  cmpf "split $f" "$F/split-$(basename "$f").txt" "$O/split-$(basename "$f").txt"
 done
-for parts in "atom cf-customers-columns-email-data-type header" "run compile-run run bcd84c6407873338f39a80edc4eacadd836dca7ec48f8c1f40909b8d43778443" "schema ekos/object/v1"; do
+while IFS=$'\t' read -r parts want; do
   # shellcheck disable=SC2086
-  cmptext "id $parts" "$(python3 -I -c 'import sys; sys.path.insert(0, sys.argv[1]); import importlib.util as u; s=u.spec_from_file_location("m", sys.argv[2]); m=u.module_from_spec(s); s.loader.exec_module(m); print(m.num(*sys.argv[3:]))' "$O" "$O/mapper-as-run.py" $parts)" "$("$M" id $parts)"
-done
+  cmptext "id $parts" "$want" "$("$M" id $parts)"
+done <"$F/ids.tsv"
+while IFS=$'\t' read -r text want; do cmptext "structural-key $text" "$want" "$("$M" structural-key "$text")"; done <"$F/structural-keys.tsv"
+while IFS=$'\t' read -r name want; do cmptext "table-cell $name" "$want" "$("$M" table-cell "$name")"; done <"$F/table-cells.tsv"
 exit $fail

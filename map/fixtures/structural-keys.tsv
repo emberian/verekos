@@ -1,0 +1,6 @@
+CREATE TABLE customers	create-table:customers
+create unique index if not exists "Idx_A" on t(x)	create-index:idx_a
+CREATE OR REPLACE VIEW v AS SELECT 1	create-view:v
+CREATE MATERIALIZED   VIEW mv AS SELECT 1	create-materialized-view:mv
+-- a comment	anon:11d80c8433fdd286
+INSERT INTO t VALUES (1);	anon:b6d8999b6132ae89

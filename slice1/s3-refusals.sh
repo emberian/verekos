@@ -9,7 +9,8 @@
 C=$(dirname "$0"); D=$RUN/refusals; mkdir -p "$D"
 TAG=${TAG:-1}
 hexs() { printf '%s' "$1" | xxd -p | tr -d '\n'; }
-idof() { python3 -I -c 'import sys; sys.path.insert(0, sys.argv[1]); import mapper; print(mapper.num(*sys.argv[2:]))' "$C" "$@"; }
+# ids computed on the Mac by `verekos-map id` (slice1/ids.sh), sent as ids.tsv
+idof() { awk -F'\t' -v k="$*" '$1 == k { print $2; f = 1 } END { exit !f }' "$C/ids.tsv" || echo "idof: '$*' not in $C/ids.tsv" >&2; }
 
 # R1 -------------------------------------------------------------------------------------------
 t0=$(now)

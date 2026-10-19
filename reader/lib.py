@@ -20,8 +20,56 @@ import time
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parent
-sys.path.insert(0, str(HERE / "vendor"))
-import mapper as M  # noqa: E402  W17's mapper, copied unchanged (vendor/VENDORED.txt)
+# Ids, statement keys, source documents and cell names come from the Lean mapper (map/,
+# `verekos-map`), the same code that wrote the cells; nothing here re-derives them.
+MAP = pathlib.Path(os.environ.get("VEREKOS_MAP", ROOT / "map" / ".lake" / "build" / "bin" / "verekos-map"))
+
+
+def vmap(*args, check=True):
+    r = subprocess.run([str(MAP), *map(str, args)], capture_output=True, text=True)
+    if check and r.returncode != 0:
+        raise SystemExit(f"verekos-map {args[0]} failed ({r.returncode}): {r.stderr.strip()[:300]}")
+    return r
+
+
+def schema_id(name):
+    return vmap("id", "schema", name).stdout.strip()
+
+
+def table_cell(name):
+    return vmap("table-cell", name).stdout.strip()
+
+
+class Doc:
+    """A signed read view's entries by type and id (the parts the reader looks at)."""
+
+    def __init__(self, path):
+        view = json.loads(pathlib.Path(path).read_text())
+        entries = (view.get("cell") or {}).get("entries", [])
+        self.target = str(view["target"])
+        by = lambda ty: {e["id"]: e for e in entries if e.get("type") == ty}
+        self.atoms, self.links, self.transclusions = by("atom"), by("link"), by("transclusion")
+        docs = [e for e in entries if e.get("type") == "document"]
+        self.document = docs[0] if docs else None
+
+    def payload(self, atom):
+        return bytes.fromhex(self.atoms[atom]["payload"])
+
+    def revision(self, atom):
+        return str(self.atoms[atom]["revision"])
+
+
+class Source:
+    """An imported source document, as `verekos-map source` reads it: key, path, and the live
+    statement atoms in run order (structural key, atom id)."""
+
+    def __init__(self, path, info):
+        self.doc = Doc(path)
+        self.key, self.path, self.cell = info["key"], info["path"], info["cell"]
+        self.order = [(st["key"], st["atom"]) for st in info["statements"]]
+
+    def text(self):
+        return "".join(self.doc.payload(a).decode() for _, a in self.order)
 
 CONF = json.loads((HERE / "reader.conf.json").read_text())
 for _k in ("ssh", "ekos", "who", "reader_workspace", "remote_dir"):
@@ -33,7 +81,7 @@ GUESS = "guess: structural key"   # said on every pin line: EKOS evidence names 
 PROPS = ["columns", "check_constraints", "indexes", "description", "source", "sources", "signature",
          "claims", "subject_id", "attribute", "status", "subject_kind", "conflict_type", "chosen",
          "subject_name"]
-SCHEMAS = {M.schema(n): n for n in ("ekos/object/v1", "ekos/header/v1", "ekos/properties/v1", "ekos/edge/v1",
+SCHEMAS = {schema_id(n): n for n in ("ekos/object/v1", "ekos/header/v1", "ekos/properties/v1", "ekos/edge/v1",
                                     "ekos/evidence-meta/v1", "ekos/source-header/v1", "ekos/conflict/v1",
                                     "ekos/conflict-header/v1", "ekos/claim/v1", "ekos/manifest/v1")}
 
@@ -88,7 +136,7 @@ def read_cells(names, out_dir, tag):
 def doc_summary(name, path):
     """Atoms, links and transclusion pins of one read cell. `role`: source / compiled / empty."""
     view = json.loads(pathlib.Path(path).read_text())
-    d = M.Doc(path)
+    d = Doc(path)
     judged = view.get("judgedAt", {})
     out = {"cell": name, "target": d.target, "height": judged.get("height"), "worldRoot": judged.get("worldRoot"),
            "document": (d.document or {}).get("id"), "atoms": [], "links": [], "pins": [], "role": "empty"}
@@ -116,12 +164,14 @@ def doc_summary(name, path):
 
 def source_of(path):
     """(Source, header) when the read cell is an imported source document, else None."""
-    d = M.Doc(path)
-    try:
-        hdr = M.source_header(d)
-    except SystemExit:
+    r = vmap("source", "--read", path, check=False)
+    if r.returncode != 0:
         return None
-    return M.Source(hdr["source_key"], path), hdr
+    info = json.loads(r.stdout)
+    src = Source(path, info)
+    hdr = next(json.loads(src.doc.payload(a)) for a in src.doc.atoms
+               if src.doc.atoms[a].get("kind", {}).get("schema") == schema_id("ekos/source-header/v1"))
+    return src, hdr
 
 
 def statements(src):
@@ -176,7 +226,22 @@ def run_pipeline(ws, out):
 
 
 def load_export(path):
-    return M.load_export(path)
+    """An EKOS `graph export --format ndjson`: nodes and edges, kinds resolved, edge ends linked."""
+    nodes, edges, kinds, rkinds = [], [], [], []
+    for line in pathlib.Path(path).read_text().splitlines():
+        r = json.loads(line)
+        if r["record"] == "header":
+            kinds, rkinds = r["kind_index"], r["rel_kind_index"]
+        elif r["record"] == "node":
+            nodes.append(r)
+        elif r["record"] == "edge":
+            edges.append(r)
+    for n in nodes:
+        n["kind"] = kinds[n["k"]]
+    for e in edges:
+        e["kind"] = rkinds[e["k"]]
+        e["from"], e["to"] = nodes[e["s"]], nodes[e["t"]]
+    return nodes, edges
 
 
 # ------------------------------------------------------------------ the local record
@@ -260,7 +325,7 @@ def recheck(pins, sync, who=None):
             else:
                 verdicts.append({"pin": p, "verdict": "unchecked", "why": f"the node did not answer, so I cannot say: {str(val)[:90]}"})
             continue
-        d = M.Doc(val)
+        d = Doc(val)
         if p["kind"] == "atom":
             a = d.atoms.get(p["atom"])
             if a is None or a.get("tombstonedAt") not in (None, "null"):
@@ -294,7 +359,7 @@ def file_digest_of(tuples):
 
 def _old_text(sync, p):
     cell_file = pathlib.Path(sync["dir"]) / "cells" / f"{p['cell']}.json"
-    d = M.Doc(cell_file)
+    d = Doc(cell_file)
     a = d.atoms.get(p["atom"])
     return bytes.fromhex(a["payload"]).decode(errors="replace") if a else None
 
@@ -349,10 +414,9 @@ def pin_for_object(sync, obj):
                 return file_pin(sync, rel)
         return None
     for ev in obj["evidence"]:
-        m = M.CREATE.match(ev["fragment"])
-        if m:
-            kind = re.sub(r"\s+", "-", m.group(1).lower())
-            sk = f"create-{kind}:{m.group(2).strip(chr(34)).lower()}#0"
+        k = vmap("structural-key", ev["fragment"]).stdout.strip()
+        if k.startswith("create-"):
+            sk = f"{k}#0"
             p = statement_pin(sync, ev["path"], sk)
             if p:
                 return p

@@ -12,10 +12,13 @@ def usage : String := "usage: verekos-map (split FILE | id PART... | import | re
   render  --key K --read READ.json --out FILE
   plan    --export E --source K=READ.json ...
   compile --export E --source K=READ.json ... --cells CELLS.json --out DIR [--current NAME=READ.json ...] [--ekos-version S]
-  runrec  --dir DIR --source K=READ.json ... --cell NAME [--read READ.json] [--ekos-version S] [--mapper-file F] --out REQ.json
+  runrec  --dir DIR --source K=READ.json ... --cell NAME [--read READ.json] [--ekos-version S] [--mapper-file F | --mapper-sha256 HEX] --out REQ.json
   attest  --compile-run READ.json --claimed SHA --replayed SHA --cell NAME --source-cell NAME [--read READ.json] [--replayer N] --out REQ.json
   review  --conflict READ.json --conflict-cell NAME --cell NAME [--read READ.json] --pick K [--verb V] [--note TEXT] --out REQ.json
-  laws    --out DIR [--owner S --importer S --compiler S --reviewer S --verifier S]"
+  laws    --out DIR [--owner S --importer S --compiler S --reviewer S --verifier S]
+  source  [--key K] --read READ.json          (JSON: a source document's statements, for reader/)
+  edit-atom --read R --source-key K --structural S --cell C --file F --out REQ.json
+  structural-key TEXT | table-cell NAME"
 
 def cmdLaws (a : List (String × String)) : IO Unit := do
   let out : System.FilePath := ← arg a "out"
@@ -42,6 +45,8 @@ def run (argv : List String) : IO Bool := do
   match argv with
   | "split" :: file :: _ => cmdSplit file; pure true
   | "id" :: parts => IO.println (num parts); pure true
+  | ["structural-key", text] => cmdStructuralKey text; pure true
+  | ["table-cell", name] => cmdTableCell name; pure true
   | cmd :: rest =>
     let a ← liftM (parseArgs rest)
     match cmd with
@@ -53,6 +58,8 @@ def run (argv : List String) : IO Bool := do
     | "attest" => cmdAttest a; pure true
     | "review" => cmdReview a; pure true
     | "laws" => cmdLaws a; pure true
+    | "source" => cmdSource a; pure true
+    | "edit-atom" => cmdEditAtom a; pure true
     | _ => pure false
   | [] => pure false
 

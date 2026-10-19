@@ -4,8 +4,9 @@
     python3 -I reader/edit_as_importer.py var/lane-a/scene/shop.edit1.sql --tag edit1
 
 This is a WORLD WRITE made by a principal that is not the reader (the reader holds only
-observe on the shop room and could not make it). It runs slice 1's mapper `import` (vendored in
-reader/vendor/) on the node's machine, as slice1/s-import.sh does. FILE is the full new text
+observe on the shop room and could not make it). The importer's read and submit run on the
+node's machine (remote/importer-edit.sh); the diff runs here with `verekos-map import`, as
+slice1/import.sh does (or `verekos-map edit-atom` with --atom-key). FILE is the full new text
 of ecommerce.sql; only the statements that differ are submitted.
 """
 import argparse
@@ -28,17 +29,36 @@ def main():
     a = ap.parse_args()
     rd = lib.CONF["remote_dir"]
     tag = f"{a.tag}-{lib.stamp()}"
-    lib.ssh(f"mkdir -p {rd}/code/vendor {rd}/edits")
-    for local, remote in ((lib.HERE / "vendor" / "mapper.py", f"{rd}/code/vendor/mapper.py"),
-                          (lib.HERE / "remote" / "edit-atom.py", f"{rd}/code/edit-atom.py"), (pathlib.Path(a.file), f"{rd}/edits/{tag}.sql")):
-        r = lib.subprocess.run(["scp", "-q", str(local), f"{lib.CONF['ssh']}:{remote}"])
-        if r.returncode:
-            raise SystemExit("scp failed")
-    args = " ".join(shlex.quote(x) for x in [lib.CONF["mini"], IMPORTER_WS, "src-shop", "shop", "ecommerce.sql",
-                                              f"{rd}/edits/{tag}.sql", f"{rd}/code/vendor/mapper.py", f"{rd}/edits/{tag}", f"reader-{tag}"])
+    remote_out = f"{rd}/edits/{tag}"
+    local = lib.ROOT / "var" / "w24" / "reader-edits" / tag
+    local.mkdir(parents=True, exist_ok=True)
+    script = (lib.HERE / "remote" / "importer-edit.sh").read_bytes()
+
+    def remote(phase):
+        args = " ".join(shlex.quote(x) for x in [phase, lib.CONF["mini"], IMPORTER_WS, "src-shop", remote_out, f"reader-{tag}"])
+        return lib.ssh(f"bash -s -- {args}", stdin=script, check=False)
+
     t0 = time.time()
-    env = f"ATOM_KEY={shlex.quote(a.atom_key)} " if a.atom_key else ""
-    r = lib.ssh(f"{env}bash -s -- {args}", stdin=(lib.HERE / "remote" / "importer-edit.sh").read_bytes(), check=False)
+    r = remote("read")
+    if r.returncode:
+        print(r.stdout.decode().strip(), r.stderr.decode()[-300:])
+        return r.returncode
+    if lib.subprocess.run(["scp", "-q", f"{lib.CONF['ssh']}:{remote_out}/before.json", str(local / "before.json")]).returncode:
+        raise SystemExit("scp failed")
+    req = local / "req.json"
+    if a.atom_key:
+        m = lib.vmap("edit-atom", "--read", local / "before.json", "--source-key", "shop", "--structural", a.atom_key,
+                     "--cell", "src-shop", "--file", a.file, "--out", req)
+    else:
+        m = lib.vmap("import", "--source-key", "shop", "--path", "ecommerce.sql", "--file", a.file, "--cell", "src-shop",
+                     "--read", local / "before.json", "--out", req)
+    (local / "mapper.txt").write_text(m.stdout)
+    if not req.exists():
+        print(f"nothing to submit ({m.stdout.strip()})   [{time.time() - t0:.1f} s wall]")
+        return 0
+    if lib.subprocess.run(["scp", "-q", str(req), str(local / "mapper.txt"), f"{lib.CONF['ssh']}:{remote_out}/"]).returncode:
+        raise SystemExit("scp failed")
+    r = remote("submit")
     print(r.stdout.decode().strip() + f"   [{time.time() - t0:.1f} s wall]")
     if r.returncode:
         print(r.stderr.decode()[-300:])

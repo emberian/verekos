@@ -4,7 +4,8 @@
 . "$(dirname "$0")/world-lib.sh"
 C=$(dirname "$0"); P=$1; D=$RUN/r5-$P; mkdir -p "$D"
 CF=cf-customers-columns-email-data-type
-idof() { python3 -I -c 'import sys; sys.path.insert(0, sys.argv[1]); import mapper; print(mapper.num(*sys.argv[2:]))' "$C" "$@"; }
+# ids computed on the Mac by `verekos-map id` (slice1/ids.sh), sent as ids.tsv
+idof() { awk -F'\t' -v k="$*" '$1 == k { print $2; f = 1 } END { exit !f }' "$C/ids.tsv" || echo "idof: '$*' not in $C/ids.tsv" >&2; }
 legacy_atom=$(idof atom legacy legacy_customers.sql 'create-table:customers#0')
 t0=$(now)
 read_to "$D/src-legacy.json" verifier src-legacy

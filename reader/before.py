@@ -74,10 +74,10 @@ def answer(name):
             if t in doc2cell:
                 nadj.setdefault(n, set()).add(doc2cell[t])
                 nadj.setdefault(doc2cell[t], set()).add(n)
-    rc = lib.M.table_cell(name)
+    rc = lib.table_cell(name)
     ndist, _ = bfs(nadj, rc)
     node_side = {"ring1": sorted(n for n, d in ndist.items() if d == 1), "ring2": sorted(n for n, d in ndist.items() if d == 2)}
-    cell_of = {n: lib.M.table_cell(n) for n in d2}
+    cell_of = {n: lib.table_cell(n) for n in d2}
     node_equal = (sorted(cell_of[n] for n in ring1) == node_side["ring1"] and sorted(cell_of[n] for n in ring2) == node_side["ring2"])
     # pins
     members = {}

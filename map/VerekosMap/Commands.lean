@@ -244,7 +244,9 @@ def cmdRunrec (a : List (String × String)) : IO Unit := do
   let mapperFile ← match arg? a "mapper-file" with
     | some p => pure p
     | none => do pure (← IO.appPath).toString
-  let mapperSha := hexBytes (sha256 (← IO.FS.readBinFile mapperFile))
+  let mapperSha ← match arg? a "mapper-sha256" with
+    | some h => pure h
+    | none => do pure (hexBytes (sha256 (← IO.FS.readBinFile mapperFile)))
   let cell ← arg a "cell"
   let k := metaJ.s "sha256"
   let outputs := ((metaJ.get? "requests").bind J.arr? |>.getD []).map (·.s "cell")
@@ -353,5 +355,48 @@ def cmdReview (a : List (String × String)) : IO Unit := do
   let b ← runB cell cur m
   IO.FS.writeFile (← arg a "out") (requestBytes (invokeJ cell b.acts.toList [cname]))
   IO.println s!"decision {num ["atom", cell, "decision", cname, header, rev]} on {cname} header at revision {rev}"
+
+end VerekosMap
+
+namespace VerekosMap
+
+/-! ## Library commands for reader/ (JSON on stdout) -/
+
+/-- `source --key K --read R`: a source document as the mapper reads it: key, cell, path, target, the
+header atom and runs, and its live statement atoms in run order with structural keys and revisions.
+Exit 1 when the read is not a source document. -/
+def cmdSource (a : List (String × String)) : IO Unit := do
+  let d ← Doc.load (← arg a "read")
+  let key ← match arg? a "key" with
+    | some k => pure k
+    | none => do pure ((← liftM (sourceHeader d)).s "source_key")
+  let s ← liftM (Source.ofDoc key d)
+  IO.println (J.compact (.obj [("key", .str s.key), ("cell", .str s.cell), ("path", .str s.path), ("target", .str d.target),
+    ("header_atom", .str s.headerAtom), ("header_revision", .str (d.revision s.headerAtom)), ("header_run", .str s.headerRun),
+    ("stmt_run", .str s.stmtRun),
+    ("statements", .arr (s.order.map fun (k, aid) => .obj [("key", .str k), ("atom", .str aid), ("revision", .str (d.revision aid))]))]))
+
+/-- `structural-key TEXT`: the structural key of one statement text (no occurrence suffix). -/
+def cmdStructuralKey (text : String) : IO Unit := do
+  IO.println (← liftM (structuralKey text))
+
+/-- `table-cell NAME`: the compiled cell a table lives in (`obj-<safe name>`). -/
+def cmdTableCell (name : String) : IO Unit := do
+  IO.println (← liftM (tableCell name))
+
+/-- `edit-atom --read R --source-key K --structural S --cell C --file F --out REQ`: one `editAtom`
+that replaces the payload of the statement atom named by its structural key with F's bytes (lane
+A's scene tool, `reader/remote/edit-atom.py`, which this replaces). -/
+def cmdEditAtom (a : List (String × String)) : IO Unit := do
+  let d ← Doc.load (← arg a "read")
+  let s ← liftM (Source.ofDoc (← arg a "source-key") d)
+  let structural ← arg a "structural"
+  let (aid, _) ← liftM (s.pin structural)
+  let text ← IO.FS.readFile (← arg a "file")
+  let cell ← arg a "cell"
+  let act : J := .obj [("type", .str "editAtom"), ("atom", .str aid), ("before", d.before aid), ("kind", textKind),
+    ("payload", .str (hexs text)), ("tombstone", .bool false)]
+  IO.FS.writeFile (← arg a "out") (requestBytes (invokeJ cell [act] []))
+  IO.println s!"1 action(s): editAtom (atom {String.ofList (aid.toList.take 12)}…, {structural}, {text.utf8ByteSize} bytes)"
 
 end VerekosMap

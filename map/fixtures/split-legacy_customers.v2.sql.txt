@@ -1,0 +1,1 @@
+create-table:customers#0	117	'CREATE TABLE customers ('

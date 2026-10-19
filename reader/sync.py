@@ -119,7 +119,7 @@ def main():
     for n, c in docs.items():
         if c["role"] != "compiled":
             continue
-        d = lib.M.Doc(cells_dir / f"{n}.json")
+        d = lib.Doc(cells_dir / f"{n}.json")
         name, props = None, None
         for a_ in d.atoms.values():
             kind = lib.SCHEMAS.get(a_.get("kind", {}).get("schema"))
