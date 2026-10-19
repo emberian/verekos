@@ -6,7 +6,7 @@ The laws are values of minidregg's own predicate type
 a copy of it. Principals are parameters; with the placeholders
 (91001 importer, 91002 owner, 91003 compiler, 91004 reviewer) they are the
 laws `laws/L-*.json` states, and with real subjects they are the laws
-`slice1/laws.py` installed on hbox.
+the Python laws script installed on hbox.
 
 The JSON renderer is UNTRUSTED. It spells each constructor the way the
 client serializer does (`native/resource-client/src/shell/law.rs:211-430`,
