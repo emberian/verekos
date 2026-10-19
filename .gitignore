@@ -1,2 +1,11 @@
+# Run scratch: workspaces, logs, PID files, receipts. Never committed.
 var/
+# Build output (cargo, lake).
 target/
+.lake/
+# Python bytecode written when one tool imports another.
+__pycache__/
+*.pyc
+# Editor and OS litter.
+.DS_Store
+*.swp
