@@ -25,6 +25,7 @@ use std::path::{Path, PathBuf};
 mod branch_dump;
 mod conflicts_dump;
 mod identity_dump;
+mod impact_dump;
 mod scope_dump;
 mod scope_store_dump;
 
@@ -270,6 +271,13 @@ fn main() {
             "branch.unit",
             branch_dump::control_for,
             branch_dump::check_assert,
+        ),
+        "impact" => run_panel(
+            &panel,
+            expected.as_deref(),
+            "impact.unit",
+            impact_dump::control_for,
+            impact_dump::check_assert,
         ),
         other => {
             eprintln!("{me}: unknown subcommand {other}");
