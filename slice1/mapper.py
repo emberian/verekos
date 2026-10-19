@@ -23,7 +23,7 @@ Subcommands
           present documents (recompile); without it every cell is a birth.
   runrec  --dir DIR --source K=READ.json ... --cell NAME [--read READ.json] --out REQ.json
           the compile-run append (L-run): the run record and a snapshot of each source header.
-  attest  --compile-run READ.json --replayed SHA --cell NAME --source-cell NAME --out REQ.json
+  attest  --compile-run READ.json --claimed SHA --replayed SHA --cell NAME --source-cell NAME --out REQ.json
           the verifier's attestation (L-run): its record and a snapshot of the compile-run record.
   review  --conflict READ.json --conflict-cell NAME --cell NAME [--read READ.json] --pick K
           --note TEXT --out REQ.json   a reviewer decision transcluding the conflict header.
