@@ -41,6 +41,8 @@ nice -n 10 lake build
 | `World/WellFormed.lean` | The three rules. **Pins are nonempty.** **No pin cycles**: a *rank* drops from every claim to each claim it pins, so the pin graph is well founded with finite depth. **Sources are sorted and duplicate-free** (`ClaimKey.Canonical`, and `ClaimKey.normalize` to get there). | `eq_iff_of_canonical` (keys equal iff same schema, subject and source *set*), `normalize_eq_iff`, `latest_wellFormed`, `Ranked.wellFounded`, `visible_stable` (every bound above a claim's rank gives the same visibility), `visibleR_rank_irrelevant`, `visible_iff_sourcePins`, `reviewSurvives_put_acyclic` (the self-review hypothesis replaced by acyclicity) |
 | `World/Traverse.lean` | Reachability from a seed over typed edge claims, within a hop bound. It crosses an edge only if the edge and both endpoints are current facts (`Schema.isFact` of their status). | `pending_edge_never_crossed`, `reach_trivial_of_all_pending`, `unreviewed_hypothesis_edge_not_crossed`, `unreviewed_hypothesis_node_blocks`, `reach_mono_confirm` (a confirming review only adds), `reach_mono_hops`, `reach_mono_hops_le` |
 | `World/Identity.lean` | Identity as an overlay. A `SameAs` claim pins two claims. Current, confirmed ones link their keys. `Same` is the equivalence closure of those links, and the canonical key is the least key of a class. | `same_equivalence`, `canonical_eq_iff`, `canonical_congr` (depends only on the classes), `links_list_congr`, `fuzzy_no_link`, `fuzzy_not_crossed`, `merge_takes_effect`, `merge_reversible`, `merge_reversible_canonical` |
+| `World/Admission.lean` | The admission law. A put is admissible when every claim pin names a present id other than its own, and re-putting an id does not raise the rank recorded for it. Ranks are computed by replaying the log (`rankMap`, `rankN`, `rankOf`). | `admLog_snoc`, `ranked_of_admLog` (an admissible log yields a ranked state, so `visibleR` is defined), `rankOf_some_of_admLog`, `not_admissible_self_pin`, `not_admissible_absent_pin`; `AdmLog` is decidable |
+| `World/Document.lean` | The `ekos/object/v1` document shape. A **cell** holds a header (key), properties, window, evidence containers (each a meta atom plus a snapshot-transclusion pin: source document and atom revisions) and premise links. An **object document** is a cell plus one edge container per outgoing edge, each holding the edge's cell and its link. `encode`/`decode`, `toDocument`/`fromDocument`. Admission refusals `sourceNotCovered` and `staleOpening`, and the reader views (no-grant placeholder, `moved`, same bytes). A reader scope built from the sources a reader can read. | `decode_encode` (pins permuted, nothing else changed), `encode_decode` (exact), `cellAtomPins_encode`, `claimAtomPins_decode`, `toDocument_atomPins`, `fromDocument_atomPins`, `admitEvidence_none`, `viewEvidence_noGrant`, `viewEvidence_sameBytes`, `visibleR_iff_readable`, `visibleR_iff_room` |
 | `World/Minidregg.lean` | The carriers filled with minidregg's types. `claimIdDerivation` derives ids the way minidregg derives identifiers. Source-pin freshness is checked against `AtomRecord.revision`. | `claimId_injective` (from an injective encoder and digest, using minidregg's `preimageCodec_encode_injective`), `sourcePinFresh_iff`, `stale_of_moved` |
 | `World/Examples.lean` | The theorems run on the table example (extended with a foreign key, a fuzzy `SameAs` and an exact `SameAs` schema, and a total order on keys), so their hypotheses are shown to be satisfiable. A human review confirms. A compiler-written review changes nothing. A core change gives `needsReview`, and restoring the core restores the decision. `diff` over-approximates. A reader denied one file does not see the conflict. The example state has a rank. The foreign key is crossed; the fuzzy candidate is not, until a human confirms it. The compiler's exact merge links two tables and is undone by retracting it. | `d₀_injective`, `ranked₀`, `keyCode_injective`, `same_empty`; about thirty examples checked by `decide` or by the theorems |
 
@@ -62,10 +64,12 @@ nice -n 10 lake build
   and canonical sources) and `Ranked` (no pin cycles) are hypotheses that
   theorems use. Nothing makes an ill-formed claim impossible to write.
   `latest_wellFormed` shows a log that puts only well-formed claims keeps a
-  well-formed state. No theorem yet shows that a log keeps its pin graph
-  ranked, because a put can pin anything.
-- **No ranks are computed.** A rank is supplied as a witness. Nothing computes
-  one from a state, or proves one exists for every acyclic finite state.
+  well-formed state. `ranked_of_admLog` shows a log whose every put passes
+  `admissible` keeps its pin graph ranked, by a rank computed from the log.
+- **The admission law is stricter than needed.** Re-putting an id can never
+  raise its rank, even when nothing pins it, so a claim whose new version
+  pins deeper premises must take a new id. A law that re-ranks dependents
+  would be more permissive.
 - **Reviews cannot be retracted.** Status ignores retract receipts, so a change
   of mind is a new review.
 - **Traversal and identity take their candidates as given.** Traversal works
@@ -80,5 +84,14 @@ nice -n 10 lake build
   - `merge_reversible` needs fresh distinct ids for the merge and its review,
     and a review that no candidate pins.
 - **Claim-pin staleness is not checked.** It is only implicit in `status`.
+- **The document shape covers the object cell only.** The source document
+  (`ekos/source/v1`), manifest, conflict, review and compile-run documents
+  are not modelled. `viewEvidence` and `admitEvidence` take the reader's
+  grants, and the writer's held revisions, as given functions; they do not
+  model minidregg's grants or heights. The round trip is exact on the cell
+  side and up to pin order on the claim side.
+- **The audience theorems cover claims pinned only to sources.** A claim
+  that pins other claims is visible only if its premises are, which its own
+  evidence containers do not show.
 - **The example schemas' core digests are stand-ins.** They are the column
   count, or `0`.
