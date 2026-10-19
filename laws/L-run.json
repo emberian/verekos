@@ -1,0 +1,19 @@
+{
+  "type": "any",
+  "predicates": [
+    {
+      "type": "memberOf",
+      "slot": "request/verb",
+      "values": ["1", "3", "4", "5"]
+    },
+    {
+      "type": "all",
+      "predicates": [
+        {"type": "eq", "slot": "request/verb", "value": "2"},
+        {"type": "memberOf", "slot": "request/subject", "values": ["91003"]},
+        {"type": "eq", "slot": "content/atom-edits", "value": "0"},
+        {"type": "eq", "slot": "content/tombstones", "value": "0"}
+      ]
+    }
+  ]
+}

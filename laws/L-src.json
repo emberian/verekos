@@ -1,0 +1,24 @@
+{
+  "type": "any",
+  "predicates": [
+    {
+      "type": "memberOf",
+      "slot": "request/verb",
+      "values": ["1", "3", "5"]
+    },
+    {
+      "type": "all",
+      "predicates": [
+        {"type": "eq", "slot": "request/verb", "value": "4"},
+        {"type": "memberOf", "slot": "request/subject", "values": ["91002"]}
+      ]
+    },
+    {
+      "type": "all",
+      "predicates": [
+        {"type": "eq", "slot": "request/verb", "value": "2"},
+        {"type": "memberOf", "slot": "request/subject", "values": ["91001"]}
+      ]
+    }
+  ]
+}
