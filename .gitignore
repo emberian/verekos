@@ -9,3 +9,6 @@ __pycache__/
 # Editor and OS litter.
 .DS_Store
 *.swp
+
+# written by minidregg modules at compile time (Kernel.ContentResource closure), relative to cwd
+world/prover/
