@@ -5,7 +5,7 @@ the answers against EKOS's controls and writes the receipts in
 `controls/check/`. What is trusted and what is not is in each module's
 docstring and in `notes/B-check.md`.
 
-    cd check && nice -n 10 lake build        # verekos-check and CheckProofs
+    cd check && nice -n 10 lake build        # verekos-check (imports WorldCore only)
     python3 -I check/run.py                  # from the repo root; never builds
 
 ## Exit codes

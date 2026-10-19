@@ -3,9 +3,10 @@
 
 What is trusted and what is not:
 
-- **Model (trusted):** `World.detectList` (`World/Conflicts.lean:63`),
-  computed by `Check.detectL`, which `CheckProofs.Detect.mem_detectL` proves
-  has the same members. `World.mem_detect`, `coverage`, `soundness` and
+- **Model (trusted):** `World.detectL` and `World.detectLBy` (WorldCore,
+  `World/ConflictsCore.lean`, `World/ClashCore.lean`), which the model proves
+  equal to `World.detectList` and `World.detectListBy` (`detectL_toFinset`,
+  `detectLBy_toFinset`). `World.mem_detect`, `coverage`, `soundness` and
   `detectList_perm` are about that function.
 - **Mapper (UNTRUSTED, no theorem):** everything in this file. It reads the
   panel's EKOS objects and turns each into a claim, and gives the claims a
@@ -40,8 +41,7 @@ How each item kind becomes claims:
   the two types; `same` is "no key detected".
 -/
 import Lean.Data.Json
-import Check.Detect
-import Check.DetectBy
+import WorldCore
 
 namespace Check.Conflicts
 
@@ -303,7 +303,7 @@ def wordsOfValue (v : String) : List String :=
   | _ => []
 
 /-- EKOS's label rule for `EnumMeaning`, values differ elsewhere. -/
-def κ : ClashL CC := labelClashL "EnumMeaning" wordsOfValue
+def κ : World.Clash CC := World.labelClash "EnumMeaning" wordsOfValue
 
 /-! ## One item → one candidate line -/
 
@@ -323,7 +323,7 @@ label table `κ`, one claim per distinct label; for every schema other than
 `EnumMeaning` the table is "values differ", which `World.detectBy_differ`
 proves is `detect`. -/
 def answerWith (clash : Bool) (kind : String) (input : Json) : List (String × Json) :=
-  let detect := if clash then detectLBy reg κ else detectL reg
+  let detect := if clash then World.detectLBy reg κ else World.detectL reg
   match kind with
   | "normalize_type_pair" =>
     let col (t : String) : Payload :=

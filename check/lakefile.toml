@@ -1,5 +1,5 @@
 name = "check"
-defaultTargets = ["verekos-check", "CheckProofs"]
+defaultTargets = ["verekos-check"]
 
 # The model, pinned to one commit of this repository and cloned under
 # .lake/packages/world (subDir world). Not a path dependency: a path
@@ -9,19 +9,14 @@ defaultTargets = ["verekos-check", "CheckProofs"]
 [[require]]
 name = "world"
 git = "/Users/ember/dev/verekos"
-rev = "12e5543712db1ec507a47b821d0fd4b6c7aad98a"
+rev = "833eae5e9d24ad2a291172f209bd86ee1a480dfa"
 subDir = "world"
 
-# The runner: Mathlib-free (imports only World.Claim, World.Log,
-# World.Status, World.Visible and Lean's JSON reader), so the executable
-# never compiles or links Mathlib.
+# The runner: the untrusted parsers and mappers. It imports the model only
+# through WorldCore, world's Mathlib-free library, so the executable never
+# compiles or links Mathlib, and it copies no model definition.
 [[lean_lib]]
 name = "Check"
-
-# Proofs that the runner's Mathlib-free copies equal the model's
-# definitions (detect, admissible, pins nonempty). Built, never linked.
-[[lean_lib]]
-name = "CheckProofs"
 
 [[lean_exe]]
 name = "verekos-check"

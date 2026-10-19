@@ -4,10 +4,10 @@
 Rebuilds a run's accepted writes as `World.Receipt`s and checks, on the real
 log rather than on examples:
 
-1. **The pin law** `World.AdmLog` (`World/Admission.lean:97`), decided by
-   `Check.admLogB` (proved equal in `CheckProofs.Adm.admLogB_iff`).
-2. **Pins nonempty** (`World.Claim.PinsNonempty`, the first half of
-   `Claim.WellFormed`) for every claim the compiler puts (`pinsNonemptyB_iff`).
+1. **The pin law** `World.AdmLog` (`World/Admission.lean`, WorldCore), by
+   its own `Decidable` instance.
+2. **Pins nonempty** (`World.Claim.PinsNonempty`, `World/Ranked.lean`) for
+   every claim the compiler puts.
 3. **Transaction order** `World.TxMonotone` (`World/TxOrder.lean:32`).
 4. **Status** of every conflict claim in the final state, by
    `World.statusAt` (`World/Status.lean:71`) with the core taken as the
@@ -54,9 +54,7 @@ Roles map to kinds: `compiler`, `importer` → compiler; `reviewer`, `owner`
 not modelled.
 -/
 import Lean.Data.Json
-import World.Status
-import World.TxOrder
-import Check.Adm
+import WorldCore
 
 namespace Check.Laws
 
@@ -235,15 +233,16 @@ def headerRevAt (lines : List Line) (id : String) : Option String :=
 
 def report (lines : List Line) (expect : Option Json) : Json × Bool := Id.run do
   let L := lines.map (·.receipt)
-  let adm := admLogB derive L
+  let adm := decide (World.AdmLog derive L)
   let firstBad : Option Nat := (List.range L.length).find? fun k =>
     match L[k]? with
-    | some r => !admissibleL derive (L.take k) r
+    | some r => !World.admissible derive (L.take k) r
     | none => false
   let compiled := L.filterMap fun r => match r.op with
     | .put c => if r.author.1 == .compiler then some (r.tx, c) else none
     | .retract _ => none
-  let unpinned := compiled.filter fun (_, c) => !pinsNonemptyB c
+  let unpinned := compiled.filter fun (_, c) =>
+    !@decide c.PinsNonempty (inferInstanceAs (Decidable (c.pins ≠ [])))
   let txMono := decide (World.TxMonotone L)
   let mismatches := lines.filter fun l => match l.payloadAuthor with
     | some a => a != kindText l.receipt.author.1

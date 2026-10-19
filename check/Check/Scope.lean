@@ -28,7 +28,7 @@ What is trusted and what is not:
   `World.visible`.
 -/
 import Lean.Data.Json
-import World.Visible
+import WorldCore
 import Check.Glob
 
 namespace Check.Scope
