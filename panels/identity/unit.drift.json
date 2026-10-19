@@ -1,51 +1,186 @@
 {
   "ekos_commit": "8e3c178fc45741c7e2b1576e936646e0c461e75c",
+  "recorded": "2026-10-19",
   "functions": {
-    "a_binary_field_named_after_its_type_does_not_conflict": "b0ea480bf3a86b8e313251a99c9733e54e7bc34731f0fa8ed8a1c4c669e89b23",
-    "a_binary_method_and_a_same_named_field_do_not_conflict": "6d5efe36c4d02178e88153c43bd66924a0b01bf6614effedce86c405ef68ac7c",
-    "a_binary_method_paired_with_an_unrelated_kind_still_conflicts": "bee4ca03c63c5e335bba1e2a22c9a21af37fa7d4857c474d067faf87dfa65d7e",
-    "a_non_declaration_kind_mixed_into_the_binary_group_still_conflicts": "8fb2bd9356446a4f1bfe56afb9fb15b759b965308dfe355f22e6228638846b00",
-    "a_non_keyed_custom_kind_still_resolves_normally": "f9775a028d749d1a3cd71cdc5e2e3e58c4d128f3b9ec2983e62d9ca4f95b7e65",
-    "a_perl_package_and_a_perl_sub_sharing_a_name_do_not_conflict": "0a9f4364ce256888027f0ec0227d27b3e64ea14b767b66aa1792c0abf1c4ab65",
-    "a_relative_specifier_jsmodule_sharing_a_technology_name_still_conflicts": "4002af13db6e8b99ee17aecb3b6dd6aa73d994b70345212b59a972035050e468",
-    "a_third_kind_mixed_into_the_perl_group_still_conflicts": "b6b3b30c8c466a23ff1bed25e0c4005fa17d1a5d09d9b9160a274aad0fdb8647",
-    "a_third_kind_mixed_into_the_technology_jsmodule_group_still_conflicts": "343ba87014c48003016685801727f36d6b2fdb9dade609a18a02e9394341dc4c",
-    "a_trigger_named_after_its_function_does_not_conflict": "2ff648eb9b4369aa45b786b5f84b817801871d7df4496bd5b2dc5af991c058f2",
-    "a_view_and_a_same_named_routine_do_not_conflict": "f77c1e8962a8fe3e7bf84adad58bbed0e9b68dcaa3626e98e0c9f8abc8262815",
-    "a_view_beside_a_same_named_table_still_conflicts": "309889b411d579e2e4cb87154cb58c466680f6555b2f96f854a580b4256ad10f",
-    "architecture_gap_objects_are_never_merged_even_with_shared_question_prefix": "67188084fe039791cdc21cac84cf68e6548911a4ea536366e01a4b5a251e58e0",
-    "claim_objects_are_never_merged_even_with_shared_statement_prefix": "7502c0db56d871f8e600fef76f07c79c60680d8608b30d8443e9c2e530b9bd76",
-    "code_in_different_languages_sharing_a_name_does_not_conflict": "f66ed3ca144a475b76038679eace00ec25565c48177c9836b7d060591c670120",
-    "concept_generic_short_names_across_unrelated_documents_do_not_all_merge": "86e542f3fdf5821d337049513b2ebc25b1cda1bc18b77006e82e5bb10d86d37c",
-    "concept_same_real_entity_across_two_documents_merges": "7163d06361b3f72f7656f52b381b001e56e8d3734d32f5a47821b3ff27c03850",
-    "crate_objects_are_never_merged_even_with_shared_name_prefix": "ff54b75669b7c2c4cd565f32d26ceb653ba1fe5ad980f0cf88eeaccb8912876f",
-    "different_kind_same_name_conflict": "5e768d4a78930c884061c597f1c860d65402bfb4f40679544f3b89faa0d851c7",
-    "document_objects_are_never_merged_even_with_identical_names": "e38d78d05feb2f5cd108fc3ee2b3847baed3af9ad21c4aadfe6ea769c17e9ac0",
-    "elixir_module_objects_are_never_merged_even_with_unrelated_names": "22127011192c7b8d6ad044642b6bc29c4b917b92cb903228b65426d314593a8f",
-    "elixir_symbol_and_js_module_and_js_symbol_objects_are_never_merged": "b330baaaa46c08fa9c83c8acdd1cfcce01f487ed05689622ddfc8d99cc6b0378",
-    "exact_name_match_false_for_a_transitively_chained_mixed_group": "85afce2921e5c7c33d067cf4bf31f5b71c5d28a3f538ef0af6f659449a8b4395",
-    "exact_name_match_false_for_rfc_0060_residual_known_wrong_pairs": "15976294fd27110a116403da2e74a7c0af203c3bd7c8f12b88f20cafe9543435",
-    "exact_name_match_false_for_the_rfc_0060_known_good_fuzzy_merges": "8e0b5a0e1cbb3b42962e20a52851c1ab06123a392dab73a88dbffbadde3ffcf8",
-    "exact_name_match_true_for_identical_normalized_names": "eba5f0d19e67092e59cd663f175cbfb7ee83ae17eef6ef27b70b2b8f8a919704",
-    "name_for_similarity_does_not_strip_a_table_name_containing_a_slash": "90e5b4f1264c2268f7e11b7b559685331b2bc94d31b1d4de656b324707b17206",
-    "name_for_similarity_does_not_strip_non_table_kinds": "17db572b0aaa30024a2db6c5685e4e824b9aaf8d59165d97d6ad76732ead7840",
-    "name_for_similarity_leaves_unqualified_table_names_untouched": "fdda70b3c51f878cecdcac77f220d0dfb160297719f7eff876246493c515318b",
-    "name_for_similarity_strips_owner_repo_number_prefix_for_github_items": "0e75d1b30ec032dac863ca9ed881ec413513991728c43aec4d7454109e9035e7",
-    "name_for_similarity_strips_schema_qualifier_for_tables": "a36e5755e4dd3cc9b8e1d43f42ba09c2a9c708e7e06523663264d38fb27d8462",
-    "newly_added_object_kind_participates_in_conflict_detection": "0aadfca4e823ba02d018bb4a36e03d915c9c94987d43742148dee27f068a24fb",
-    "perl_code_beside_same_named_database_objects_does_not_conflict": "012b99b1bb2db0d800a0e8c5c9e5096b3a46cbe30e695ee3ce6cbd235a5ee9c7",
-    "perl_does_not_excuse_a_database_side_conflict_or_another_kind": "9cb3d7a6d988571b4bbb267f0bdfb28a3bdc297f115d6b1be79b48f3e670ed65",
-    "real_clickhouse_imported_tables_do_not_merge": "daa23d8c357d3b13a69de518b0fc65b582f6413bb45d1856433d9d333279f05c",
-    "real_distinct_contributors_with_similar_names_do_not_merge": "a0ebe9fc52f5885cd1613833775441bc671ef9d77e1987483444cc145d0b45f3",
-    "real_github_pull_requests_do_not_all_merge_into_one_identity": "64d9aa32871cee7eeea75e91d099a31166f502235ce96945522ce0eec9fb3727",
-    "real_postgres_email_template_tables_do_not_merge": "e1bc736d45083ef4eb4e07bf6b6eb69979ce226f43b290af5c73bcba007d9606",
-    "real_same_contributor_under_different_git_names_still_merges": "3edfd1bcac25b3b094e1c8f36ba803d0251437db46fc0ffb4ca7f3e45399c0d2",
-    "rust_symbol_objects_are_never_merged_even_with_shared_name_suffix": "8af7e27b229a8d79538406b2dc48d5bf81c3ae018bdeeb85411915a897c1d931",
-    "section_objects_are_never_merged_even_with_near_identical_names": "a75aa79ac2469bce962a5a1d65aeb7033453cd27708e8f42ac9d6818f5d502e5",
-    "technology_and_bare_specifier_jsmodule_sharing_a_name_do_not_conflict": "f4d09e5342ae23cba36ff0c13d61a0f3b906851d35f8fcf59645ba646d5b8437",
-    "transform_node_objects_are_never_merged_even_with_shared_source_prefix": "b59891af9c6c22a90d724c8a6dbf83466aa4b342fcc15348ef82e4bdd696047a",
-    "two_perl_packages_sharing_a_name_are_not_silently_excluded": "86095bf7e7d5ada9a9e0d68c7038561c0d0ac8cbfbf46e94d717d9840abd1650",
-    "unrelated_documents_sharing_a_folder_prefix_do_not_all_merge": "d86d6f6ed8018addcef402444620cf81bb9dd725217429b0b40b35e5ec706a2c"
-  },
-  "source_file": "ekos/crates/identity/src/lib.rs"
+    "a_binary_field_named_after_its_type_does_not_conflict": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "b0ea480bf3a86b8e313251a99c9733e54e7bc34731f0fa8ed8a1c4c669e89b23"
+    },
+    "a_binary_method_and_a_same_named_field_do_not_conflict": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "6d5efe36c4d02178e88153c43bd66924a0b01bf6614effedce86c405ef68ac7c"
+    },
+    "a_binary_method_paired_with_an_unrelated_kind_still_conflicts": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "bee4ca03c63c5e335bba1e2a22c9a21af37fa7d4857c474d067faf87dfa65d7e"
+    },
+    "a_non_declaration_kind_mixed_into_the_binary_group_still_conflicts": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "8fb2bd9356446a4f1bfe56afb9fb15b759b965308dfe355f22e6228638846b00"
+    },
+    "a_non_keyed_custom_kind_still_resolves_normally": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "f9775a028d749d1a3cd71cdc5e2e3e58c4d128f3b9ec2983e62d9ca4f95b7e65"
+    },
+    "a_perl_package_and_a_perl_sub_sharing_a_name_do_not_conflict": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "0a9f4364ce256888027f0ec0227d27b3e64ea14b767b66aa1792c0abf1c4ab65"
+    },
+    "a_relative_specifier_jsmodule_sharing_a_technology_name_still_conflicts": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "4002af13db6e8b99ee17aecb3b6dd6aa73d994b70345212b59a972035050e468"
+    },
+    "a_third_kind_mixed_into_the_perl_group_still_conflicts": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "b6b3b30c8c466a23ff1bed25e0c4005fa17d1a5d09d9b9160a274aad0fdb8647"
+    },
+    "a_third_kind_mixed_into_the_technology_jsmodule_group_still_conflicts": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "343ba87014c48003016685801727f36d6b2fdb9dade609a18a02e9394341dc4c"
+    },
+    "a_trigger_named_after_its_function_does_not_conflict": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "2ff648eb9b4369aa45b786b5f84b817801871d7df4496bd5b2dc5af991c058f2"
+    },
+    "a_view_and_a_same_named_routine_do_not_conflict": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "f77c1e8962a8fe3e7bf84adad58bbed0e9b68dcaa3626e98e0c9f8abc8262815"
+    },
+    "a_view_beside_a_same_named_table_still_conflicts": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "309889b411d579e2e4cb87154cb58c466680f6555b2f96f854a580b4256ad10f"
+    },
+    "architecture_gap_objects_are_never_merged_even_with_shared_question_prefix": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "67188084fe039791cdc21cac84cf68e6548911a4ea536366e01a4b5a251e58e0"
+    },
+    "claim_objects_are_never_merged_even_with_shared_statement_prefix": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "7502c0db56d871f8e600fef76f07c79c60680d8608b30d8443e9c2e530b9bd76"
+    },
+    "code_in_different_languages_sharing_a_name_does_not_conflict": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "f66ed3ca144a475b76038679eace00ec25565c48177c9836b7d060591c670120"
+    },
+    "concept_generic_short_names_across_unrelated_documents_do_not_all_merge": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "86e542f3fdf5821d337049513b2ebc25b1cda1bc18b77006e82e5bb10d86d37c"
+    },
+    "concept_same_real_entity_across_two_documents_merges": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "7163d06361b3f72f7656f52b381b001e56e8d3734d32f5a47821b3ff27c03850"
+    },
+    "crate_objects_are_never_merged_even_with_shared_name_prefix": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "ff54b75669b7c2c4cd565f32d26ceb653ba1fe5ad980f0cf88eeaccb8912876f"
+    },
+    "different_kind_same_name_conflict": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "5e768d4a78930c884061c597f1c860d65402bfb4f40679544f3b89faa0d851c7"
+    },
+    "document_objects_are_never_merged_even_with_identical_names": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "e38d78d05feb2f5cd108fc3ee2b3847baed3af9ad21c4aadfe6ea769c17e9ac0"
+    },
+    "elixir_module_objects_are_never_merged_even_with_unrelated_names": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "22127011192c7b8d6ad044642b6bc29c4b917b92cb903228b65426d314593a8f"
+    },
+    "elixir_symbol_and_js_module_and_js_symbol_objects_are_never_merged": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "b330baaaa46c08fa9c83c8acdd1cfcce01f487ed05689622ddfc8d99cc6b0378"
+    },
+    "exact_name_match_false_for_a_transitively_chained_mixed_group": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "85afce2921e5c7c33d067cf4bf31f5b71c5d28a3f538ef0af6f659449a8b4395"
+    },
+    "exact_name_match_false_for_rfc_0060_residual_known_wrong_pairs": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "15976294fd27110a116403da2e74a7c0af203c3bd7c8f12b88f20cafe9543435"
+    },
+    "exact_name_match_false_for_the_rfc_0060_known_good_fuzzy_merges": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "8e0b5a0e1cbb3b42962e20a52851c1ab06123a392dab73a88dbffbadde3ffcf8"
+    },
+    "exact_name_match_true_for_identical_normalized_names": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "eba5f0d19e67092e59cd663f175cbfb7ee83ae17eef6ef27b70b2b8f8a919704"
+    },
+    "name_for_similarity_does_not_strip_a_table_name_containing_a_slash": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "90e5b4f1264c2268f7e11b7b559685331b2bc94d31b1d4de656b324707b17206"
+    },
+    "name_for_similarity_does_not_strip_non_table_kinds": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "17db572b0aaa30024a2db6c5685e4e824b9aaf8d59165d97d6ad76732ead7840"
+    },
+    "name_for_similarity_leaves_unqualified_table_names_untouched": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "fdda70b3c51f878cecdcac77f220d0dfb160297719f7eff876246493c515318b"
+    },
+    "name_for_similarity_strips_owner_repo_number_prefix_for_github_items": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "0e75d1b30ec032dac863ca9ed881ec413513991728c43aec4d7454109e9035e7"
+    },
+    "name_for_similarity_strips_schema_qualifier_for_tables": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "a36e5755e4dd3cc9b8e1d43f42ba09c2a9c708e7e06523663264d38fb27d8462"
+    },
+    "newly_added_object_kind_participates_in_conflict_detection": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "0aadfca4e823ba02d018bb4a36e03d915c9c94987d43742148dee27f068a24fb"
+    },
+    "perl_code_beside_same_named_database_objects_does_not_conflict": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "012b99b1bb2db0d800a0e8c5c9e5096b3a46cbe30e695ee3ce6cbd235a5ee9c7"
+    },
+    "perl_does_not_excuse_a_database_side_conflict_or_another_kind": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "9cb3d7a6d988571b4bbb267f0bdfb28a3bdc297f115d6b1be79b48f3e670ed65"
+    },
+    "real_clickhouse_imported_tables_do_not_merge": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "daa23d8c357d3b13a69de518b0fc65b582f6413bb45d1856433d9d333279f05c"
+    },
+    "real_distinct_contributors_with_similar_names_do_not_merge": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "a0ebe9fc52f5885cd1613833775441bc671ef9d77e1987483444cc145d0b45f3"
+    },
+    "real_github_pull_requests_do_not_all_merge_into_one_identity": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "64d9aa32871cee7eeea75e91d099a31166f502235ce96945522ce0eec9fb3727"
+    },
+    "real_postgres_email_template_tables_do_not_merge": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "e1bc736d45083ef4eb4e07bf6b6eb69979ce226f43b290af5c73bcba007d9606"
+    },
+    "real_same_contributor_under_different_git_names_still_merges": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "3edfd1bcac25b3b094e1c8f36ba803d0251437db46fc0ffb4ca7f3e45399c0d2"
+    },
+    "rust_symbol_objects_are_never_merged_even_with_shared_name_suffix": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "8af7e27b229a8d79538406b2dc48d5bf81c3ae018bdeeb85411915a897c1d931"
+    },
+    "section_objects_are_never_merged_even_with_near_identical_names": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "a75aa79ac2469bce962a5a1d65aeb7033453cd27708e8f42ac9d6818f5d502e5"
+    },
+    "technology_and_bare_specifier_jsmodule_sharing_a_name_do_not_conflict": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "f4d09e5342ae23cba36ff0c13d61a0f3b906851d35f8fcf59645ba646d5b8437"
+    },
+    "transform_node_objects_are_never_merged_even_with_shared_source_prefix": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "b59891af9c6c22a90d724c8a6dbf83466aa4b342fcc15348ef82e4bdd696047a"
+    },
+    "two_perl_packages_sharing_a_name_are_not_silently_excluded": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "86095bf7e7d5ada9a9e0d68c7038561c0d0ac8cbfbf46e94d717d9840abd1650"
+    },
+    "unrelated_documents_sharing_a_folder_prefix_do_not_all_merge": {
+      "file": "ekos/crates/identity/src/lib.rs",
+      "sha256": "d86d6f6ed8018addcef402444620cf81bb9dd725217429b0b40b35e5ec706a2c"
+    }
+  }
 }

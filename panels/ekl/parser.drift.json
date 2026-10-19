@@ -1,0 +1,110 @@
+{
+  "ekos_commit": "8e3c178fc45741c7e2b1576e936646e0c461e75c",
+  "recorded": "2026-10-19",
+  "functions": {
+    "parses_minimal_find_object": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "07f7b1fe9bc21c36690037d727e38c115f1f7c4fd67f7d370df4595dbc6570db"
+    },
+    "parses_return_clause": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "fe094beef16669b8a43daf0748d17ef707045c9fa86be17e278cb707f167d959"
+    },
+    "parses_relationship_with_from": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "1e3c5ae93ba7de9d67a8a6b8bf42480fc78c45f2b15d7fb77c088eb3b39eb215"
+    },
+    "parses_order_by_and_limit": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "e88742c5ec17267b6c6c5a9a9262bb7e2843970291654358c99945e52193d78c"
+    },
+    "parses_order_by_desc": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "8efd6c9eaead04badaf282e896413d845937055a83971aa10964db877c014db7"
+    },
+    "parses_and_chained_predicates": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "063b11a9ef48709da2bb19fe92797b4bc2a2761d6b775965e40ca9d50a8b8d3e"
+    },
+    "parses_query_with_no_where": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "e3339069939b93b163ad6b08060a109ab4400c78060cbbf8cb5af5f3d5dd42a7"
+    },
+    "parses_numeric_comparison_operators": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "c0d84e6737143f40cfd08a02a74984501666799d9449dc1525c3d4b43f7b3cdb"
+    },
+    "parses_via_and_depth": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "9c35107a2f447f04672785a1504b1b602b87609d2ca05097b08b9dc9f9d3aaa6"
+    },
+    "depth_alone_generalizes_from_without_via": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "1c6ed98648b17a1309a95e2439952ff4256d155c936c74bf3e654df2ee0856c1"
+    },
+    "queries_without_via_or_depth_default_to_none": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "69c96c2b55297290eb1b28344776fcda2d566c8d6a899e9a46f5fcfeb3737c67"
+    },
+    "rejects_via_without_from": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "a60f4951944945a61f0359cb15c285b776c739cb3edf7973ea6d52814164ad25"
+    },
+    "parses_semantic_clause": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "61474bf4ce4f0d0bd0b5d087a13b7fbb5d24019d2724871fac67815ddc47bd61"
+    },
+    "parses_semantic_with_where_and_inline_limit": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "01478b6d7486fe323ca1168dccb725c164c6658a6191c0957a6bbd4abfdf09e5"
+    },
+    "rejects_semantic_combined_with_from_asof_count_and_relationship": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "29a85305def3f6f13bfcff354fe2912130bc04505787baea468772679c5cea97"
+    },
+    "rejects_unknown_entity": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "e24916872e61c008e53417c3409011a1f44c6106312e71807aef54d2807801d6"
+    },
+    "rejects_missing_find_keyword": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "0fd501c32055e86ac662d7342bc520c39b554e957043792b15d855c588276599"
+    },
+    "rejects_unterminated_string": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "ea6b54ba6f03aefda8fda827fec1985d620cba123e35f0f2919dc88b23ae656c"
+    },
+    "rejects_trailing_garbage": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "acc8dc1d1ab4eb6506821cf713282afca064e7306e08bc0cc71fe1a7e08ce0b9"
+    },
+    "parses_as_of_clause": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "c8fd962dc600ac4754bc49622e55106ec90cb3eed12c2b9e7d17c516365f8286"
+    },
+    "rejects_malformed_as_of_timestamp": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "3d9588b4c22622d5619b3be4111db55fb8b8fb8f0eb2e17ce62fb36c0b273953"
+    },
+    "parses_bare_count": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "e5a38f220e3c146e845e060992b70e81f0dce683c385f160f9f66567a898e2f5"
+    },
+    "parses_count_with_group_by": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "1e130130b2693db9085d3c8567b8c3db1a81e7ebea346caa1586e040d2f07977"
+    },
+    "rejects_group_by_without_count": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "b5a4038b9f98661ad6857a367e142906d8e506df65a4f13b9ba5bd0898ace8ca"
+    },
+    "rejects_count_combined_with_return": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "b340c5c82f1e91006c3ee86b7634b471024a6f7e9baa90d8f719803ef8928153"
+    },
+    "fuzz_random_strings_never_panic": {
+      "file": "ekos/crates/ekl/src/parser.rs",
+      "sha256": "68b89389de92fa8e7e9b201e31ec67efab67f1468562083cec375ee19697190a"
+    }
+  }
+}

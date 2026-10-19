@@ -9,7 +9,12 @@
   4. compares each run against the committed control file: byte-identical,
      or a report of exactly which items moved — a differing control is only
      overwritten with --accept;
-  5. runs every drift checker (transcribed tests unchanged in the pin);
+  5. runs every drift checker (transcribed tests unchanged in the pin, and
+     every test a panel cites is pinned);
+  0. before the ledger versions dumps, rebuilds a missing var/w18/<fixture>
+     workspace with run_fixture.py (so a fresh clone can regenerate), and
+     compares those controls without the fields that carry EKOS#10's random
+     evidence ids (LEDGER_VOLATILE);
   6. rewrites controls/MANIFEST.json: EKOS commit + tree hash, dump binary
      sha256 + source tree hash, panel and control file sha256s, the drift
      records, and the reproducibility result, with a UTC timestamp.
@@ -18,8 +23,8 @@ Run with python3 -I; every path is an argument or repo-relative:
 
     python3 -I tools/scoreboard/regen_controls.py --ekos /Users/ember/dev/EKOS [--accept]
 
-The registry below names every dump; adding a panel means adding one entry
-(and the drift record that pins its transcription).
+PANELS below names every dump; adding a panel means adding one row and
+putting its four files at the paths the panel name implies.
 """
 
 import argparse
@@ -35,65 +40,100 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 DUMP = HERE / "control-dump"
 
-# subcommand, panel, expected (the transcribed assertions), control (EKOS's
-# answers), drift checker + record. `new_panel` marks a control file that is
-# expected not to exist yet (written without --accept, announced loudly).
-REGISTRY = [
-    {"sub": "scope", "panel": "panels/scope/decision.jsonl",
-     "expected": "controls/scope.decision.expected.jsonl",
-     "control": "controls/scope.decision.control.jsonl",
-     "drift": ["python3", "-I", "panels/transcribed/drift_check.py",
-               "--ekos", "{ekos}", "--record", "panels/transcribed/scope_drift.json"]},
-    {"sub": "conflicts", "panel": "panels/conflicts/unit.jsonl",
-     "expected": "controls/conflicts.unit.expected.jsonl",
-     "control": "controls/conflicts.unit.control.jsonl",
-     "drift": ["python3", "-I", "panels/transcribed/drift_check.py",
-               "--ekos", "{ekos}", "--record", "panels/transcribed/conflicts_drift.json"]},
-    {"sub": "store", "panel": "panels/scope/store.jsonl",
-     "expected": "controls/scope.store.expected.jsonl",
-     "control": "controls/scope.store.control.jsonl",
-     "drift": ["python3", "-I", "panels/transcribed/drift_check.py",
-               "--ekos", "{ekos}", "--record", "panels/transcribed/scope_store_drift.json"]},
-    # The three lanes' own layouts: expected files where the lanes put them
-    # (W3 under the panel's controls/, W6 likewise, W11 in controls/), drift
-    # checkers per lane (identity's takes no --ekos; it pins the path itself).
-    {"sub": "identity", "panel": "panels/identity/identity.unit.jsonl",
-     "expected": "panels/identity/controls/identity.unit.controls.jsonl",
-     "control": "controls/identity.unit.control.jsonl",
-     "drift": ["python3", "-I", "panels/identity/drift.py"]},
-    {"sub": "branch", "panel": "panels/branch/items.jsonl",
-     "expected": "panels/branch/controls/expected.jsonl",
-     "control": "controls/branch.unit.control.jsonl",
-     "drift": ["python3", "-I", "panels/branch/drift.py", "--ekos", "{ekos}"]},
-    {"sub": "impact", "panel": "panels/impact/items.jsonl",
-     "expected": "controls/impact.expected.jsonl",
-     "control": "controls/impact.control.jsonl",
-     "drift": ["python3", "-I", "panels/transcribed/drift_check.py",
-               "--ekos", "{ekos}", "--record", "panels/impact/drift.json"]},
+# One row per panel: (panel name, control-dump subcommand, extra args). Every
+# path follows from the name a.b (the lane C layout, CLAUDE.md "Panel
+# conventions"): inputs panels/a/b.jsonl, the transcribed assertions
+# controls/a.b.expected.jsonl, EKOS's answers controls/a.b.control.jsonl, the
+# drift record panels/a/b.drift.json, checked by tools/scoreboard/drift_check.py.
+PANELS = [
+    ("scope.decision", "scope", []),
+    ("conflicts.unit", "conflicts", []),
+    ("scope.store", "store", []),
+    ("identity.unit", "identity", []),
+    ("branch.unit", "branch", []),
+    ("impact.unit", "impact", []),
+    ("redact.unit", "redact", []),
+    ("ekl.parser", "ekl", ["--which", "ekl.parser"]),
+    ("ekl.interpreter", "ekl", ["--which", "ekl.interpreter"]),
 ]
 
-# Drift checkers for panels whose dumps live in other lanes' files; run for
-# the record, never edited by this script. (branch and identity moved into
-# REGISTRY when their dumps were built, W12.)
-OTHER_DRIFT: list[list[str]] = []
 
-# The ledger versions controls (W20) are a different entry kind: the dump
-# subcommand takes a WORKSPACE DIRECTORY — a real W18 fixture build whose
-# .ekos/ledger/facts is opened read-only — not a panel+expected pair. The
-# `panel` file supplies the fixture-sha provenance check the dump runs
-# itself; there is no expected file because the workspace IS the expectation
-# source (the committed control pins the one-commit state; the EKOS#10 fork
-# away from it is classified in controls/classified.jsonl). Everything else
-# below treats these exactly like REGISTRY entries: double run,
-# byte-identical or fatal, committed-control comparison, --accept to move.
+def panel_entry(name: str, sub: str, extra: list[str]) -> dict:
+    family, variant = name.split(".", 1)
+    return {"name": name, "sub": sub, "args": extra,
+            "panel": f"panels/{family}/{variant}.jsonl",
+            "expected": f"controls/{name}.expected.jsonl",
+            "control": f"controls/{name}.control.jsonl",
+            "drift": ["python3", "-I", "tools/scoreboard/drift_check.py", "--ekos", "{ekos}",
+                      "--record", f"panels/{family}/{variant}.drift.json",
+                      "--panel", f"panels/{family}/{variant}.jsonl"]}
+
+
+REGISTRY = [panel_entry(*row) for row in PANELS]
+
+# The ledger versions controls (W20) take a WORKSPACE DIRECTORY, a real
+# fixture build whose .ekos/ledger/facts is opened read-only, not a
+# panel+expected pair. The workspace lives in git-ignored var/w18/<name>/ws;
+# when it is missing (a fresh clone, or var/ cleared) regen rebuilds it with
+# run_fixture.py from the fixture the panel names, checking its sha256 first
+# (R1 finding S3). A rebuilt workspace has fresh v4 evidence ids (EKOS#10), so
+# the committed control is compared on a projection without the fields that
+# carry them (LEDGER_VOLATILE, recorded in MANIFEST); the two runs on one
+# workspace must still be byte-identical.
 LEDGER_REGISTRY = [
-    {"run": "ledger", "workspace": "var/w18/ecommerce/ws",
-     "panel": "panels/ledger/items.jsonl",
-     "control": "controls/ledger.ecommerce.versions.control.jsonl"},
-    {"run": "ledger", "workspace": "var/w18/northwind/ws",
-     "panel": "panels/ledger/items.jsonl",
-     "control": "controls/ledger.northwind.versions.control.jsonl"},
+    {"run": "ledger", "name": n, "workspace": f"var/w18/{n.split('.')[1]}/ws",
+     "panel": f"panels/ledger/{n.split('.')[1]}.jsonl",
+     "control": f"controls/{n}.versions.control.jsonl"}
+    for n in ("ledger.ecommerce", "ledger.northwind")
 ]
+
+# Per object: the evidence id lists, and the two signatures computed over
+# the object payload including those lists. The no-evidence signatures stay
+# compared, so a real content change still moves the control. `workspace` is
+# the absolute path the dump was run on.
+LEDGER_VOLATILE = {"top": ["workspace"],
+                   "objects": ["evidence", "signature", "version_evidence", "version_signatures"]}
+
+
+def ledger_projection(line: str) -> str:
+    v = json.loads(line)
+    for k in LEDGER_VOLATILE["top"]:
+        v.pop(k, None)
+    for obj in v.get("objects", []):
+        for k in LEDGER_VOLATILE["objects"]:
+            obj.pop(k, None)
+    return json.dumps(v, sort_keys=True)
+
+
+def ensure_workspace(entry: dict, ekos_binary: Path) -> dict:
+    """Rebuild var/w18/<name> through run_fixture.py when its ws is missing."""
+    ws = ROOT / entry["workspace"]
+    if (ws / ".ekos").is_dir():
+        return {"rebuilt": False, **sidecar_of(ws.parent)}
+    item = json.loads((ROOT / entry["panel"]).read_text().splitlines()[0])
+    fixture = Path(item["input"]["fixture"])
+    if sha256_of(fixture.read_bytes()) != item["input"]["fixture_sha256"]:
+        sys.exit(f"{fixture} no longer hashes to the panel's fixture_sha256; refusing to rebuild")
+    out = ws.parent
+    if out.exists() and any(out.iterdir()):
+        sys.exit(f"{out} exists without a compiled ws; move it aside and re-run")
+    p = subprocess.run(["python3", "-I", str(HERE / "run_fixture.py"), "run",
+                        "--fixture", str(fixture), "--out", str(out), "--ekos", str(ekos_binary)],
+                       capture_output=True, text=True)
+    if p.returncode != 0:
+        sys.exit(f"run_fixture.py failed for {entry['name']}:\n{p.stdout}{p.stderr}")
+    print(json.dumps({"rebuilt_workspace": entry["workspace"]}))
+    return {"rebuilt": True, **sidecar_of(out)}
+
+
+def sidecar_of(run_dir: Path) -> dict:
+    """The binary and fixture run_fixture.py recorded for this workspace."""
+    path = run_dir / "sidecar.json"
+    if not path.is_file():
+        return {"sidecar": None}
+    sidecar = json.loads(path.read_text())
+    return {"ekos_binary_sha256": sidecar["ekos_binary"]["sha256"],
+            "fixture_sha256": sidecar["fixture"]["sha256"]}
 
 
 def sha256_of(data: bytes) -> str:
@@ -138,7 +178,8 @@ def run_dump(entry: dict, out: Path) -> dict:
     with out.open("w") as fh:
         p = subprocess.run(
             [str(DUMP / "target/debug/control-dump"), entry["sub"],
-             str(ROOT / entry["panel"]), "--expected", str(ROOT / entry["expected"])],
+             str(ROOT / entry["panel"]), "--expected", str(ROOT / entry["expected"]),
+             *entry["args"]],
             stdout=fh, stderr=subprocess.PIPE, text=True)
     report = {}
     for line in p.stderr.splitlines():
@@ -149,7 +190,7 @@ def run_dump(entry: dict, out: Path) -> dict:
         if isinstance(v, dict) and "panel" in v:
             report = v
     if p.returncode != 0:
-        sys.exit(f"dump {entry['sub']} failed (exit {p.returncode}):\n{p.stderr}")
+        sys.exit(f"dump {entry['name']} failed (exit {p.returncode}):\n{p.stderr}")
     if not report or "items" not in report:
         sys.exit(f"dump {entry['sub']}: no panel summary on stderr:\n{p.stderr}")
     if report["agree"] != report["items"] or report["mismatch"] or report["missing"]:
@@ -199,6 +240,9 @@ def main() -> int:
     ap.add_argument("--accept", action="store_true",
                     help="overwrite committed controls whose bytes moved (reported first)")
     ap.add_argument("--force-build", action="store_true", help="cargo build even if nothing moved")
+    ap.add_argument("--ekos-binary", type=Path,
+                    default=Path("/Users/ember/dev/EKOS/ekos/target/release/ekos"),
+                    help="the release binary run_fixture.py uses to rebuild a missing workspace")
     args = ap.parse_args()
 
     dirty = git(args.ekos, "status", "--porcelain")
@@ -233,11 +277,14 @@ def main() -> int:
         committed = ROOT / entry["control"]
         if committed.is_file():
             same = run1.read_bytes() == committed.read_bytes()
+            status = "identical" if same else "moved"
+            if not same and entry.get("run") == "ledger" and (
+                    ledger_projection(run1.read_text()) == ledger_projection(committed.read_text())):
+                same, status = True, "identical_modulo_volatile"
             moved = [] if same else moved_items(committed, run1)
             if not same and args.accept:
                 committed.write_bytes(run1.read_bytes())
-                same = True
-            status = "identical" if same else "moved"
+                same, status = True, "accepted"
         else:
             committed.write_bytes(run1.read_bytes())
             moved, same, status = [], True, "written_new"
@@ -245,7 +292,8 @@ def main() -> int:
             "control": entry["control"], "panel": entry["panel"],
             "items": report.get("items"), "agree": report.get("agree"),
             "reproducible": repro, "committed_control": status, "moved_items": moved,
-        })
+        } | ({"workspace": entry["workspace"], **entry.get("_ws", {})}
+             if entry.get("run") == "ledger" else {}))
         print(json.dumps(results[-1]))
         if not repro:
             sys.exit(f"{entry['control']}: two runs differ — the volatile-field list must grow "
@@ -256,18 +304,12 @@ def main() -> int:
         for entry in REGISTRY:
             drive(entry, run_dump)
         for entry in LEDGER_REGISTRY:
+            entry["_ws"] = ensure_workspace(entry, args.ekos_binary)
             drive(entry, run_ledger_dump)
 
     drift_results = []
     for entry in REGISTRY:
         cmd = [c.replace("{ekos}", str(args.ekos)) for c in entry["drift"]]
-        p = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
-        drift_results.append({"cmd": " ".join(cmd), "exit": p.returncode,
-                              "out": (p.stdout or p.stderr).strip().splitlines()[-1] if (p.stdout or p.stderr).strip() else ""})
-        if p.returncode != 0:
-            sys.exit(f"drift check failed: {' '.join(cmd)}\n{p.stdout}{p.stderr}")
-    for cmd in OTHER_DRIFT:
-        cmd = [c.replace("{ekos}", str(args.ekos)) for c in cmd]
         p = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
         drift_results.append({"cmd": " ".join(cmd), "exit": p.returncode,
                               "out": (p.stdout or p.stderr).strip().splitlines()[-1] if (p.stdout or p.stderr).strip() else ""})
@@ -297,6 +339,7 @@ def main() -> int:
         "runs": results,
         "drift_checks": drift_results,
         "volatile_fields_stripped": ["created_at"],
+        "ledger_versions_compared_without": LEDGER_VOLATILE,
         "recorded": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
     (ROOT / "controls/MANIFEST.json").write_text(json.dumps(manifest, indent=2) + "\n")

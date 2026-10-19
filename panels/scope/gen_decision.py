@@ -272,7 +272,8 @@ def write(panel_path: Path, expected_path: Path) -> None:
             }, separators=(",", ":")) + "\n")
             expected.write(json.dumps({
                 "item": item_id,
-                "assert": entry["expected"],
+                "expect": entry["expected"],
+                "expect_from_test": f"the assertion of {source}, transcribed in panels/scope/gen_decision.py",
             }, separators=(",", ":")) + "\n")
 
 

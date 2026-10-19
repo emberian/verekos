@@ -14,7 +14,8 @@
       "control_file": "controls/scope.decision.control.jsonl",
       "assurance": "design target",
       "measures": "ReadScope parsing (parse vs rule refusals), the visibility decision `Compiled::visible` on (id, origins) inputs, `is_unrestricted`, and the sources×paths `origins` crossing — the decision-test families of ekos/crates/ledger/src/scope.rs, answered by EKOS's own functions on 59 items from 17 tests.",
-      "does_not_measure": "anything inside a store (the ScopedStore wrappers: filtered reads, both-ends relationships, evidence gating, counts, diff, search, write refusal — that is the scope.store panel); MCP/CLI scope enforcement end to end (the RFC 0181 leak suite needs the fixture pipeline, no control exists yet); the scope fingerprint's equality behaviour across scope changes."
+      "does_not_measure": "anything inside a store (the ScopedStore wrappers: filtered reads, both-ends relationships, evidence gating, counts, diff, search, write refusal — that is the scope.store panel); MCP/CLI scope enforcement end to end (the RFC 0181 leak suite needs the fixture pipeline, no control exists yet); the scope fingerprint's equality behaviour across scope changes.",
+      "expected_file": "controls/scope.decision.expected.jsonl"
     },
     "conflicts.unit": {
       "kernel": "Conflicts",
@@ -22,7 +23,8 @@
       "control_file": "controls/conflicts.unit.control.jsonl",
       "assurance": "design target",
       "measures": "the detectors `duplicate_definitions`, `merge_losses`, `label_mismatches` and `normalize_type` (ekos/crates/semantic/src/conflicts.rs): type-alias normalization, duplicate collapse (incl. silent and per-attribute), permutation-invariance with stable conflict ids/claims/signature, exact vs fuzzy merge losses, label mismatch exclusion rules — 16 items from 8 tests.",
-      "does_not_measure": "the conflicts review workflow (`resolve`, `carry_forward`, `column_links` — reviewing, not detecting); conflict persistence (EKOS prints conflicts, it does not store them); fixture-scale conflict finding (conflicts.ledgersmb needs the LedgerSMB demo pipeline, not built)."
+      "does_not_measure": "the conflicts review workflow (`resolve`, `carry_forward`, `column_links` — reviewing, not detecting); conflict persistence (EKOS prints conflicts, it does not store them); fixture-scale conflict finding (conflicts.ledgersmb needs the LedgerSMB demo pipeline, not built).",
+      "expected_file": "controls/conflicts.unit.expected.jsonl"
     },
     "scope.store": {
       "kernel": "Scope",
@@ -30,74 +32,78 @@
       "control_file": "controls/scope.store.control.jsonl",
       "assurance": "design target",
       "measures": "ScopedStore — the RFC 0181 store wrapper — over a real (temp SQLite) Ledger built through ekos_ledger's public API: the eight store tests of scope.rs:1041 on as ordered step scenarios — filtered object/relationship/history/at/fact/audit reads, both-ends relationship visibility, evidence gating through visible objects, search and retrieval filtering, scoped counts and diff, write/event/vacuum refusal, multi-scope intersection and set_scopes replacement.",
-      "does_not_measure": "the MCP/CLI surface over a compiled project (the read_scope.rs leak suite: marker words through every tool shape, the result cache, --read-scope flag and process scope) — that needs the fixture pipeline (run_fixture.py), not built; the every_store_method_has_a_decision_here meta-test (source inspection, nothing to replay); scale (the world is four objects)."
+      "does_not_measure": "the MCP/CLI surface over a compiled project (the read_scope.rs leak suite: marker words through every tool shape, the result cache, --read-scope flag and process scope) — that needs the fixture pipeline (run_fixture.py), not built; the every_store_method_has_a_decision_here meta-test (source inspection, nothing to replay); scale (the world is four objects).",
+      "expected_file": "controls/scope.store.expected.jsonl"
     },
     "ledger.ecommerce": {
       "kernel": "Ledger",
-      "panel_file": "panels/ledger/items.jsonl",
+      "panel_file": "panels/ledger/ecommerce.jsonl",
       "assurance": "design target",
-      "status": "controls committed and wired into regen_controls.py's LEDGER_REGISTRY (W20): the ledger dump opens the workspace's fact store READ-ONLY (.ekos/ledger/facts) and regen runs it twice byte-identically against the committed control like every other entry; no expected file — the workspace is the expectation source, and the EKOS#10 fork away from this control is classified ekos_defect in controls/classified.jsonl (diff_id 07e3cb27…)",
+      "status": "controls committed and wired into regen_controls.py's LEDGER_REGISTRY (W20): the ledger dump opens the workspace's fact store READ-ONLY and regen runs it twice byte-identically. The workspace (git-ignored var/w18/<fixture>/ws) is rebuilt by run_fixture.py when missing (lane C, R1 S3), so the committed control is compared without the fields that carry EKOS#10's random evidence ids (per-object evidence, version_evidence, signature, version_signatures, and the workspace path; MANIFEST ledger_versions_compared_without); the no-evidence signatures, versions, kinds, names and totals stay compared. The EKOS#10 fork away from this control is classified ekos_defect in controls/classified.jsonl (diff_id 07e3cb27…)",
       "measures": "the six-stage ekos pipeline (init, build, recover, resolve, compile, commit --yes) on ecommerce.sql through the release binary in a scratch workspace: the graph export ndjson (8 nodes — 2 File plus exactly the 6 Tables the integration test counts — and 6 ForeignKey edges), the EKL object and relationship rows sorted by id, status and conflicts json, pinned by a sidecar (binary sha256, EKOS commit, fixture sha256, per-stage timings); plus the versions control (controls/ledger.ecommerce.versions.control.jsonl): per object (sorted by id) the id, kind, name, version count (object_history length), a locally recomputed content signature per version (content_signature is pub(crate); created_at stripped here, hashed by ekos_artifact's own ArtifactId::compute — with a no-evidence variant that isolates EKOS#10) and every version's evidence id list, the workspace totals, and diff(epoch, now) as a sorted id list; two signature self-checks (adjacent versions must differ; get_object must equal the last history version) falsify a wrong recomputation",
       "does_not_measure": "relationship version history (only its count in totals — objects only; the EKOS#10 fork's relationship half is inferred from entry arithmetic, not pinned per relationship); events and session objects; edge properties (a pending SameAs is still invisible); object properties beyond what the signature hash covers; the MySQL/docs/git fixtures (not run); the ledger's own byte layout (the control pins logical content, not segment bytes)"
     },
     "ledger.northwind": {
       "kernel": "Ledger",
-      "panel_file": "panels/ledger/items.jsonl",
+      "panel_file": "panels/ledger/northwind.jsonl",
       "assurance": "design target",
-      "status": "controls committed and wired into regen_controls.py's LEDGER_REGISTRY (W20): the ledger dump opens the workspace's fact store READ-ONLY (.ekos/ledger/facts) and regen runs it twice byte-identically against the committed control like every other entry; no expected file — the workspace is the expectation source, and the EKOS#10 fork away from this control is classified ekos_defect in controls/classified.jsonl (diff_id 07e3cb27…)",
+      "status": "controls committed and wired into regen_controls.py's LEDGER_REGISTRY (W20): the ledger dump opens the workspace's fact store READ-ONLY and regen runs it twice byte-identically. The workspace (git-ignored var/w18/<fixture>/ws) is rebuilt by run_fixture.py when missing (lane C, R1 S3), so the committed control is compared without the fields that carry EKOS#10's random evidence ids (per-object evidence, version_evidence, signature, version_signatures, and the workspace path; MANIFEST ledger_versions_compared_without); the no-evidence signatures, versions, kinds, names and totals stay compared. The EKOS#10 fork away from this control is classified ekos_defect in controls/classified.jsonl (diff_id 07e3cb27…)",
       "measures": "the six-stage ekos pipeline (init, build, recover, resolve, compile, commit --yes) on northwind.sql through the release binary in a scratch workspace: the graph export ndjson (15 nodes — 2 File plus the 13 real Tables the integration test counts — and 13 ForeignKey edges), the EKL object and relationship rows sorted by id, status and conflicts json, pinned by a sidecar (binary sha256, EKOS commit, fixture sha256, per-stage timings); plus the versions control (controls/ledger.northwind.versions.control.jsonl): per object (sorted by id) the id, kind, name, version count (object_history length), a locally recomputed content signature per version (content_signature is pub(crate); created_at stripped here, hashed by ekos_artifact's own ArtifactId::compute — with a no-evidence variant that isolates EKOS#10) and every version's evidence id list, the workspace totals, and diff(epoch, now) as a sorted id list; two signature self-checks (adjacent versions must differ; get_object must equal the last history version) falsify a wrong recomputation",
       "does_not_measure": "relationship version history (only its count in totals — objects only; the EKOS#10 fork's relationship half is inferred from entry arithmetic, not pinned per relationship); events and session objects; edge properties (a pending SameAs is still invisible); object properties beyond what the signature hash covers; the MySQL/docs/git fixtures (not run); the ledger's own byte layout (the control pins logical content, not segment bytes)"
     },
     "identity.unit": {
       "kernel": "Identity",
-      "panel_file": "panels/identity/identity.unit.jsonl",
+      "panel_file": "panels/identity/unit.jsonl",
       "control_file": "controls/identity.unit.control.jsonl",
       "assurance": "design target",
       "measures": "DefaultResolver::resolve on named objects (ekos/crates/identity/src/lib.rs): merge proposals as member sets with exact_name_match and confidence, SameNameDifferentKind conflict groups against the five expected-coexistence narrowings, structurally-keyed Custom-kind exclusion through the ekos_kir::custom_kinds registry, and the name_for_similarity rules (Table schema qualifier, GitHub owner/repo#n prefix) — 58 items from 45 tests.",
-      "does_not_measure": "the structural_score columns/rows signals on their own (four not-transcribed test families, a future structural-score panel); the stats/threshold/serde API tests; every_pipeline_custom_kind_is_registered (walks the EKOS source tree, no object inputs); merge execution (resolve proposes, the ledger merges — that is branch.unit); fixtures-scale resolve."
+      "does_not_measure": "the structural_score columns/rows signals on their own (four not-transcribed test families, a future structural-score panel); the stats/threshold/serde API tests; every_pipeline_custom_kind_is_registered (walks the EKOS source tree, no object inputs); merge execution (resolve proposes, the ledger merges — that is branch.unit); fixtures-scale resolve.",
+      "expected_file": "controls/identity.unit.expected.jsonl"
     },
     "branch.unit": {
       "kernel": "Branch",
-      "panel_file": "panels/branch/items.jsonl",
+      "panel_file": "panels/branch/unit.jsonl",
       "control_file": "controls/branch.unit.control.jsonl",
       "assurance": "design target",
       "measures": "merge_branch over two real temp SQLite ledgers (ekos/crates/ledger/src/lib.rs:1621): clean additions from branch, content-signature no-ops for identical objects (created_at stripped before hashing), and same-id diverged objects recorded as conflicts rather than overwritten — 3 items from the 3 merge_branch tests.",
-      "does_not_measure": "relationship merging (no transcribed test appends a relationship, so that half of merge_branch is unmeasured); objects removed in branch (EKOS never looks for absences); three-way merges; evidence propagation into main; persisted conflicts (the report only, EKOS does not store them)."
+      "does_not_measure": "relationship merging (no transcribed test appends a relationship, so that half of merge_branch is unmeasured); objects removed in branch (EKOS never looks for absences); three-way merges; evidence propagation into main; persisted conflicts (the report only, EKOS does not store them).",
+      "expected_file": "controls/branch.unit.expected.jsonl"
     },
     "impact.unit": {
       "kernel": "Impact",
-      "panel_file": "panels/impact/items.jsonl",
-      "control_file": "controls/impact.control.jsonl",
+      "panel_file": "panels/impact/unit.jsonl",
+      "control_file": "controls/impact.unit.control.jsonl",
       "assurance": "design target",
       "measures": "the Runtime graph walks (ekos/crates/runtime/src/lib.rs) over a real temp SQLite ledger: load_neighborhood and load_neighborhood_bounded (truncation reporting, no dangling edges after a cut), trace_impact both directions with kind filters and hop bounds, dependents()/related(), the pending-review exclusion (unconfirmed SameAs), the RFC 0151 session-memory exclusions, and the RFC 0144 doc-mention rule — 26 items from 15 tests.",
-      "does_not_measure": "named_graph_ops_respect_direction_edge_kind_and_hops and the kind-prefilter test (not walk-shaped items); the relationship-read session filters outside these walks (session_edges_are_absent_from_every_relationship_read_path); search-quality aspects of dependents ranking; fixture-scale graphs (needs run_fixture.py)."
+      "does_not_measure": "named_graph_ops_respect_direction_edge_kind_and_hops and the kind-prefilter test (not walk-shaped items); the relationship-read session filters outside these walks (session_edges_are_absent_from_every_relationship_read_path); search-quality aspects of dependents ranking; fixture-scale graphs (needs run_fixture.py).",
+      "expected_file": "controls/impact.unit.expected.jsonl"
     },
     "redact.unit": {
       "kernel": "Redact",
-      "panel_file": "panels/redact/items.jsonl",
-      "expected_file": "controls/redact.expected.jsonl",
-      "status": "panel and expected outcomes committed (W15: 26 items from 16 tests); no control dump subcommand yet, so EKOS's own answers have not been recorded",
+      "panel_file": "panels/redact/unit.jsonl",
+      "expected_file": "controls/redact.unit.expected.jsonl",
       "assurance": "design target",
-      "measures": "(when the dump exists) redact / redact_json / is_excluded_path from ekos/crates/common/src/redaction.rs on the inputs of its own 16 unit tests, including extra patterns and excluded globs.",
-      "does_not_measure": "policy completeness: a secret of a shape the pattern table does not name is not caught and will not be claimed (design §10); planted fixture strings (not transcribed); the two readers that skip redaction (EKOS#18, #19) are entry-point defects, not redact-function inputs."
+      "measures": "redact / redact_json / is_excluded_path from ekos/crates/common/src/redaction.rs on the inputs of its own 16 unit tests, including extra patterns and excluded globs. 26 items from 16 tests.",
+      "does_not_measure": "policy completeness: a secret of a shape the pattern table does not name is not caught and will not be claimed (design §10); planted fixture strings (not transcribed); the two readers that skip redaction (EKOS#18, #19) are entry-point defects, not redact-function inputs.",
+      "control_file": "controls/redact.unit.control.jsonl"
     },
     "ekl.parser": {
       "kernel": "EKL",
-      "panel_file": "panels/ekl/items.jsonl",
-      "expected_file": "controls/ekl.expected.jsonl",
-      "status": "panel and expected outcomes committed (W16: 50 items from 26 parser tests); no control dump subcommand yet",
+      "panel_file": "panels/ekl/parser.jsonl",
+      "expected_file": "controls/ekl.parser.expected.jsonl",
       "assurance": "design target",
-      "measures": "(when the dump exists) the EKL parser on the query strings of its own tests: AST fields the tests assert (entity, predicates, returns, order, limit, AS OF, GROUP BY, SEMANTIC) or the error kind.",
-      "does_not_measure": "AST fields a test does not assert (only asserted fields are in the expected file); the fuzz test (asserts only no panic); REASON/Datalog."
+      "measures": "the EKL parser on the query strings of its own tests: AST fields the tests assert (entity, predicates, returns, order, limit, AS OF, GROUP BY, SEMANTIC) or the error kind. 50 items from 26 tests; the fuzz items under catch_unwind.",
+      "does_not_measure": "AST fields a test does not assert (only asserted fields are in the expected file); the fuzz test (asserts only no panic); REASON/Datalog.",
+      "control_file": "controls/ekl.parser.control.jsonl"
     },
     "ekl.interpreter": {
       "kernel": "EKL",
-      "panel_file": "panels/ekl/items.jsonl",
-      "expected_file": "controls/ekl.expected.jsonl",
-      "status": "panel and expected outcomes committed (W16: 33 items from 32 interpreter tests); no control dump subcommand yet",
+      "panel_file": "panels/ekl/interpreter.jsonl",
+      "expected_file": "controls/ekl.interpreter.expected.jsonl",
       "assurance": "design target",
-      "measures": "(when the dump exists) the EKL interpreter over each test's own small world: rows, counts, groups, UnknownField refusals.",
-      "does_not_measure": "three AS OF tests with no fixed timestamp (not reproducible as data); queries against fixture-scale ledgers (the real `ekos ekl --json` binary over run_fixture.py workspaces is the planned second family); SEMANTIC retrieval quality."
+      "measures": "the EKL interpreter over each test's own small world: rows, counts, groups, UnknownField refusals. 33 items from 32 tests; the three AS OF tests fill their timestamps from the wall clock at the moment the Rust tests do (no fixed clock exists; no timestamp is printed).",
+      "does_not_measure": "three AS OF tests with no fixed timestamp (not reproducible as data); queries against fixture-scale ledgers (the real `ekos ekl --json` binary over run_fixture.py workspaces is the planned second family); SEMANTIC retrieval quality.",
+      "control_file": "controls/ekl.interpreter.control.jsonl"
     }
   },
   "placeholders": [

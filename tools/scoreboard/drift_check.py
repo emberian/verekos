@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The transcription drift checker (exploration 03 §5.4, option 1).
 
-The panels under ../{scope,conflicts}/ are hand transcriptions of Rust test
+The panels under panels/ are hand transcriptions of Rust test
 functions in the pinned EKOS checkout. A transcription can rot: EKOS can edit a
 test and the panel would silently keep feeding the old shape. This checker
 hashes the source text of every transcribed test function — located by name,
@@ -14,7 +14,8 @@ assertion the test makes.
 
 Run with python3 -I; every path is an argument:
 
-    python3 -I drift_check.py --ekos /Users/ember/dev/EKOS --record scope_drift.json
+    python3 -I tools/scoreboard/drift_check.py --ekos /Users/ember/dev/EKOS \
+        --record panels/scope/decision.drift.json --panel panels/scope/decision.jsonl
     python3 -I drift_check.py ... --update     # re-record after a reviewed change
 
 Extraction: a test function starts at a line `    fn <name>(` (mod tests nests
@@ -23,17 +24,11 @@ Strings inside these test bodies never sit alone at that indent, so the cut is
 unambiguous; if it ever were not, the hash would move and the checker would
 say so.
 
-This is the one drift checker every panel can use (notes/R1-review.md). It
-reads all three record shapes the lanes wrote:
-
-- `{"functions": {name: {"file", "sha256"}}}` (scope, conflicts, impact,
-  redact, ekl): span from the `fn` line;
-- the same plus `"span": "#[test] through …"` (branch, W6): span from the
-  `#[test]` attribute line above the `fn` line;
-- `{"source_file": F, "functions": {name: sha256}}` (identity, W3): span from
-  the `fn` line (its own checker's docstring says `#[test]`, but its match
-  compares the attribute without indentation and never fires, so the hashes
-  it recorded start at `fn`; this checker reproduces all 45).
+This is the one drift checker; every panel's record is
+`panels/<a>/<b>.drift.json`, `{"functions": {name: {"file", "sha256"}}}`.
+The span starts at the `fn` line, or, when the record says
+`"span": "#[test] through …"` (the branch record, W6), at the `#[test]`
+attribute above it.
 
 `--panel PANEL.jsonl` also checks coverage, which the per-lane checkers did
 only for identity: every test a panel item cites in its `source`
@@ -94,17 +89,9 @@ def ekos_commit(ekos: Path) -> str | None:
 
 
 def normalized(record: dict) -> tuple[dict[str, dict], bool]:
-    """(name -> {file, sha256}, span-from-attribute) for any of the three shapes."""
+    """(name -> {file, sha256}, span-from-attribute)."""
     from_attr = str(record.get("span", "")).startswith("#[test]")
-    default_file = record.get("source_file") or record.get("file")
-    functions = {}
-    for name, entry in record["functions"].items():
-        if isinstance(entry, str):
-            if not default_file:
-                sys.exit(f"{name}: a bare hash needs a top-level source_file")
-            entry = {"file": default_file, "sha256": entry}
-        functions[name] = entry
-    return functions, from_attr
+    return dict(record["functions"]), from_attr
 
 
 def cited(panel: Path) -> set[tuple[str, str]]:
@@ -137,13 +124,10 @@ def main() -> int:
     functions_in, from_attr = normalized(record)
 
     if args.update:
-        if any(isinstance(v, str) for v in record["functions"].values()) or record.get("span"):
-            sys.exit("--update rewrites only the default record shape; re-record this one "
-                     "with its own lane checker, or migrate it first (notes/R1-review.md)")
         functions = {}
         for name, entry in functions_in.items():
             path = args.ekos / entry["file"]
-            text = extract(path, name)
+            text = extract(path, name, from_attr)
             if text is None:
                 failures.append(f"{name}: not found in {entry['file']}")
                 continue
@@ -151,9 +135,10 @@ def main() -> int:
                 "file": entry["file"],
                 "sha256": hashlib.sha256(text.encode()).hexdigest(),
             }
-        args.record.write_text(json.dumps(
-            {"ekos_commit": commit, "recorded": record.get("recorded"),
-             "functions": functions}, indent=2) + "\n")
+        out = {"ekos_commit": commit, "recorded": record.get("recorded"), "functions": functions}
+        if record.get("span"):
+            out["span"] = record["span"]
+        args.record.write_text(json.dumps(out, indent=2) + "\n")
         print(json.dumps({"updated": len(functions), "failures": failures}))
         return 1 if failures else 0
 

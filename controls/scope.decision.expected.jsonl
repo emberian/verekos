@@ -1,59 +1,59 @@
-{"item":"a_scope_without_a_default_does_not_parse#1","assert":{"error":"parse"}}
-{"item":"a_scope_without_a_default_does_not_parse#2","assert":{"error":"parse"}}
-{"item":"a_scope_without_a_default_does_not_parse#3","assert":{"error":"parse"}}
-{"item":"a_scope_without_a_default_does_not_parse#4","assert":{"error":"parse"}}
-{"item":"unknown_fields_and_bad_rules_are_refused#1","assert":{"error":"parse"}}
-{"item":"unknown_fields_and_bad_rules_are_refused#2","assert":{"error":"parse"}}
-{"item":"unknown_fields_and_bad_rules_are_refused#3","assert":{"error":"parse"}}
-{"item":"unknown_fields_and_bad_rules_are_refused#4","assert":{"error":"rule"}}
-{"item":"unknown_fields_and_bad_rules_are_refused#5","assert":{"error":"rule"}}
-{"item":"unknown_fields_and_bad_rules_are_refused#6","assert":{"error":"parse"}}
-{"item":"unknown_fields_and_bad_rules_are_refused#7","assert":{"error":"rule"}}
-{"item":"only_default_allow_without_a_deny_is_unrestricted#1","assert":{"unrestricted":true}}
-{"item":"only_default_allow_without_a_deny_is_unrestricted#2","assert":{"unrestricted":false}}
-{"item":"only_default_allow_without_a_deny_is_unrestricted#3","assert":{"unrestricted":false}}
-{"item":"default_deny_hides_everything_without_a_rule#1","assert":{"visible":false}}
-{"item":"default_deny_hides_everything_without_a_rule#2","assert":{"visible":false}}
-{"item":"an_allowed_source_shows_its_objects_and_no_others#1","assert":{"visible":true}}
-{"item":"an_allowed_source_shows_its_objects_and_no_others#2","assert":{"visible":true}}
-{"item":"an_allowed_source_shows_its_objects_and_no_others#3","assert":{"visible":false}}
-{"item":"an_object_without_a_source_is_hidden_from_a_reader_limited_by_source#1","assert":{"visible":false}}
-{"item":"an_object_without_a_source_is_hidden_from_a_reader_limited_by_source#2","assert":{"visible":false}}
-{"item":"an_object_in_two_sources_needs_both#1","assert":{"visible":false}}
-{"item":"an_object_in_two_sources_needs_both#2","assert":{"visible":true}}
-{"item":"deny_wins_over_allow_whatever_the_order#1","assert":{"visible":true}}
-{"item":"deny_wins_over_allow_whatever_the_order#2","assert":{"visible":false}}
-{"item":"deny_wins_over_allow_whatever_the_order#3","assert":{"visible":false}}
-{"item":"deny_wins_over_allow_whatever_the_order#4","assert":{"visible":true}}
-{"item":"deny_wins_over_allow_whatever_the_order#5","assert":{"visible":false}}
-{"item":"deny_wins_over_allow_whatever_the_order#6","assert":{"visible":false}}
-{"item":"one_denied_origin_hides_an_object_with_several_paths#1","assert":{"visible":false}}
-{"item":"a_path_deny_hides_what_has_no_path#1","assert":{"visible":false}}
-{"item":"a_path_deny_hides_what_has_no_path#2","assert":{"visible":true}}
-{"item":"a_path_deny_hides_what_has_no_path#3","assert":{"visible":true}}
-{"item":"a_path_deny_hides_what_has_no_path#4","assert":{"visible":false}}
-{"item":"a_path_deny_hides_what_has_no_path#5","assert":{"visible":false}}
-{"item":"a_path_deny_hides_what_has_no_path#6","assert":{"visible":true}}
-{"item":"a_path_deny_without_a_source_applies_to_every_source_and_to_none#1","assert":{"visible":false}}
-{"item":"a_path_deny_without_a_source_applies_to_every_source_and_to_none#2","assert":{"visible":false}}
-{"item":"a_path_deny_without_a_source_applies_to_every_source_and_to_none#3","assert":{"visible":false}}
-{"item":"a_path_deny_without_a_source_applies_to_every_source_and_to_none#4","assert":{"visible":true}}
-{"item":"a_path_allow_needs_a_path_that_matches#1","assert":{"visible":true}}
-{"item":"a_path_allow_needs_a_path_that_matches#2","assert":{"visible":false}}
-{"item":"a_path_allow_needs_a_path_that_matches#3","assert":{"visible":false}}
-{"item":"a_path_allow_needs_a_path_that_matches#4","assert":{"visible":false}}
-{"item":"a_star_stays_in_one_component_and_two_cross_them#1","assert":{"visible":true}}
-{"item":"a_star_stays_in_one_component_and_two_cross_them#2","assert":{"visible":false}}
-{"item":"a_star_stays_in_one_component_and_two_cross_them#3","assert":{"visible":true}}
-{"item":"a_star_stays_in_one_component_and_two_cross_them#4","assert":{"visible":false}}
-{"item":"a_star_stays_in_one_component_and_two_cross_them#5","assert":{"visible":false}}
-{"item":"a_path_recorded_with_its_source_in_front_still_matches#1","assert":{"visible":false}}
-{"item":"a_path_recorded_with_its_source_in_front_still_matches#2","assert":{"visible":false}}
-{"item":"object_rules_name_one_object#1","assert":{"visible":true}}
-{"item":"object_rules_name_one_object#2","assert":{"visible":false}}
-{"item":"object_rules_name_one_object#3","assert":{"visible":false}}
-{"item":"object_rules_name_one_object#4","assert":{"visible":true}}
-{"item":"a_deny_on_a_source_beats_an_allow_on_the_object#1","assert":{"visible":false}}
-{"item":"a_deny_on_a_source_beats_an_allow_on_the_object#2","assert":{"visible":true}}
-{"item":"origins_cross_sources_with_paths#1","assert":{"origins":[{"source":null,"path":null}]}}
-{"item":"origins_cross_sources_with_paths#2","assert":{"origins":[{"source":"a","path":"x"},{"source":"b","path":"x"}]}}
+{"item":"a_scope_without_a_default_does_not_parse#1","expect":{"error":"parse"},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:812 a_scope_without_a_default_does_not_parse, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_scope_without_a_default_does_not_parse#2","expect":{"error":"parse"},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:812 a_scope_without_a_default_does_not_parse, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_scope_without_a_default_does_not_parse#3","expect":{"error":"parse"},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:812 a_scope_without_a_default_does_not_parse, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_scope_without_a_default_does_not_parse#4","expect":{"error":"parse"},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:812 a_scope_without_a_default_does_not_parse, transcribed in panels/scope/gen_decision.py"}
+{"item":"unknown_fields_and_bad_rules_are_refused#1","expect":{"error":"parse"},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:823 unknown_fields_and_bad_rules_are_refused, transcribed in panels/scope/gen_decision.py"}
+{"item":"unknown_fields_and_bad_rules_are_refused#2","expect":{"error":"parse"},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:823 unknown_fields_and_bad_rules_are_refused, transcribed in panels/scope/gen_decision.py"}
+{"item":"unknown_fields_and_bad_rules_are_refused#3","expect":{"error":"parse"},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:823 unknown_fields_and_bad_rules_are_refused, transcribed in panels/scope/gen_decision.py"}
+{"item":"unknown_fields_and_bad_rules_are_refused#4","expect":{"error":"rule"},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:823 unknown_fields_and_bad_rules_are_refused, transcribed in panels/scope/gen_decision.py"}
+{"item":"unknown_fields_and_bad_rules_are_refused#5","expect":{"error":"rule"},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:823 unknown_fields_and_bad_rules_are_refused, transcribed in panels/scope/gen_decision.py"}
+{"item":"unknown_fields_and_bad_rules_are_refused#6","expect":{"error":"parse"},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:823 unknown_fields_and_bad_rules_are_refused, transcribed in panels/scope/gen_decision.py"}
+{"item":"unknown_fields_and_bad_rules_are_refused#7","expect":{"error":"rule"},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:823 unknown_fields_and_bad_rules_are_refused, transcribed in panels/scope/gen_decision.py"}
+{"item":"only_default_allow_without_a_deny_is_unrestricted#1","expect":{"unrestricted":true},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:845 only_default_allow_without_a_deny_is_unrestricted, transcribed in panels/scope/gen_decision.py"}
+{"item":"only_default_allow_without_a_deny_is_unrestricted#2","expect":{"unrestricted":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:845 only_default_allow_without_a_deny_is_unrestricted, transcribed in panels/scope/gen_decision.py"}
+{"item":"only_default_allow_without_a_deny_is_unrestricted#3","expect":{"unrestricted":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:845 only_default_allow_without_a_deny_is_unrestricted, transcribed in panels/scope/gen_decision.py"}
+{"item":"default_deny_hides_everything_without_a_rule#1","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:869 default_deny_hides_everything_without_a_rule, transcribed in panels/scope/gen_decision.py"}
+{"item":"default_deny_hides_everything_without_a_rule#2","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:869 default_deny_hides_everything_without_a_rule, transcribed in panels/scope/gen_decision.py"}
+{"item":"an_allowed_source_shows_its_objects_and_no_others#1","expect":{"visible":true},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:876 an_allowed_source_shows_its_objects_and_no_others, transcribed in panels/scope/gen_decision.py"}
+{"item":"an_allowed_source_shows_its_objects_and_no_others#2","expect":{"visible":true},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:876 an_allowed_source_shows_its_objects_and_no_others, transcribed in panels/scope/gen_decision.py"}
+{"item":"an_allowed_source_shows_its_objects_and_no_others#3","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:876 an_allowed_source_shows_its_objects_and_no_others, transcribed in panels/scope/gen_decision.py"}
+{"item":"an_object_without_a_source_is_hidden_from_a_reader_limited_by_source#1","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:884 an_object_without_a_source_is_hidden_from_a_reader_limited_by_source, transcribed in panels/scope/gen_decision.py"}
+{"item":"an_object_without_a_source_is_hidden_from_a_reader_limited_by_source#2","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:884 an_object_without_a_source_is_hidden_from_a_reader_limited_by_source, transcribed in panels/scope/gen_decision.py"}
+{"item":"an_object_in_two_sources_needs_both#1","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:891 an_object_in_two_sources_needs_both, transcribed in panels/scope/gen_decision.py"}
+{"item":"an_object_in_two_sources_needs_both#2","expect":{"visible":true},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:891 an_object_in_two_sources_needs_both, transcribed in panels/scope/gen_decision.py"}
+{"item":"deny_wins_over_allow_whatever_the_order#1","expect":{"visible":true},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:903 deny_wins_over_allow_whatever_the_order, transcribed in panels/scope/gen_decision.py"}
+{"item":"deny_wins_over_allow_whatever_the_order#2","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:903 deny_wins_over_allow_whatever_the_order, transcribed in panels/scope/gen_decision.py"}
+{"item":"deny_wins_over_allow_whatever_the_order#3","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:903 deny_wins_over_allow_whatever_the_order, transcribed in panels/scope/gen_decision.py"}
+{"item":"deny_wins_over_allow_whatever_the_order#4","expect":{"visible":true},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:903 deny_wins_over_allow_whatever_the_order, transcribed in panels/scope/gen_decision.py"}
+{"item":"deny_wins_over_allow_whatever_the_order#5","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:903 deny_wins_over_allow_whatever_the_order, transcribed in panels/scope/gen_decision.py"}
+{"item":"deny_wins_over_allow_whatever_the_order#6","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:903 deny_wins_over_allow_whatever_the_order, transcribed in panels/scope/gen_decision.py"}
+{"item":"one_denied_origin_hides_an_object_with_several_paths#1","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:916 one_denied_origin_hides_an_object_with_several_paths, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_path_deny_hides_what_has_no_path#1","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:926 a_path_deny_hides_what_has_no_path, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_path_deny_hides_what_has_no_path#2","expect":{"visible":true},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:926 a_path_deny_hides_what_has_no_path, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_path_deny_hides_what_has_no_path#3","expect":{"visible":true},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:926 a_path_deny_hides_what_has_no_path, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_path_deny_hides_what_has_no_path#4","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:926 a_path_deny_hides_what_has_no_path, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_path_deny_hides_what_has_no_path#5","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:926 a_path_deny_hides_what_has_no_path, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_path_deny_hides_what_has_no_path#6","expect":{"visible":true},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:926 a_path_deny_hides_what_has_no_path, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_path_deny_without_a_source_applies_to_every_source_and_to_none#1","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:942 a_path_deny_without_a_source_applies_to_every_source_and_to_none, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_path_deny_without_a_source_applies_to_every_source_and_to_none#2","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:942 a_path_deny_without_a_source_applies_to_every_source_and_to_none, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_path_deny_without_a_source_applies_to_every_source_and_to_none#3","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:942 a_path_deny_without_a_source_applies_to_every_source_and_to_none, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_path_deny_without_a_source_applies_to_every_source_and_to_none#4","expect":{"visible":true},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:942 a_path_deny_without_a_source_applies_to_every_source_and_to_none, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_path_allow_needs_a_path_that_matches#1","expect":{"visible":true},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:951 a_path_allow_needs_a_path_that_matches, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_path_allow_needs_a_path_that_matches#2","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:951 a_path_allow_needs_a_path_that_matches, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_path_allow_needs_a_path_that_matches#3","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:951 a_path_allow_needs_a_path_that_matches, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_path_allow_needs_a_path_that_matches#4","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:951 a_path_allow_needs_a_path_that_matches, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_star_stays_in_one_component_and_two_cross_them#1","expect":{"visible":true},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:969 a_star_stays_in_one_component_and_two_cross_them, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_star_stays_in_one_component_and_two_cross_them#2","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:969 a_star_stays_in_one_component_and_two_cross_them, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_star_stays_in_one_component_and_two_cross_them#3","expect":{"visible":true},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:969 a_star_stays_in_one_component_and_two_cross_them, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_star_stays_in_one_component_and_two_cross_them#4","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:969 a_star_stays_in_one_component_and_two_cross_them, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_star_stays_in_one_component_and_two_cross_them#5","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:969 a_star_stays_in_one_component_and_two_cross_them, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_path_recorded_with_its_source_in_front_still_matches#1","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:980 a_path_recorded_with_its_source_in_front_still_matches, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_path_recorded_with_its_source_in_front_still_matches#2","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:980 a_path_recorded_with_its_source_in_front_still_matches, transcribed in panels/scope/gen_decision.py"}
+{"item":"object_rules_name_one_object#1","expect":{"visible":true},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:990 object_rules_name_one_object, transcribed in panels/scope/gen_decision.py"}
+{"item":"object_rules_name_one_object#2","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:990 object_rules_name_one_object, transcribed in panels/scope/gen_decision.py"}
+{"item":"object_rules_name_one_object#3","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:990 object_rules_name_one_object, transcribed in panels/scope/gen_decision.py"}
+{"item":"object_rules_name_one_object#4","expect":{"visible":true},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:990 object_rules_name_one_object, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_deny_on_a_source_beats_an_allow_on_the_object#1","expect":{"visible":false},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:1008 a_deny_on_a_source_beats_an_allow_on_the_object, transcribed in panels/scope/gen_decision.py"}
+{"item":"a_deny_on_a_source_beats_an_allow_on_the_object#2","expect":{"visible":true},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:1008 a_deny_on_a_source_beats_an_allow_on_the_object, transcribed in panels/scope/gen_decision.py"}
+{"item":"origins_cross_sources_with_paths#1","expect":{"origins":[{"source":null,"path":null}]},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:1020 origins_cross_sources_with_paths, transcribed in panels/scope/gen_decision.py"}
+{"item":"origins_cross_sources_with_paths#2","expect":{"origins":[{"source":"a","path":"x"},{"source":"b","path":"x"}]},"expect_from_test":"the assertion of ekos/crates/ledger/src/scope.rs:1020 origins_cross_sources_with_paths, transcribed in panels/scope/gen_decision.py"}

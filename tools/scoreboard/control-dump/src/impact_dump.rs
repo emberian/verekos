@@ -271,7 +271,7 @@ fn str_list(v: &Value) -> Vec<String> {
         .unwrap_or_default()
 }
 
-/// The expected file (W11's layout, `controls/impact.expected.jsonl`) carries
+/// The expected file (`controls/impact.unit.expected.jsonl`) carries
 /// `expect` per line; each key is one of the tests' own assertion shapes:
 /// the exact hop list, the exact id vec, ordered id vecs for the bounded
 /// equality test, object sets/counts for neighborhoods, includes/excludes

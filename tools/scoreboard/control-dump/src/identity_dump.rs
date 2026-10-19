@@ -194,7 +194,7 @@ fn str_list(v: &Value) -> Vec<String> {
         .unwrap_or_default()
 }
 
-/// The expected file (`panels/identity/controls/identity.unit.controls.jsonl`,
+/// The expected file (`controls/identity.unit.expected.jsonl`,
 /// W3's layout) carries `expect` per line: proposals as member-id sets with
 /// `exact_name_match`, conflicts as `kind`+`ids`, `name_for_similarity`
 /// strings, and (one item) `is_structurally_keyed_<Kind>`.

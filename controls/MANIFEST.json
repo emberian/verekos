@@ -7,15 +7,17 @@
   },
   "dump_binary": {
     "path": "tools/scoreboard/control-dump/target/debug/control-dump",
-    "sha256": "dcc126955be69ffe408d6f79eb9485981cd2769e71dd48729a497cdc71a4fdc2",
-    "source_tree_sha256": "018bfe1d2a0d9fbf19a91058ac05907144458cff345c1a9c221a9452147a2674",
+    "sha256": "de0df26a9550b7222841250f4e73537ca4e24a542bf40194b555f5edab6507df",
+    "source_tree_sha256": "911b2ff94395db2b06277c51e7fc2d620c0220b4bfdbeecbe5cc81a332b5eb3e",
     "source_files": [
       "tools/scoreboard/control-dump/src/branch_dump.rs",
       "tools/scoreboard/control-dump/src/conflicts_dump.rs",
+      "tools/scoreboard/control-dump/src/ekl_dump.rs",
       "tools/scoreboard/control-dump/src/identity_dump.rs",
       "tools/scoreboard/control-dump/src/impact_dump.rs",
       "tools/scoreboard/control-dump/src/ledger_dump.rs",
       "tools/scoreboard/control-dump/src/main.rs",
+      "tools/scoreboard/control-dump/src/redact_dump.rs",
       "tools/scoreboard/control-dump/src/scope_dump.rs",
       "tools/scoreboard/control-dump/src/scope_store_dump.rs"
     ],
@@ -25,24 +27,34 @@
     "panels/scope/decision.jsonl": "43c3119e3f7a56a258f1bc58f871172ab6e7529b69595e7a90875fb82449d136",
     "panels/conflicts/unit.jsonl": "b0c268c2161dbac531e38f0601058b15b2048d44ae408e8f5ceb59b15a43d321",
     "panels/scope/store.jsonl": "062ff6a5ab05b7d3186c26797d96b9979a9fb2bc39aa2fa4405687c2b22ef2c2",
-    "panels/identity/identity.unit.jsonl": "45ce02d5f00cf228c4244a0698ecdc23dbb06de523744137a458121a4b946639",
-    "panels/branch/items.jsonl": "d954076f16579f16a4940dbc728a0ec1fdb4060e052393f493fe107726902216",
-    "panels/impact/items.jsonl": "7f92fcfcf1a2efe0ad5517b046a3b29057c02333c836942220dec7211a23f11e",
-    "panels/ledger/items.jsonl": "ca648319f7da93a8f35988fc9b0a1f8ad7f590b99aebcfdc10f847d82d12383f"
+    "panels/identity/unit.jsonl": "45ce02d5f00cf228c4244a0698ecdc23dbb06de523744137a458121a4b946639",
+    "panels/branch/unit.jsonl": "d954076f16579f16a4940dbc728a0ec1fdb4060e052393f493fe107726902216",
+    "panels/impact/unit.jsonl": "7f92fcfcf1a2efe0ad5517b046a3b29057c02333c836942220dec7211a23f11e",
+    "panels/redact/unit.jsonl": "ec254a1577d9ef26d7bcc2cb5dfece1106710add575d0217571b2ead9aa84233",
+    "panels/ekl/parser.jsonl": "e1b8a3c70b18a1f5c013d3455137dec0cfdbb1a51eb58013b9d1819f137f126f",
+    "panels/ekl/interpreter.jsonl": "d0533eb60b096a72f8962b715954af95fa555994a7ab6eedfd1aff6798d1bf9c",
+    "panels/ledger/ecommerce.jsonl": "695d90f591ae03750a1779bc36e91340d9b2e1a6c973da102dff166e312629cf",
+    "panels/ledger/northwind.jsonl": "30c736e58e540574839a7eb3ff92fafa1328455033e88881184e7db0efa4dc1f"
   },
   "controls": {
-    "controls/scope.decision.expected.jsonl": "071705f373d7391291fd67bdfe93b6f7ab6c050de941b35f213e569b3cd59020",
+    "controls/scope.decision.expected.jsonl": "d35102e9393e15a406380efe6a03847835fda809bf4132fb1d75548208451a9e",
     "controls/scope.decision.control.jsonl": "6249610707a4ad763d39f1f93937ac52cb96fe206dd79b1f7a8a94ceccd58cf2",
-    "controls/conflicts.unit.expected.jsonl": "63dc35d5b8544ac6afbb1342521bc91aeeee641fffe8125ddb85209c27221e50",
+    "controls/conflicts.unit.expected.jsonl": "7393da0082a2119f11ce8e7c3facdf1ba805eba585814cd9db27b3a1850da9c1",
     "controls/conflicts.unit.control.jsonl": "07533414d14b19e3a5c6e46e0042c31c9010a7af39688f69db6298b1895c4494",
-    "controls/scope.store.expected.jsonl": "610dfdacb5189f1b73808e231d056b0f44221ab8805d14d88c6ca74ad4f3f11e",
+    "controls/scope.store.expected.jsonl": "3dd6078c6183d8b2c55a806c335f69bdb5c4e7c4dafa113720d70bb2c233a2f6",
     "controls/scope.store.control.jsonl": "5b1470e31e414a2eed71a1286a159c3000f36380cc69f528a242107d40991221",
-    "panels/identity/controls/identity.unit.controls.jsonl": "be7e9b7a52d26b6f714fa73e4c8442c539c6efd03407a0d6d6fe799d79365170",
+    "controls/identity.unit.expected.jsonl": "be7e9b7a52d26b6f714fa73e4c8442c539c6efd03407a0d6d6fe799d79365170",
     "controls/identity.unit.control.jsonl": "90823c3f01ee331df6cb10a16de6b8c267d42224b5ce7041c92d24f62951f8e4",
-    "panels/branch/controls/expected.jsonl": "aa260b01c015f55e4bb1d559ade2c648d74230927dffb8e5c12a2b2d58f0fb2b",
+    "controls/branch.unit.expected.jsonl": "b8973025beb36fb6d2e9811a7ca3433bd27b03e35fbd9f4babce96c6784f71ec",
     "controls/branch.unit.control.jsonl": "c13c20d925a18639f8ce91fb6d87c87564815dc1f4db1300cf52e9cd5ec4cf9b",
-    "controls/impact.expected.jsonl": "2a26bb7ccc724d49981477315275c63d57010e0a39c6176b89cfdf44669c62cf",
-    "controls/impact.control.jsonl": "d3461ab754a9c974fc53fa815fefe3ece753dac78b18f9bcfbc01071b9c3d308",
+    "controls/impact.unit.expected.jsonl": "2a26bb7ccc724d49981477315275c63d57010e0a39c6176b89cfdf44669c62cf",
+    "controls/impact.unit.control.jsonl": "d3461ab754a9c974fc53fa815fefe3ece753dac78b18f9bcfbc01071b9c3d308",
+    "controls/redact.unit.expected.jsonl": "4f5a4ba976781b7581b4da1e5a6f56c3189bf63e7000420130bbbf48fae4bcfc",
+    "controls/redact.unit.control.jsonl": "556896d2077333feec0ff6ec7f2fd20610474e3ce342286e697b4dcfbbc2c9ff",
+    "controls/ekl.parser.expected.jsonl": "afec4c5aaaaf095233ffac234a99d94f7701c3ed2e3c7c44622b4a50d8cd9d77",
+    "controls/ekl.parser.control.jsonl": "c0356d215cf3540a1fe33f7eddc5b49f8505d42351537bab2b374353578a6f13",
+    "controls/ekl.interpreter.expected.jsonl": "671d451b4a3f567f5f378bd234d0b15953f9fd77fe354905243c4252936e889b",
+    "controls/ekl.interpreter.control.jsonl": "5e291a56130d20b3c65aad9938110b486c0dc380c35db07a29cf2f0e4d3f6f14",
     "controls/ledger.ecommerce.versions.control.jsonl": "87407081ee89701f426e7b9e730358dcbeb260f8074acd3ee53c01c72829d8a7",
     "controls/ledger.northwind.versions.control.jsonl": "93e443f9ee061854cd76e6a80390b9e4e9609cff9373de1f90b1ccef93b44b45"
   },
@@ -76,7 +88,7 @@
     },
     {
       "control": "controls/identity.unit.control.jsonl",
-      "panel": "panels/identity/identity.unit.jsonl",
+      "panel": "panels/identity/unit.jsonl",
       "items": 58,
       "agree": 58,
       "reproducible": true,
@@ -85,7 +97,7 @@
     },
     {
       "control": "controls/branch.unit.control.jsonl",
-      "panel": "panels/branch/items.jsonl",
+      "panel": "panels/branch/unit.jsonl",
       "items": 3,
       "agree": 3,
       "reproducible": true,
@@ -93,8 +105,8 @@
       "moved_items": []
     },
     {
-      "control": "controls/impact.control.jsonl",
-      "panel": "panels/impact/items.jsonl",
+      "control": "controls/impact.unit.control.jsonl",
+      "panel": "panels/impact/unit.jsonl",
       "items": 26,
       "agree": 26,
       "reproducible": true,
@@ -102,58 +114,119 @@
       "moved_items": []
     },
     {
-      "control": "controls/ledger.ecommerce.versions.control.jsonl",
-      "panel": "panels/ledger/items.jsonl",
-      "items": 1,
-      "agree": 1,
+      "control": "controls/redact.unit.control.jsonl",
+      "panel": "panels/redact/unit.jsonl",
+      "items": 26,
+      "agree": 26,
       "reproducible": true,
       "committed_control": "identical",
       "moved_items": []
     },
     {
-      "control": "controls/ledger.northwind.versions.control.jsonl",
-      "panel": "panels/ledger/items.jsonl",
-      "items": 1,
-      "agree": 1,
+      "control": "controls/ekl.parser.control.jsonl",
+      "panel": "panels/ekl/parser.jsonl",
+      "items": 50,
+      "agree": 50,
       "reproducible": true,
       "committed_control": "identical",
       "moved_items": []
+    },
+    {
+      "control": "controls/ekl.interpreter.control.jsonl",
+      "panel": "panels/ekl/interpreter.jsonl",
+      "items": 33,
+      "agree": 33,
+      "reproducible": true,
+      "committed_control": "identical",
+      "moved_items": []
+    },
+    {
+      "control": "controls/ledger.ecommerce.versions.control.jsonl",
+      "panel": "panels/ledger/ecommerce.jsonl",
+      "items": 1,
+      "agree": 1,
+      "reproducible": true,
+      "committed_control": "identical_modulo_volatile",
+      "moved_items": [],
+      "workspace": "var/w18/ecommerce/ws",
+      "rebuilt": false,
+      "ekos_binary_sha256": "03cf977be667e41c3740ee26410fe8fed9ffc27773bccf35d03f2d2c60fe21b5",
+      "fixture_sha256": "accad143288923b4cb4d4e8fd8894a7afdacfa5db436ff9ab938600dfa1c0180"
+    },
+    {
+      "control": "controls/ledger.northwind.versions.control.jsonl",
+      "panel": "panels/ledger/northwind.jsonl",
+      "items": 1,
+      "agree": 1,
+      "reproducible": true,
+      "committed_control": "identical_modulo_volatile",
+      "moved_items": [],
+      "workspace": "var/w18/northwind/ws",
+      "rebuilt": false,
+      "ekos_binary_sha256": "03cf977be667e41c3740ee26410fe8fed9ffc27773bccf35d03f2d2c60fe21b5",
+      "fixture_sha256": "8708061e703e789b025b411c1d6798b7fdd4fa3552b381c9d371480631f29a86"
     }
   ],
   "drift_checks": [
     {
-      "cmd": "python3 -I panels/transcribed/drift_check.py --ekos /Users/ember/dev/EKOS --record panels/transcribed/scope_drift.json",
+      "cmd": "python3 -I tools/scoreboard/drift_check.py --ekos /Users/ember/dev/EKOS --record panels/scope/decision.drift.json --panel panels/scope/decision.jsonl",
       "exit": 0,
-      "out": "{\"record\": \"panels/transcribed/scope_drift.json\", \"functions\": 17, \"drifted\": 0, \"failures\": []}"
+      "out": "{\"record\": \"panels/scope/decision.drift.json\", \"functions\": 17, \"drifted\": 0, \"failures\": []}"
     },
     {
-      "cmd": "python3 -I panels/transcribed/drift_check.py --ekos /Users/ember/dev/EKOS --record panels/transcribed/conflicts_drift.json",
+      "cmd": "python3 -I tools/scoreboard/drift_check.py --ekos /Users/ember/dev/EKOS --record panels/conflicts/unit.drift.json --panel panels/conflicts/unit.jsonl",
       "exit": 0,
-      "out": "{\"record\": \"panels/transcribed/conflicts_drift.json\", \"functions\": 8, \"drifted\": 0, \"failures\": []}"
+      "out": "{\"record\": \"panels/conflicts/unit.drift.json\", \"functions\": 8, \"drifted\": 0, \"failures\": []}"
     },
     {
-      "cmd": "python3 -I panels/transcribed/drift_check.py --ekos /Users/ember/dev/EKOS --record panels/transcribed/scope_store_drift.json",
+      "cmd": "python3 -I tools/scoreboard/drift_check.py --ekos /Users/ember/dev/EKOS --record panels/scope/store.drift.json --panel panels/scope/store.jsonl",
       "exit": 0,
-      "out": "{\"record\": \"panels/transcribed/scope_store_drift.json\", \"functions\": 12, \"drifted\": 0, \"failures\": []}"
+      "out": "{\"record\": \"panels/scope/store.drift.json\", \"functions\": 12, \"drifted\": 0, \"failures\": []}"
     },
     {
-      "cmd": "python3 -I panels/identity/drift.py",
+      "cmd": "python3 -I tools/scoreboard/drift_check.py --ekos /Users/ember/dev/EKOS --record panels/identity/unit.drift.json --panel panels/identity/unit.jsonl",
       "exit": 0,
-      "out": "drift check passed: 45 functions unchanged (ekos 8e3c178fc457)"
+      "out": "{\"record\": \"panels/identity/unit.drift.json\", \"functions\": 45, \"drifted\": 0, \"failures\": []}"
     },
     {
-      "cmd": "python3 -I panels/branch/drift.py --ekos /Users/ember/dev/EKOS",
+      "cmd": "python3 -I tools/scoreboard/drift_check.py --ekos /Users/ember/dev/EKOS --record panels/branch/unit.drift.json --panel panels/branch/unit.jsonl",
       "exit": 0,
-      "out": "{\"record\": \"/Users/ember/dev/verekos/panels/branch/drift.json\", \"functions\": 3, \"drifted\": 0, \"failures\": []}"
+      "out": "{\"record\": \"panels/branch/unit.drift.json\", \"functions\": 3, \"drifted\": 0, \"failures\": []}"
     },
     {
-      "cmd": "python3 -I panels/transcribed/drift_check.py --ekos /Users/ember/dev/EKOS --record panels/impact/drift.json",
+      "cmd": "python3 -I tools/scoreboard/drift_check.py --ekos /Users/ember/dev/EKOS --record panels/impact/unit.drift.json --panel panels/impact/unit.jsonl",
       "exit": 0,
-      "out": "{\"record\": \"panels/impact/drift.json\", \"functions\": 15, \"drifted\": 0, \"failures\": []}"
+      "out": "{\"record\": \"panels/impact/unit.drift.json\", \"functions\": 15, \"drifted\": 0, \"failures\": []}"
+    },
+    {
+      "cmd": "python3 -I tools/scoreboard/drift_check.py --ekos /Users/ember/dev/EKOS --record panels/redact/unit.drift.json --panel panels/redact/unit.jsonl",
+      "exit": 0,
+      "out": "{\"record\": \"panels/redact/unit.drift.json\", \"functions\": 16, \"drifted\": 0, \"failures\": []}"
+    },
+    {
+      "cmd": "python3 -I tools/scoreboard/drift_check.py --ekos /Users/ember/dev/EKOS --record panels/ekl/parser.drift.json --panel panels/ekl/parser.jsonl",
+      "exit": 0,
+      "out": "{\"record\": \"panels/ekl/parser.drift.json\", \"functions\": 26, \"drifted\": 0, \"failures\": []}"
+    },
+    {
+      "cmd": "python3 -I tools/scoreboard/drift_check.py --ekos /Users/ember/dev/EKOS --record panels/ekl/interpreter.drift.json --panel panels/ekl/interpreter.jsonl",
+      "exit": 0,
+      "out": "{\"record\": \"panels/ekl/interpreter.drift.json\", \"functions\": 32, \"drifted\": 0, \"failures\": []}"
     }
   ],
   "volatile_fields_stripped": [
     "created_at"
   ],
-  "recorded": "2026-10-19T19:50:08Z"
+  "ledger_versions_compared_without": {
+    "top": [
+      "workspace"
+    ],
+    "objects": [
+      "evidence",
+      "signature",
+      "version_evidence",
+      "version_signatures"
+    ]
+  },
+  "recorded": "2026-10-19T20:19:48Z"
 }

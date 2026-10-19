@@ -196,7 +196,8 @@ def write(panel_path: Path, expected_path: Path) -> None:
             }, separators=(",", ":")) + "\n")
             expected.write(json.dumps({
                 "item": item_id,
-                "assert": entry["expected"],
+                "expect": entry["expected"],
+                "expect_from_test": f"the assertion of {CONFLICTS_RS}:{entry['line']} {fn}, transcribed in panels/conflicts/gen_unit.py",
             }, separators=(",", ":")) + "\n")
 
 

@@ -26,7 +26,7 @@ cannot land in some other workspace.
         --fixture /Users/ember/dev/EKOS/tests/fixtures/ecommerce.sql \
         --out var/w18/ecommerce \
         [--ekos /path/to/ekos] [--controls-dir controls] \
-        [--panel-file panels/ledger/items.jsonl]
+        [--panel-file panels/ledger/<name>.jsonl]
 
 `--controls-dir` copies the five control files + sidecar to
 `<dir>/ledger.<name>.<suffix>` (the committed control). `--panel-file`

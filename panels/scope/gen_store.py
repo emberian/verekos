@@ -24,7 +24,7 @@ the dump's `--expected` run itself.
 
 Run with python3 -I:
 
-    python3 -I panels/transcribed/scope_store_tests.py
+    python3 -I panels/scope_store_tests.py
 """
 
 import json
@@ -206,7 +206,8 @@ def write(panel_path: Path, expected_path: Path) -> None:
             }, separators=(",", ":")) + "\n")
             expected.write(json.dumps({
                 "item": item_id,
-                "assert": {"results": EXPECTED[item_id]},
+                "expect": {"results": EXPECTED[item_id]},
+                "expect_from_test": f"the assertions of {SCOPE_RS}:{entry['line']} {fn}, transcribed in panels/scope/gen_store.py",
             }, separators=(",", ":")) + "\n")
 
 

@@ -41,9 +41,8 @@ mod scope_store_dump;
 pub struct Item {
     pub item: String,
     pub kind: String,
-    /// The envelope's `panel` name when the file holds more than one panel
-    /// (`panels/ekl/items.jsonl` is both `ekl.parser` and `ekl.interpreter`);
-    /// empty for single-panel files.
+    /// The envelope's `panel` name (every panel file writes it; empty if
+    /// absent). `run_panel` keeps only the items naming its own panel.
     pub panel: String,
     pub input: serde_json::Value,
 }
@@ -89,13 +88,10 @@ fn read_panel(path: &Path) -> Result<Vec<Item>, String> {
     Ok(out)
 }
 
-/// One expected line per item, keyed by item id. The one shape is
-/// `{"item": ..., "expect": ..., "expect_from_test": ...}` where `expect` is
-/// whatever the transcribed test asserts (an object of assertion fields for
-/// the scope-shaped panels, the call's whole return value for redact, an AST
-/// or error field set for EKL). Two older spellings still read, until their
-/// files are moved to the one shape (lane C's migration): `assert` for
-/// scope/conflicts/store, and the branch panel's flat top-level fields.
+/// One expected line per item, keyed by item id, in the one shape every
+/// panel uses: `{"item": ..., "expect": ..., "expect_from_test": ...}`, where
+/// `expect` is whatever the transcribed test asserts (an object of assertion
+/// fields, or the call's whole return value for redact).
 fn read_expected(path: &Path) -> Result<HashMap<String, serde_json::Value>, String> {
     let text = std::fs::read_to_string(path)
         .map_err(|e| format!("{}: {e}", path.display()))?;
@@ -110,25 +106,10 @@ fn read_expected(path: &Path) -> Result<HashMap<String, serde_json::Value>, Stri
             .as_str()
             .ok_or_else(|| format!("{} line {}: no item", path.display(), i + 1))?
             .to_string();
-        let assert = if let Some(expect) = v.get("expect") {
-            expect.clone()
-        } else if let Some(assert) = v.get("assert") {
-            if !assert.is_object() {
-                return Err(format!("{} line {}: assert is not an object", path.display(), i + 1));
-            }
-            assert.clone()
-        } else {
-            let mut kept = serde_json::Map::new();
-            for (k, val) in v.as_object().into_iter().flatten() {
-                if !matches!(k.as_str(), "item" | "test" | "expect_from_test") {
-                    kept.insert(k.clone(), val.clone());
-                }
-            }
-            if kept.is_empty() {
-                return Err(format!("{} line {}: no assertions found", path.display(), i + 1));
-            }
-            serde_json::Value::Object(kept)
-        };
+        let assert = v
+            .get("expect")
+            .cloned()
+            .ok_or_else(|| format!("{} line {}: no expect", path.display(), i + 1))?;
         out.insert(item, assert);
     }
     Ok(out)
@@ -159,9 +140,8 @@ fn run_panel(
     check: impl Fn(&serde_json::Value, &serde_json::Value) -> Vec<String>,
 ) -> Result<Report, String> {
     let mut items = read_panel(panel_path)?;
-    // One items file can hold several panels (`panels/ekl/items.jsonl` is both
-    // ekl.parser and ekl.interpreter): when the envelopes name their panel,
-    // answer only this run's own items.
+    // Answer only this run's own panel's items (a guard: since the lane C
+    // layout each panel has its own input file, panels/<a>/<b>.jsonl).
     if items.iter().any(|i| !i.panel.is_empty()) {
         items.retain(|i| i.panel == panel_name);
         // A subcommand whose name matches no envelope would otherwise answer
