@@ -1,4 +1,4 @@
-# VerEKOS design, 2026-10-19 (revision 3, same day)
+# VerEKOS design, 2026-10-19 (revision 3.1, same day)
 
 Written by the root (Fable 5.1). Revision 1 came from reading EKOS, veri7vn and
 minidregg. Revision 2 folded in six scout memos (`../../notes/`, A to F). Revision 3
@@ -8,7 +8,11 @@ note, the docworld integration (Opus), the claim primitive tested to breaking
 memo or exploration and this document disagree, the one with the path and line
 wins. §11 is the ledger of what each revision corrected.
 
-Nothing here is built. Every name marked (new) is a proposal.
+Revision 3.1 (the R1 review, 2026-10-19 night) does not change the design; it
+corrects what the built work contradicted. The Isabelle layer of §4 and §5 was
+dropped the same evening: every kernel is Lean in `world/`. What is built and
+measured is in `project/PLAN.md`, `world/README.md` and
+`docs/parity/BOARD.md`; a name marked (new) here may since exist.
 
 ## 0. In one paragraph
 
@@ -70,7 +74,17 @@ are instances of.
   the reviewed claim's core digest. A review holds while the core is unchanged;
   when the core changes the status becomes `needsReview` and the old review is
   kept. EKOS's three hand-written `carry_forward`s and the session fingerprint
-  become one definition.
+  become one definition. **Correction (3.1, proved in
+  `world/World/CarryForward.lean`):** this holds for conflicts only when the
+  core is the conflict header atom's *revision*. With the core a digest of the
+  payload (what `Schema.core` computes), a signature that goes A→B→A brings
+  the old review back, while EKOS's `carry_forward` stays reopened
+  (`core_sig_diverges`); with the revision as core the two agree exactly
+  (`status_core_rev_agrees`). A revision is minted by the world, not computed
+  from the payload, so the conflict schema's core is not a function of its
+  payload; `World.Status.status` (which reads `c.core reg`) does not express it
+  yet, only `statusAt` given the digest. Whether the same holds for the session
+  fingerprint and the semantics review is not checked.
 - The EKOS **object is a view**: the join of the per-source claims about one
   subject. There is no last-read survivor; two definitions of `orders` are two
   claims and a conflict is a claim pinned to both.
@@ -116,8 +130,12 @@ scout claims (§11). The embedding that survives:
   decision atom and a snapshot transclusion of the reviewed thing's header atom.
   **The transclusion is the carry-forward rule**: by `transclusion_pinned` the
   pin shows the same bytes or says `moved`, so a resolution holds exactly while
-  the conflict's signature is unchanged and reopens when it changes. RFC 0172's
-  `carry_forward` and RFC 0151's staleness are one kernel theorem.
+  the conflict's signature is unchanged and reopens when it changes. Two
+  conditions (3.1): the compiler must leave a header whose signature did not
+  change untouched (a client obligation: any rewrite moves the revision), and
+  the agreement is proved over a model of the header (`compileHeader`), not
+  over minidregg's `transclusion_pinned` itself. RFC 0151's staleness is not
+  yet part of the theorem.
 - `ekos/compile-run/v1` and `ekos/replay-attestation/v1`: input pins with read
   heights, compiler identity, output list, SHA-256 of the command bytes; a
   **verifier** principal replays and attests. Determinism is not admitted
@@ -145,8 +163,10 @@ replacing EKOS's guard test.
 **Read scope is enforced twice.** At admission: transcluded bytes render only
 through the reader's own read of the source, and single-source compiled cells
 take their source room's audience. In the lens: origins (source cells named by
-transclusions, crossed with header paths) feed the Isabelle `Scope` kernel, and
-`scope_noninterference` (new) is `locality` specialized to `dependencies ⊆ Vis`.
+transclusions, crossed with header paths) feed the `Scope` decision
+(`world/World/Visible.lean`), and `scope_noninterference` (new, not yet
+stated) is `locality` specialized to `dependencies ⊆ Vis`. Nothing in `world/`
+imports `ObserverLens` or `locality` yet.
 Honest limit: computing `Vis` reads origin metadata of hidden objects, so this
 is noninterference relative to origins, not breadstuffs' `FogOfWar` standard
 where a hidden cell is structurally absent. Reaching that is open. A conflict is
@@ -172,18 +192,16 @@ broadly readable corpus" was wrong: `DisclosureDecision` governs what a receipt
 reveals, not encryption; readers read cells through observe grants and the
 Runtime needs grants, not keys. Encryption is opt-in per atom.
 
-## 4. The decision kernels (Isabelle/HOL)
+## 4. The decision kernels (Lean, in `world/`)
 
-Each is a HOL function with its theorem, exported with `export_code` and
-`Code_Target_Numeral` to Standard ML, compiled with the MLton inside
-Isabelle2026-RC1, run from a binary that reads EKOS's own JSON. Lane C trimmed
-the AFP imports to `Bounded_Deducibility_Security` (the indistinguishability
-wrapper for Scope), `UPF` (the allow/deny type), `Depth-First-Search` (impact,
-has `export_code`) and `List-Index` (rank), with `Transitive-Closure` and
-`Allen_Calculus` in side sessions if wanted. Never import anything that drags
-`Deriving`/`Collections`/`Containers`; copy `Stratified_Datalog`'s `Main`-only
-`Datalog.thy` if REASON needs it. The snapshot is AFP 2025-2; whether it builds
-under RC1 is untested.
+Revision 3 planned these as Isabelle/HOL functions exported to Standard ML,
+with four AFP imports (lane C, `notes/C-afp.md`). That plan was dropped on
+2026-10-19 (ember: not a good idea for this project): the world already has a
+Lean spine, and the one AFP entry that mattered (indistinguishability for
+Scope) reduces to `ObserverLens.locality`. Each kernel is now a Lean
+definition in `world/` with its theorems; to be scored it must also *run* on
+a panel (`#eval` or a compiled Lean reader), which nothing does yet. The
+paragraph after the table says where each stands tonight.
 
 | Kernel | One theorem over the claim/receipt record | Stays per kind |
 |---|---|---|
@@ -200,15 +218,34 @@ under RC1 is untested.
 Untrusted, labelled so in every output: parsers, document extraction, model
 calls, BM25 and vector scoring. veri7vn's recognizer rule.
 
-## 5. The seam between two provers
+Where each stands (3.1): `Ledger` is `World/Log.lean` (append-only, state as a
+fold, idempotent put, diff as footprint); `Review` is `World/Status.lean` and
+`World/CarryForward.lean`; `Scope` is `World/Visible.lean` and
+`World/WellFormed.lean` (deny wins, rank-independent visibility) plus the
+audience rules of `World/Document.lean`; `Identity` is `World/Identity.lean`;
+`Conflicts` is `World/Conflicts.lean` (coverage, soundness, order
+independence); `Impact` is `World/Traverse.lean`. `Branch` and `Time` have no
+Lean file. None runs on a panel.
 
-An exported kernel binary is a grain, or a process the importer, compiler and
-lens host call. minidregg treats grain output as a proposal; a proof inside the
-binary is about the computation, the world's laws are about admission, and
-neither trusts the other. The claim at the seam: the binary's output equals the
-HOL function's value on the same input, and the world admits only what its laws
-allow. Whether the Isabelle layer is permanent or scaffolding to remove once the
-world layer exists is an open question the root holds (exploration 00).
+## 5. The seams (rewritten in 3.1; there is one prover)
+
+With Isabelle gone there is no seam between provers. Three seams remain, and
+none is covered by a theorem yet:
+
+1. **Model to runner.** A Lean definition proved in `world/` must be the code
+   that answers a panel. Until a compiled reader runs it, a theorem says
+   nothing about a board row.
+2. **Model to host.** `world/` models minidregg's records (carriers, the pin
+   shape, revisions as counters) but does not import its kernel theorems
+   (`transclusion_pinned`, `locality`, the admission of a command). The slice-1
+   receipts are the only evidence that the deployed host behaves as modelled.
+3. **Model to the laws.** The Lean admission law (`World/Admission.lean`: pins
+   present, no self-pin, rank never rises) and the four `Pred` laws in `laws/`
+   (who may write which cell, at least one transclusion at birth) are different
+   laws with the same name. Neither is derived from the other.
+
+minidregg still treats any grain or client output as a proposal; that part of
+the old seam stands.
 
 ## 6. The scoreboard (M0.5, before any theorem)
 
@@ -252,11 +289,11 @@ upstream and recenter on our own work. They feed the scoreboard's classifier.
 | | Deliverable | Number that proves it |
 |---|---|---|
 | M0 | design, seven memos, five explorations, eleven upstream issues | done |
-| M0.5 | the scoreboard (§6) | EKOS's numbers reproduced on every panel |
+| M0.5 | the scoreboard (§6) | EKOS's numbers reproduced on every panel. **3.1:** built for six panels (170 items, every transcribed assertion reproduced) and two fixtures; redact and EKL have panels but no control; no candidate scored |
 | M1a | **reader-local compile** (exploration 04's build-first): a friend's client reads their own documents with their own signed reads, runs EKOS over the copies, and gets find, two-hop impact and a disagreement list, each answer ending in a pin that re-checks as `same bytes` or `moved`. No node or kernel change; the ledger is the reader's | find/impact/disagree identical to EKOS on the same copies; pin checks measured |
-| M1b | **slice 1 step 0**: does `transclude` work on a current Host build (J12C failed on 2026-09-30, the action landed later, no recorded run) | one recorded run, pass or fail |
-| M2 | **slice 1** (exploration 01 §5): `ecommerce.sql` plus a 6-line `legacy_customers.sql` conflicting on `customers.email`, five principals, two rooms, four laws, six steps | seven receipts: a birth with a pinned transclusion; refusals for no evidence, for a compiler writing a review, for citing an unread source; a pin that says `moved` and a reopened conflict; a one-source reader who sees no conflict; a byte-identical replay |
-| M3 | `Ledger` + `Branch` kernels | `object_at`, `diff`, `merge_branch` identical to EKOS on the fixtures |
+| M1b | **slice 1 step 0**: does `transclude` work on a current Host build (J12C failed on 2026-09-30, the action landed later, no recorded run) | one recorded run, pass or fail. **3.1: done** on hbox (K12T 24/24, JDV 143/143, `notes/W7-hbox-transclusion.md`) |
+| M2 | **slice 1** (exploration 01 §5): `ecommerce.sql` plus a 6-line `legacy_customers.sql` conflicting on `customers.email`, five principals, two rooms, four laws, six steps | seven receipts: a birth with a pinned transclusion; refusals for no evidence, for a compiler writing a review, for citing an unread source; a pin that says `moved` and a reopened conflict; a one-source reader who sees no conflict; a byte-identical replay. **3.1:** in progress (lane W17, `slice1/`); the mapper locates evidence by structural key because EKOS's evidence names only the file, so R1 measures the mapper's choice, not EKOS's P3 |
+| M3 | `Ledger` + `Branch` kernels | `object_at`, `diff`, `merge_branch` identical to EKOS on the fixtures. **3.1:** `Ledger` theorems exist in Lean; no runner; no `Branch` model |
 | M4 | `Scope` kernel + `scope_noninterference` in the world | leak-suite inputs: identical visible sets; a disabled filter is caught |
 | M5 | `Review`, `Identity`, `Conflicts` kernels | identical groups, pending edges and conflict sets; coverage holds |
 | M6 | residents grounded in compiled knowledge; the `obend` analyzer reading the front end's own output | blocked on Hermes on a real node |
@@ -277,7 +314,11 @@ That a search result is relevant. That a secret of a shape the pattern table
 does not name was caught. That minidregg's or breadstuffs' theorems hold
 (imported, not re-proved; breadstuffs' categorical claims are known not to be
 the standard notions). That `Vis`-relative noninterference is the `FogOfWar`
-standard. That anything here is built.
+standard. That a theorem about the Lean model is a fact about EKOS or about a
+deployed host, until a panel score or a receipt ties the two. That the author
+or verifier named in a receipt or an attestation is who signed it: the model
+takes those names as data (`compilerCannotDecide`, `not_replayed_by_compiler`
+assume the label); minidregg's signatures are what would make them true.
 
 ## 11. Corrections ledger
 
@@ -311,3 +352,11 @@ Pijul-shaped system was not imported.
   grain.
 - 00: the three ambitions (checker, sibling, a world that knows itself) and the
   open question whether the Isabelle layer is permanent.
+
+**Revision 3 → 3.1** (the R1 review, `notes/R1-review.md`): the Isabelle layer
+is gone from §4 and §5 (dropped by ember on 2026-10-19); §2's "one definition"
+for carry-forward holds for conflicts only with the header revision as core
+(W19, `core_sig_diverges`); §3's carry-forward claim names its two conditions;
+`scope_noninterference` is not yet stated; §5 now lists the three seams no
+theorem covers; §8 records what is built; §10 adds that receipt author names
+are data in the model.
