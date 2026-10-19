@@ -1,151 +1,100 @@
-# The scoreboard tools (W5 + W9, 2026-10-19)
+# The scoreboard
 
-What lives here, in plain words. The design documents are
-`docs/design/explorations/03-scoreboard.md` (the spec) and
-`docs/design/VEREKOS-DESIGN-2026-10-19.md §6`; the lane memos are
-`notes/W5-control-dump.md` (the control binary) and
-`notes/W9-scoreboard-machinery.md` (the scorer, board, regen, store panel).
+The scoreboard measures EKOS against its own tests and fixtures, so that a
+VerEKOS candidate (a Lean definition from `world/`, run on the same inputs)
+can later be scored against EKOS item by item. Spec: exploration 03
+(`docs/design/explorations/03-scoreboard.md`); design §6. Lane memos: W5
+(control binary), W9 (scorer, board, regen), W3/W6/W11/W15/W16 (panels),
+W12 (identity, branch, impact dumps), W18 (fixture pipeline), W20 (ledger
+versions dump, EKOS#10). The board: `docs/parity/BOARD.md`.
 
-## Layout
+**What it measures today.** EKOS's own functions reproduce what its own tests
+assert, on inputs transcribed from those tests (170 items, all reproduced),
+and EKOS's real binary reproduces its own stated counts on two fixtures.
+**No VerEKOS candidate is scored yet**; the Agree column on the board is the
+control against itself.
 
-```
-tools/scoreboard/
-  control-dump/          the control binary, its own Cargo workspace
-    Cargo.toml           path deps on /Users/ember/dev/EKOS/ekos/crates/{ledger,kir,semantic,identity,common}
-    rust-toolchain.toml  copied from EKOS (1.98.0), so the control builds with EKOS's compiler
-    src/main.rs          arg dispatch, panel reader, expected-file checker
-    src/scope_dump.rs    the Scope decision control (Compiled::visible & co)
-    src/scope_store_dump.rs the ScopedStore control (a real Ledger, built via public API)
-    src/conflicts_dump.rs the Conflicts kernel control
-  score.py               score a candidate against a control (§3, §5.3)
-  board.py               render docs/parity/BOARD.md (§4)
-  regen_controls.py      the one control-regeneration command (§5.2)
-panels/
-  scope/decision.jsonl      inputs only (59 items from 17 EKOS tests)
-  scope/store.jsonl         ordered step scenarios (8 items from 8 store tests)
-  conflicts/unit.jsonl      inputs only (16 items from 8 EKOS tests)
-  LABELS.json               assurance label + measures/does-not-measure per panel
-  transcribed/
-    scope_tests.py          the transcription data + generator (scope decisions)
-    scope_store_tests.py    ditto, the ScopedStore scenarios
-    conflicts_tests.py      the transcription data + generator (conflicts)
-    drift_check.py          fails when a transcribed EKOS test's source text changes
-    scope_drift.json        recorded sha256 of each transcribed scope test function
-    scope_store_drift.json  ditto, store tests + the object/world/scoped/names helpers
-    conflicts_drift.json    same, for conflicts
-controls/
-  MANIFEST.json                       what was pinned when the control was built (regen writes it)
-  classified.jsonl                     explained differences, sha256-keyed (§3.4, one manifest)
-  scope.decision.expected.jsonl       what the transcribed tests assert (expect_from_test)
-  scope.decision.control.jsonl        EKOS's own answers on the panel
-  scope.store.expected.jsonl          per-step assertions of the store tests
-  scope.store.control.jsonl           EKOS's own answers (results per step)
-  conflicts.unit.expected.jsonl       ditto, conflicts
-  conflicts.unit.control.jsonl        ditto, conflicts
-docs/parity/
-  README.md                           how to read the board; the five assurance labels
-  BOARD.md                            the board (generated, never hand-edited)
-```
+## The pieces
 
-A panel item is an input and nothing else; EKOS's answers never go in a panel.
-The expected files hold the *assertions of the transcribed Rust tests*, not
-EKOS's output — they come from the tests' own `assert!` lines.
+| Piece | What it does |
+|---|---|
+| `control-dump/` | Rust, its own Cargo workspace, path dependencies on `/Users/ember/dev/EKOS/ekos/crates/*` at the pin. Subcommands `scope`, `store`, `conflicts`, `identity`, `branch`, `impact` read a panel and print EKOS's answer per item; with `--expected` they also check every transcribed assertion and exit non-zero on a miss. `ledger <workspace>` reads a compiled workspace read-only and prints versions, recomputed content signatures and a diff. Toolchain copied from EKOS (1.98.0). Builds to its own `target/`. |
+| `regen_controls.py` | The one regeneration command: refuses a dirty EKOS, rebuilds the dump if its sources moved (`nice -n 10`), runs every dump twice (must be byte-identical), compares with the committed control (`--accept` to overwrite), runs every drift checker, rewrites `controls/MANIFEST.json`. |
+| `run_fixture.py` | `run`: one fixture through the real six-stage `ekos` pipeline in a scratch workspace under `var/`, writing `controls/ledger.<name>.*` and a sidecar; `compare`: two runs field by field, volatile versus content. |
+| `score.py` | Scores a candidate JSONL against a control JSONL; every difference is looked up in `controls/classified.jsonl` by a sha256 over (panel, item, control, candidate). Exit 1 on anything unexplained or classified `verekos_defect`. |
+| `board.py` | Renders `docs/parity/BOARD.md` from `panels/LABELS.json`, the controls, `controls/MANIFEST.json` and the classification manifest. Fails on an empty "measures" or "does not measure" cell. |
+| `panels/transcribed/drift_check.py` | The drift checker: hashes each transcribed EKOS test function at the pin and fails when one moved; reads every record shape in the repo; `--panel` also fails when a panel cites a test the record does not pin. |
 
-## The commands
+## The panels, file by file
 
-`regen_controls.py` does everything below in one go; the pieces:
+Target shape for every panel: inputs `panels/<family>/items.jsonl`, test
+assertions `controls/<panel>.expected.jsonl`, EKOS's answers
+`controls/<panel>.control.jsonl`, drift record `panels/<family>/drift.json`.
+Rows marked **exception** predate that shape; `regen_controls.py` knows their
+paths, so they are not moved while lanes run (see `notes/R1-review.md` §4 for
+the migration).
+
+| Panel | Items | Inputs | Expected (test assertions) | Control (EKOS) | Drift record | Notes |
+|---|---|---|---|---|---|---|
+| `scope.decision` | 59 | `panels/scope/decision.jsonl` **exception** | `controls/scope.decision.expected.jsonl` | `controls/scope.decision.control.jsonl` | `panels/transcribed/scope_drift.json` **exception** | generated by `panels/transcribed/scope_tests.py` |
+| `scope.store` | 8 | `panels/scope/store.jsonl` **exception** | `controls/scope.store.expected.jsonl` | `controls/scope.store.control.jsonl` | `panels/transcribed/scope_store_drift.json` **exception** | generated by `panels/transcribed/scope_store_tests.py` |
+| `conflicts.unit` | 16 | `panels/conflicts/unit.jsonl` **exception** | `controls/conflicts.unit.expected.jsonl` | `controls/conflicts.unit.control.jsonl` | `panels/transcribed/conflicts_drift.json` **exception** | generated by `panels/transcribed/conflicts_tests.py` |
+| `identity.unit` | 58 | `panels/identity/identity.unit.jsonl` **exception** | `panels/identity/controls/identity.unit.controls.jsonl` **exception** (an expected file, despite the name) | `controls/identity.unit.control.jsonl` | `panels/identity/drift.json` (flat shape) | own checker `panels/identity/drift.py` |
+| `branch.unit` | 3 | `panels/branch/items.jsonl` | `panels/branch/controls/expected.jsonl` **exception** | `controls/branch.unit.control.jsonl` | `panels/branch/drift.json` (`#[test]` span) | own checker `panels/branch/drift.py` |
+| `impact.unit` | 26 | `panels/impact/items.jsonl` | `controls/impact.expected.jsonl` **exception** (no `.unit`) | `controls/impact.control.jsonl` **exception** | `panels/impact/drift.json` | |
+| `redact.unit` | 26 | `panels/redact/items.jsonl` | `controls/redact.expected.jsonl` **exception** | none yet (no dump subcommand) | `panels/redact/drift.json` | |
+| `ekl.parser`, `ekl.interpreter` | 50, 33 | `panels/ekl/items.jsonl` (both panels) | `controls/ekl.expected.jsonl` (both) | none yet | `panels/ekl/drift.json` | |
+| `ledger.ecommerce`, `ledger.northwind` | 1 each | `panels/ledger/items.jsonl` (fixture path + sha256) | none (EKOS's stated counts are in the W18 memo) | `controls/ledger.<name>.{graph.ndjson,objects.jsonl,relationships.jsonl,status.json,conflicts.json,sidecar.json}` from `run_fixture.py`; `controls/ledger.<name>.versions.control.jsonl` from `control-dump ledger` | none (a fixture, not a test) | the versions control is dumped from `var/w18/<name>/ws`, a git-ignored workspace: see R1 finding S3 |
+
+Three expected-file spellings exist (`{"assert": …}` for scope and conflicts,
+`{"expect": …, "expect_from_test": …}` for identity, impact, redact and EKL,
+flat fields plus `expect_from_test` for branch); `control-dump` reads each
+in its own subcommand.
+
+## Commands
 
 ```
-# the control: EKOS's own functions answer every panel item
-#   (each exits non-zero when a transcribed assertion fails; stderr ends
-#    with a JSON summary line)
+# regenerate every control, check drift, rewrite the manifest
+python3 -I tools/scoreboard/regen_controls.py --ekos /Users/ember/dev/EKOS [--accept]
+
+# one dump by hand
 tools/scoreboard/control-dump/target/debug/control-dump scope \
     panels/scope/decision.jsonl --expected controls/scope.decision.expected.jsonl
-tools/scoreboard/control-dump/target/debug/control-dump conflicts \
-    panels/conflicts/unit.jsonl --expected controls/conflicts.unit.expected.jsonl
-tools/scoreboard/control-dump/target/debug/control-dump store \
-    panels/scope/store.jsonl --expected controls/scope.store.expected.jsonl
 
-# score a candidate against the control (the law: 0 unexplained, exit 1)
-python3 -I tools/scoreboard/score.py --kernel scope \
-    --panel panels/scope/decision.jsonl \
-    --control controls/scope.decision.control.jsonl \
-    --candidate <candidate.jsonl> --classified controls/classified.jsonl
+# drift, one record (add --panel to check coverage)
+python3 -I panels/transcribed/drift_check.py --ekos /Users/ember/dev/EKOS \
+    --record panels/impact/drift.json --panel panels/impact/items.jsonl
+
+# score a candidate (law: 0 unexplained)
+python3 -I tools/scoreboard/score.py --kernel scope --panel panels/scope/decision.jsonl \
+    --control controls/scope.decision.control.jsonl --candidate <file> \
+    --classified controls/classified.jsonl [--out var/<lane>/verdict.json]
 
 # render the board
 python3 -I tools/scoreboard/board.py
 
-# regenerate everything (clean pin check, build if needed with nice -n 10
-# logged to var/w9/, each dump twice byte-identically, control comparison,
-# all five drift checkers, full MANIFEST)
-python3 -I tools/scoreboard/regen_controls.py --ekos /Users/ember/dev/EKOS [--accept]
-
-# drift checks (regen runs them; singly)
-python3 -I panels/transcribed/drift_check.py --ekos /Users/ember/dev/EKOS --record panels/transcribed/scope_drift.json
-python3 -I panels/transcribed/drift_check.py --ekos /Users/ember/dev/EKOS --record panels/transcribed/scope_store_drift.json
-python3 -I panels/transcribed/drift_check.py --ekos /Users/ember/dev/EKOS --record panels/transcribed/conflicts_drift.json
+# a fixture through the real binary
+python3 -I tools/scoreboard/run_fixture.py run \
+    --fixture /Users/ember/dev/EKOS/tests/fixtures/ecommerce.sql --out var/<lane>/ecommerce
 ```
 
-Current numbers: scope.decision 59/59, conflicts.unit 16/16, scope.store
-8/8 agree; all byte-identical across two runs; a deliberately flipped
-expectation is caught (exit 1), and score.py's three recorded runs
-(self / planted / classified: 0 / 1 / 0 unexplained) are in
-`var/w9/score-selftest/` — the checks are not vacuous.
+## What does not exist yet
 
-## What exists
-
-- The control binary calls EKOS's real library code, pinned at
-  `/Users/ember/dev/EKOS` @ `8e3c178` (recorded, with hashes, in
-  `controls/MANIFEST.json`): `ReadScope::from_json`, `Compiled::visible`,
-  `origins`, `is_unrestricted`, `duplicate_definitions`, `merge_losses`,
-  `label_mismatches`, `normalize_type`, and — through the `store` dump —
-  `Ledger::open`, the `append_*` writes, `ScopedStore::with_scopes`/
-  `set_scopes` and every `KnowledgeStore` read the store tests assert on.
-- The scope decision panel covers every parsing and decision test in
-  `ekos/crates/ledger/src/scope.rs` (the `mod tests` families up to
-  `origins_cross_sources_with_paths`).
-- The scope store panel covers the ScopedStore tests (`scope.rs:1041` on,
-  minus the source-inspection meta-test) as ordered step scenarios over the
-  tests' own `world()` fixture: filtered reads, both-ends relationships,
-  evidence gating, search, counts, diff, write/event/vacuum refusal,
-  multi-scope intersection and replacement.
-- The conflicts panel covers the detector tests of
-  `ekos/crates/semantic/src/conflicts.rs`: type-alias normalization,
-  duplicate definitions (collapse, silent collapse, per-attribute,
-  permutation invariance), merge losses (exact vs fuzzy name match), label
-  mismatches (different sources conflict; spellings and same-source variants
-  do not).
-- `score.py` (diff + classification, `controls/classified.jsonl`),
-  `board.py` (`docs/parity/BOARD.md`), `regen_controls.py` (the one
-  regeneration command; also runs the branch and identity lanes' drift
-  checkers for the record).
-- Deterministic output: object and conflict ids are UUIDv5 over panel keys
-  (exactly EKOS's private `kid()` rule), claims come out sorted, `created_at`
-  and evidence ids are never printed, and the store dump prints names,
-  counts and booleans only. Two runs are byte-identical.
-
-## What does not exist (yet, or at all in M0.5)
-
-- `run_fixture.py` (fixture→workspace→graph) and with it the leak suite's
-  MCP/CLI panel (marker words through every tool of a real `ekos mcp serve`)
-  and the Ledger/Impact/Time/EKL fixture panels.
-- Every other kernel dump: Ledger, Branch (W6's panel waits for it),
-  Identity (W3's panel waits for it), Impact, Time, EKL, Fusion, Redact.
-- Kernel binaries and the standing mutant family (`tools/scoreboard/
-  standins/`): the planted-defect check so far is a hand-altered control
-  copy, recorded in `var/w9/score-selftest/`.
-- `content_signature` is `pub(crate)` in EKOS: nothing here needs it, but the
-  Ledger and Branch controls will have to recompute it locally and self-check
-  against stored signatures (the recorded decision).
-- Events: no control exists in M0.5 (by decision).
-- The conflicts review workflow (`resolve`, `carry_forward`, `column_links`)
-  is not transcribed: it reviews conflicts rather than detecting them.
+- **A candidate.** Nothing in `world/` is run on a panel. This is the next
+  lane (`docs/design/explorations/05-next-lanes.md`, lane B).
+- Control dumps for `redact.unit` and the two EKL panels.
+- Panels for Time and Fusion; the leak suite's MCP/CLI half (marker words
+  through a real `ekos mcp serve`); fixtures beyond ecommerce and northwind.
+- The standing mutant family (`standins/`, exploration 03 §3.5-2). The
+  planted-defect checks so far are hand-altered copies, recorded in lane
+  `var/` directories.
+- Events: no control in M0.5, by decision.
 
 ## Rules kept
 
-The store dump writes only to its own temp directory (a scratch SQLite
-ledger it built); the decision and conflicts dumps only read. EKOS is never
-edited; anything EKOS does not export is reimplemented here in the smallest
-way (so far only `kid()`, the UUIDv5 id rule) and checked against the tests'
-own stability assertions. Builds run `nice -n 10`, one at a time. Nothing
-under `target/` or `var/` is committed.
+EKOS is never edited; anything it does not export is recomputed here in the
+smallest way (the UUIDv5 `kid()` rule; `content_signature`, with two
+self-checks against stored versions). The store and impact dumps write only
+to their own temp ledgers; the ledger dump opens a workspace read-only.
+Builds run `nice -n 10`, one at a time. Nothing under `target/` or `var/` is
+committed.
