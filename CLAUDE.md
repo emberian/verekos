@@ -71,7 +71,7 @@ The EKOS pin is `/Users/ember/dev/EKOS` at `8e3c178`; the minidregg pin is
 - **Plain words**, for a reader who is not a software engineer: what it does,
   what it proves, what it cannot do yet. Cite `path:line`.
 
-## Panel conventions (target shape; see `notes/R1-review.md` for the migration)
+## Panel conventions (target shape; the move list is lane C of `docs/design/explorations/05-next-lanes.md`)
 
 A panel item is an input and nothing else. EKOS's answers go in
 `controls/<panel>.control.jsonl`; what the transcribed Rust test asserts goes

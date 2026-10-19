@@ -31,8 +31,8 @@ Target shape for every panel: inputs `panels/<family>/items.jsonl`, test
 assertions `controls/<panel>.expected.jsonl`, EKOS's answers
 `controls/<panel>.control.jsonl`, drift record `panels/<family>/drift.json`.
 Rows marked **exception** predate that shape; `regen_controls.py` knows their
-paths, so they are not moved while lanes run (see `notes/R1-review.md` §4 for
-the migration).
+paths, so they are not moved while lanes run (the move list is lane C of
+`docs/design/explorations/05-next-lanes.md`).
 
 | Panel | Items | Inputs | Expected (test assertions) | Control (EKOS) | Drift record | Notes |
 |---|---|---|---|---|---|---|
