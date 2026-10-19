@@ -1,0 +1,70 @@
+{
+  "ekos_commit": "8e3c178fc45741c7e2b1576e936646e0c461e75c",
+  "recorded": "2026-10-19",
+  "functions": {
+    "redacts_kettle_passwords_and_keeps_the_xml_well_formed": {
+      "file": "ekos/crates/common/src/redaction.rs",
+      "sha256": "99d3935ce645490cb21c3b7a11a7739f277c6afe1bab5f85a0f40d29097d3703"
+    },
+    "redacts_aws_access_key_id": {
+      "file": "ekos/crates/common/src/redaction.rs",
+      "sha256": "0bf41178722c1f648b72d6256d689ac91ecebf2907ae70ade20e64b4a9aef457"
+    },
+    "redacts_github_token": {
+      "file": "ekos/crates/common/src/redaction.rs",
+      "sha256": "576b20fac756bb6046624e9dc0cc4900d95000cccac41c983612b96ed4e319b3"
+    },
+    "redacts_private_key_block": {
+      "file": "ekos/crates/common/src/redaction.rs",
+      "sha256": "c869c466031292315ad1336a51e8eb7cde29c2c31d1850734485dcfdfeb0236b"
+    },
+    "redacts_jwt": {
+      "file": "ekos/crates/common/src/redaction.rs",
+      "sha256": "0339897f5946b2451d4fea0d1e688868cbcafac19976252977d2992072903408"
+    },
+    "redacts_generic_password_assignment": {
+      "file": "ekos/crates/common/src/redaction.rs",
+      "sha256": "357dc979bf1890cd425ecabf38eed84360c5cf7a00766030adf72c452f0345fc"
+    },
+    "redaction_preserves_the_real_field_name_and_quotes_replacing_only_the_value": {
+      "file": "ekos/crates/common/src/redaction.rs",
+      "sha256": "1bb44223d93dfa2b480a88f997439e8f79ff0ac8e5be843a16ab6e90d97601b8"
+    },
+    "label_match_requires_a_real_word_boundary_not_a_substring_of_a_longer_identifier": {
+      "file": "ekos/crates/common/src/redaction.rs",
+      "sha256": "91f6fa8359279c50b98bd522d5d1d5eca06b682d937ccdb6ea7ee60e63ab1351"
+    },
+    "generic_pattern_leaves_a_dotted_code_reference_untouched": {
+      "file": "ekos/crates/common/src/redaction.rs",
+      "sha256": "44af2ee86a0c98bf758ead6f18ce5f05396a651e2868f9666cc604dfa7e99ffb"
+    },
+    "generic_pattern_still_redacts_a_dotted_value_that_is_not_a_clean_identifier_chain": {
+      "file": "ekos/crates/common/src/redaction.rs",
+      "sha256": "cb303b8fdb5c8dcdc83bed78cdc80daa44d8f99214b4b956d964cffb7a56af35"
+    },
+    "leaves_ordinary_text_untouched": {
+      "file": "ekos/crates/common/src/redaction.rs",
+      "sha256": "38db629d7c4ad27d50a46751dc6dd587004fa9e93e0e1a10c80d7ace132c2740"
+    },
+    "extra_pattern_from_config_is_additive": {
+      "file": "ekos/crates/common/src/redaction.rs",
+      "sha256": "63145abfa4f1cd056bff3703b52fc89894090a07d122144d4a06c933231c7e5d"
+    },
+    "invalid_extra_pattern_regex_is_skipped_not_fatal": {
+      "file": "ekos/crates/common/src/redaction.rs",
+      "sha256": "fd41e655d47371f33e33f5fb0bcc0852a61ad31ba79086a7c8b902af92ef6d22"
+    },
+    "is_excluded_path_matches_builtin_globs": {
+      "file": "ekos/crates/common/src/redaction.rs",
+      "sha256": "7ac56d1ca0d6ccae65d5ae090c252b5de480ef0b2083135ac57c9d69c6943a98"
+    },
+    "is_excluded_path_extra_glob_is_additive": {
+      "file": "ekos/crates/common/src/redaction.rs",
+      "sha256": "99c3b2b26b6dd2689b81b84b57c10b67352ea2f868d740fa11b751420db65d07"
+    },
+    "redact_json_recurses_into_arrays_and_objects": {
+      "file": "ekos/crates/common/src/redaction.rs",
+      "sha256": "50a9309cdba68da8bc3332fa8eebfe77c9112731517d8af5a30f788975954e35"
+    }
+  }
+}
