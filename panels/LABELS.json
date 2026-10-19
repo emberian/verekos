@@ -1,0 +1,117 @@
+{
+  "note": "The scoreboard board generator (tools/scoreboard/board.py) reads this file: the assurance label and the two mandatory prose cells per panel (exploration 03 §3.6, §4). A panel with a control_file gets real numbers; one without is a placeholder row. Both prose cells are mandatory — the generator fails when either is empty.",
+  "assurance_labels": {
+    "design target": "no theory yet; the row exists to say the panel is measured by the control only (every row at M0.5 is this)",
+    "executable property": "a HOL/QuickCheck-style property, no theorem",
+    "conditional": "theorem with an explicit premise (e.g. coverage premise)",
+    "proved": "theorem on the HOL function, unconditional, exported ML hash-tied to the session receipt",
+    "cross-language": "the claim crosses the Lean/Isabelle seam (design §3)"
+  },
+  "panels": {
+    "scope.decision": {
+      "kernel": "Scope",
+      "panel_file": "panels/scope/decision.jsonl",
+      "control_file": "controls/scope.decision.control.jsonl",
+      "assurance": "design target",
+      "measures": "ReadScope parsing (parse vs rule refusals), the visibility decision `Compiled::visible` on (id, origins) inputs, `is_unrestricted`, and the sources×paths `origins` crossing — the decision-test families of ekos/crates/ledger/src/scope.rs, answered by EKOS's own functions on 59 items from 17 tests.",
+      "does_not_measure": "anything inside a store (the ScopedStore wrappers: filtered reads, both-ends relationships, evidence gating, counts, diff, search, write refusal — that is the scope.store panel); MCP/CLI scope enforcement end to end (the RFC 0181 leak suite needs the fixture pipeline, no control exists yet); the scope fingerprint's equality behaviour across scope changes."
+    },
+    "conflicts.unit": {
+      "kernel": "Conflicts",
+      "panel_file": "panels/conflicts/unit.jsonl",
+      "control_file": "controls/conflicts.unit.control.jsonl",
+      "assurance": "design target",
+      "measures": "the detectors `duplicate_definitions`, `merge_losses`, `label_mismatches` and `normalize_type` (ekos/crates/semantic/src/conflicts.rs): type-alias normalization, duplicate collapse (incl. silent and per-attribute), permutation-invariance with stable conflict ids/claims/signature, exact vs fuzzy merge losses, label mismatch exclusion rules — 16 items from 8 tests.",
+      "does_not_measure": "the conflicts review workflow (`resolve`, `carry_forward`, `column_links` — reviewing, not detecting); conflict persistence (EKOS prints conflicts, it does not store them); fixture-scale conflict finding (conflicts.ledgersmb needs the LedgerSMB demo pipeline, not built)."
+    },
+    "scope.store": {
+      "kernel": "Scope",
+      "panel_file": null,
+      "control_file": null,
+      "assurance": "design target",
+      "status": "control pending (W9 task 4: the ScopedStore family of scope.rs:1041 on, via a second dump that builds an in-memory/temp ledger through ekos_ledger's public API)",
+      "measures": "(when built) ScopedStore read filtering over a real ledger: objects, relationships (both ends), evidence gating, counts, diff, search, write refusal, multi-scope intersection and replacement.",
+      "does_not_measure": "the MCP/CLI surface over a compiled project (leak suite: marker words through every tool), which needs the fixture pipeline."
+    }
+  },
+  "placeholders": [
+    {
+      "kernel": "Branch",
+      "panel": "branch.unit",
+      "items": 3,
+      "status": "panel exists (panels/branch/, lane W6); no control in controls/ yet — the merge_stores/merge_branch dump is not built",
+      "assurance": "design target",
+      "measures": "(planned) merge_stores vs the kernel on object additions, property divergence and no-ops with fixed re-keyed ids; main's version never overwritten.",
+      "does_not_measure": "removed-in-branch objects (EKOS never looks for absences); three-way merges; evidence copied into main; persisted conflicts."
+    },
+    {
+      "kernel": "Identity",
+      "panel": "identity.unit",
+      "items": 58,
+      "status": "panel exists (panels/identity/, lane W3); no control in controls/ yet — the DefaultResolver::resolve dump is not built",
+      "assurance": "design target",
+      "measures": "(planned) DefaultResolver::resolve merge groups, conflict groups and pending-edge sets on named objects with assigned ids.",
+      "does_not_measure": "confidence floats beyond 1e-6 tolerance; overlay-versus-re-key choices (design §7); fixtures-scale resolve."
+    },
+    {
+      "kernel": "Ledger",
+      "panel": "ledger.ecommerce / ledger.northwind",
+      "items": null,
+      "status": "no panel; needs run_fixture.py (the fixture→workspace→graph pipeline) and the ledger dump",
+      "assurance": "design target",
+      "measures": "(planned) current (id, content_signature) sets, object_at cuts, diff touched ids, re-commit append-only behaviour.",
+      "does_not_measure": "events (no lister exists, §2.4); unreferenced evidence; entry rowids and written_at volatility."
+    },
+    {
+      "kernel": "Impact",
+      "panel": "impact.ecommerce / impact.northwind",
+      "items": null,
+      "status": "no panel; needs the fixture pipeline and the impact dump",
+      "assurance": "design target",
+      "measures": "(planned) trace_impact hop lists both directions, hops 1..5, confirmed-edge exclusion of pending SameAs.",
+      "does_not_measure": "search-quality aspects of dependents ranking."
+    },
+    {
+      "kernel": "Time",
+      "panel": "time.ecommerce",
+      "items": null,
+      "status": "no panel",
+      "assurance": "design target",
+      "measures": "(planned) as-of cuts with relationship validity windows stated separately from domain time.",
+      "does_not_measure": "domain time semantics beyond the stored windows."
+    },
+    {
+      "kernel": "EKL",
+      "panel": "ekl.grid",
+      "items": null,
+      "status": "no panel; the control is the real `ekos ekl --json` binary",
+      "assurance": "design target",
+      "measures": "(planned) query grid over the grammar plus the parser/interpreter tests' own queries.",
+      "does_not_measure": "REASON/Datalog rules (out of scope for M0.5)."
+    },
+    {
+      "kernel": "Fusion",
+      "panel": "fusion.unit",
+      "items": null,
+      "status": "no panel",
+      "assurance": "design target",
+      "measures": "(planned) rrf_fuse ranked-list fusion, order-sensitive.",
+      "does_not_measure": "retrieval relevance (the retrieval_eval harness is search quality, not a Fusion panel)."
+    },
+    {
+      "kernel": "Redact",
+      "panel": "redact.unit",
+      "items": null,
+      "status": "no panel",
+      "assurance": "design target",
+      "measures": "(planned) redact/redact_json/is_excluded_path on the patterns' own unit tests plus planted fixture strings.",
+      "does_not_measure": "policy completeness beyond the pinned pattern set."
+    }
+  ],
+  "never_measured_here": [
+    "search relevance (BM25/vector quality) — design §4 lists it as not measured",
+    "model-pass quality (evals/datasets agent+retrieval runners) — LLM-dependent, not a kernel input",
+    "SQL/parser coverage breadth — parsing is untrusted per design §2.2",
+    "Events — no control available in M0.5 (no lister; §2.4)"
+  ]
+}
