@@ -1519,3 +1519,110 @@ theorem diff_eq_segment (L : List (Receipt C P)) (h : TxMonotone L) (a b : Nat) 
 'World.filter_window_eq_segment' depends on axioms: [propext, Classical.choice, Quot.sound]
 'World.diff_eq_segment' depends on axioms: [propext, Classical.choice, Quot.sound]
 ```
+
+---
+
+## 2026-10-19, sixth quest: the clash relation and EKOS's label rule (lane B, F1)
+
+Lane B's proposal (`notes/B-check.md` F1) adds `clash` as a field of `Schema`
+and rewrites `disagreeOn`. That is sound, but it would change two existing
+definitions, which check/ pins. So `World/Clash.lean` does the same thing
+additively:
+- a **clash table** `Clash C := SchemaId → (sources × value) → (sources ×
+  value) → Bool`, where the sources are the claim's `ClaimKey.sources`, as
+  the coordinator asked;
+- `detectBy κ`, which is `detect` with `κ` in place of `≠`.
+
+What is proved:
+- **`detectBy_differ`**: the default table `Clash.differ` (values differ)
+  gives `detect` **exactly**, so every existing theorem is its default
+  instance. `World/Conflicts.lean` is untouched, including
+  `detectList_congr`.
+- `mem_detectBy`, `coverageBy`, `soundnessBy`, `detectListBy_congr`,
+  `detectListBy_perm` and `detectBy_mono` hold for any table.
+- **Symmetry is not needed**, contrary to B's note. `detectBy` tries every
+  ordered pair, so a relation that holds one way round is found.
+- **`labelClash`** (EKOS `label_mismatches`, `conflicts.rs:414-416`): for the
+  label schema, clash iff the source sets are disjoint and the word sets are
+  disjoint. The word sets come from a supplied `wordsOf`, standing in for
+  `label_words`. Every other schema keeps `≠`. `mem_detectBy_label` states
+  exactly what it detects.
+
+Lane B's three probes, run by `decide` in `World.ClashExample`, now come out
+as EKOS:
+- `asset account` / `asset`: no conflict, though `detect` with `≠` flags it;
+- a shared source: no conflict;
+- two sourceless labels: a conflict.
+
+`asset` / `liability` from two sources is a conflict.
+
+The build is green (2979 jobs). Commit: `c5b013e`.
+
+```lean
+theorem mem_disagreeOnBy (c₁ c₂ : Claim C P) (a : C.Digest) :
+    a ∈ disagreeOnBy reg κ c₁ c₂ ↔
+    ∃ v₁ v₂, (a, v₁) ∈ c₁.stated reg ∧ (a, v₂) ∈ c₂.stated reg ∧
+    κ c₁.key.schema (c₁.key.sources, v₁) (c₂.key.sources, v₂) = true
+
+theorem mem_detectBy (cs : Finset (Claim C P)) (k : ConflictKey C) :
+    k ∈ detectBy reg κ cs ↔
+    ∃ c₁ ∈ cs, ∃ c₂ ∈ cs, c₁ ≠ c₂ ∧ sameSubject c₁ c₂ ∧
+    ∃ a v₁ v₂, (a, v₁) ∈ c₁.stated reg ∧ (a, v₂) ∈ c₂.stated reg ∧
+    κ c₁.key.schema (c₁.key.sources, v₁) (c₂.key.sources, v₂) = true ∧
+    k = (c₁.key.schema, c₁.key.subject, a)
+
+theorem coverageBy (cs : Finset (Claim C P)) (c₁ c₂ : Claim C P)
+    (h₁ : c₁ ∈ cs) (h₂ : c₂ ∈ cs) (hne : c₁ ≠ c₂) (hsame : sameSubject c₁ c₂)
+    (a v₁ v₂ : C.Digest) (hv₁ : (a, v₁) ∈ c₁.stated reg) (hv₂ : (a, v₂) ∈ c₂.stated reg)
+    (hk : κ c₁.key.schema (c₁.key.sources, v₁) (c₂.key.sources, v₂) = true) :
+    (c₁.key.schema, c₁.key.subject, a) ∈ detectBy reg κ cs
+
+theorem soundnessBy (cs : Finset (Claim C P)) (k : ConflictKey C) (hk : k ∈ detectBy reg κ cs) :
+    ∃ c₁ ∈ cs, ∃ c₂ ∈ cs, c₁ ≠ c₂ ∧ sameSubject c₁ c₂ ∧
+    ∃ a v₁ v₂, (a, v₁) ∈ c₁.stated reg ∧ (a, v₂) ∈ c₂.stated reg ∧
+    κ c₁.key.schema (c₁.key.sources, v₁) (c₂.key.sources, v₂) = true ∧
+    k = (c₁.key.schema, c₁.key.subject, a)
+
+theorem detectListBy_congr (l₁ l₂ : List (Claim C P)) (h : ∀ c, c ∈ l₁ ↔ c ∈ l₂) :
+    detectListBy reg κ l₁ = detectListBy reg κ l₂
+
+theorem detectListBy_perm (l₁ l₂ : List (Claim C P)) (h : l₁.Perm l₂) :
+    detectListBy reg κ l₁ = detectListBy reg κ l₂
+
+theorem detectBy_mono (cs cs' : Finset (Claim C P)) (h : cs ⊆ cs') :
+    detectBy reg κ cs ⊆ detectBy reg κ cs'
+
+theorem disagreeOnBy_differ (c₁ c₂ : Claim C P) :
+    disagreeOnBy reg Clash.differ c₁ c₂ = disagreeOn reg c₁ c₂
+
+theorem detectBy_differ (cs : Finset (Claim C P)) : detectBy reg Clash.differ cs = detect reg cs
+
+theorem disjointB_iff {α : Type} [DecidableEq α] (l₁ l₂ : List α) :
+    disjointB l₁ l₂ = true ↔ ∀ a ∈ l₁, a ∉ l₂
+
+theorem mem_detectBy_label (label : C.SchemaId) (wordsOf : C.Digest → List C.KeyPart)
+    (cs : Finset (Claim C P)) (subj : List C.KeyPart) (a : C.Digest) :
+    (label, subj, a) ∈ detectBy reg (labelClash label wordsOf) cs ↔
+    ∃ c₁ ∈ cs, ∃ c₂ ∈ cs, c₁ ≠ c₂ ∧ c₁.key.schema = label ∧ c₂.key.schema = label ∧
+    c₁.key.subject = subj ∧ c₂.key.subject = subj ∧
+    ∃ v₁ v₂, (a, v₁) ∈ c₁.stated reg ∧ (a, v₂) ∈ c₂.stated reg ∧
+    (∀ s ∈ c₁.key.sources, s ∉ c₂.key.sources) ∧
+    (∀ w ∈ wordsOf v₁, w ∉ wordsOf v₂)
+
+```
+
+`#print axioms`, verbatim:
+
+```
+'World.mem_disagreeOnBy' depends on axioms: [propext, Quot.sound]
+'World.mem_detectBy' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.coverageBy' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.soundnessBy' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.detectListBy_congr' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.detectListBy_perm' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.detectBy_mono' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.disagreeOnBy_differ' depends on axioms: [propext, Quot.sound]
+'World.detectBy_differ' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.disjointB_iff' depends on axioms: [propext, Quot.sound]
+'World.mem_detectBy_label' depends on axioms: [propext, Classical.choice, Quot.sound]
+```
