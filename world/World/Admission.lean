@@ -124,7 +124,7 @@ theorem maxPinRank_mono (m m' : RankMap C) (ps : List (Pin C))
       unfold pinRank
       cases ht : q.target with
       | source _ _ => exact le_refl _
-      | claim j => have := h q List.mem_cons_self j ht; omega
+      | claim j => have := h q List.mem_cons_self j ht; dsimp only; omega
     have := ih (fun p hp => h p (List.mem_cons_of_mem _ hp))
     omega
 
@@ -178,7 +178,7 @@ theorem rankInv_snoc (L : List (Receipt C P)) (r : Receipt C P) (hinv : RankInv 
   unfold apply rstep
   cases hop : r.op with
   | retract x =>
-    simp only [hop]
+    simp only
     refine ⟨fun j c hj => ?_, fun j c hj => ?_⟩
     · split at hj
       · cases hj

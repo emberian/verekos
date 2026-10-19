@@ -20,6 +20,7 @@ import World.Visible
 import World.WellFormed
 import World.Traverse
 import World.Identity
+import World.Admission
 import Mathlib.Data.Prod.Lex
 
 namespace World.Example
@@ -121,9 +122,11 @@ def conflictAB : Claim C₀ Cols where
            ⟨.claim (cB.id d₀), .core (cB.core reg₀), 1000⟩]
   valid := ⟨none, none⟩
 
-/-- The state holding both tables. -/
-def σ₀ : C₀.ClaimId → Option (Claim C₀ Cols) := fun i =>
-  if i = cA.id d₀ then some cA else if i = cB.id d₀ then some cB else none
+/-- The log holding both tables. -/
+def Lσ : List (Receipt C₀ Cols) := [rcpt 1 (.put cA) .compiler, rcpt 2 (.put cB) .compiler]
+
+/-- The state holding both tables: the replay of `Lσ`. -/
+def σ₀ : C₀.ClaimId → Option (Claim C₀ Cols) := latest d₀ Lσ
 
 /-- A reader allowed every file. -/
 def allFiles : Scope C₀ := ⟨fun _ => false, fun _ => false, fun _ _ => true, fun _ _ => false⟩
@@ -141,34 +144,32 @@ example : visible d₀ σ₀ notB 1 cA = true := by decide
 
 /-! ### No pin cycles in the example state -/
 
-/-- Is this a claim pin? -/
-def isClaimPin (p : Pin C₀) : Bool :=
-  match p.target with
-  | .claim _ => true
-  | .source _ _ => false
+/-- `Lσ` passes admission (checked by `decide`). -/
+theorem admLσ : AdmLog d₀ Lσ := by decide
 
-/-- A rank for `σ₀`: claims with a claim pin sit one level above the tables. -/
-def rank₀ (c : Claim C₀ Cols) : Nat := if c.pins.any isClaimPin then 1 else 0
+/-- So the state has no pin cycles, ranked by the **computed** rank. -/
+theorem ranked₀ : Ranked σ₀ (rankN d₀ Lσ) := ranked_of_admLog d₀ Lσ admLσ
 
-/-- The example state has no pin cycles. -/
-theorem ranked₀ : Ranked σ₀ rank₀ := ⟨by
-  rintro c' c ⟨p, hp, i, ht, hσ⟩
-  have h1 : rank₀ c' = 0 := by
-    unfold σ₀ at hσ
-    split at hσ
-    · cases hσ; decide
-    · split at hσ
-      · cases hσ; decide
-      · cases hσ
-  have h2 : rank₀ c = 1 := by
-    unfold rank₀
-    rw [if_pos]
-    exact List.any_eq_true.mpr ⟨p, hp, by simp [isClaimPin, ht]⟩
-  omega⟩
+/-- The computed ranks: tables 0, the conflict (pinning two tables) 1. -/
+example : rankN d₀ Lσ cA = 0 ∧ rankN d₀ Lσ conflictAB = 1 := by decide
+example : rankOf d₀ Lσ cA = some 0 := by decide
+
+/-- Refused: a claim pinning ids nothing has put yet. -/
+example : ¬ AdmLog d₀ [rcpt 1 (.put conflictAB) .compiler] := by decide
+
+/-- Refused: file A's table re-put under its id, now also pinning file B's
+table. Its rank would rise from 0 to 1 (rule 2), the step that could close a
+cycle with any claim pinning A. -/
+example : ¬ AdmLog d₀ (Lσ ++ [rcpt 3 (.put { cA with
+    pins := cA.pins ++ [⟨.claim (cB.id d₀), .core (cB.core reg₀), 1000⟩] }) .compiler]) := by
+  decide
+
+/-- Accepted: the conflict claim after both tables. -/
+example : AdmLog d₀ (Lσ ++ [rcpt 3 (.put conflictAB) .compiler]) := by decide
 
 /-- With the rank, visibility needs no chosen bound. -/
-example : visibleR d₀ σ₀ allFiles rank₀ conflictAB = true := by decide
-example : visibleR d₀ σ₀ notB rank₀ conflictAB = false := by decide
+example : visibleR d₀ σ₀ allFiles (rankN d₀ Lσ) conflictAB = true := by decide
+example : visibleR d₀ σ₀ notB (rankN d₀ Lσ) conflictAB = false := by decide
 
 end World.Example
 
