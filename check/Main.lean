@@ -1,5 +1,6 @@
 import Lean.Data.Json
 import Check.Scope
+import Check.Conflicts
 
 open Lean
 
@@ -26,10 +27,11 @@ def runPanel (f : String → Json → List (String × Json)) : IO UInt32 := do
   return code
 
 def usage : String :=
-  "usage: verekos-check scope [--mutant deny-ignored] < panel.jsonl"
+  "usage: verekos-check scope [--mutant deny-ignored] < panel.jsonl\n       verekos-check conflicts < panel.jsonl"
 
 def main (args : List String) : IO UInt32 := do
   match args with
   | ["scope"] => runPanel (Check.Scope.answer .faithful)
   | ["scope", "--mutant", "deny-ignored"] => runPanel (Check.Scope.answer .denyIgnored)
+  | ["conflicts"] => runPanel Check.Conflicts.answer
   | _ => IO.eprintln usage; return 2
