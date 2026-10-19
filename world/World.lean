@@ -12,4 +12,5 @@ import World.Document
 import World.Shapes
 import World.CarryForward
 import World.TxOrder
+import World.Clash
 import World.Examples
