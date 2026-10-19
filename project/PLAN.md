@@ -57,7 +57,19 @@ earlier Grok lanes died with "Prompt is too long" before Claude Code compacted.
 
 | W6 | `panels/branch/`, `notes/W6-branch-panels.md` | Grok (live test of the corrected wrapper: 250k window, 120k compaction, 16k output) | `merge_branch_*` tests as panel items with fixed ids, controls, drift checker |
 
-**Open decision for ember:** build a fresh `minidregg-host` (heavy; hbox with `swarm-build`, or a local snapshot build) so transclusion can be tested, or take exploration 01 §4's fallback (evidence as a `link` with a `.range` target plus revision in the meta atom) for slice 1.
+**Resolved 2026-10-19 evening (ember: "hbox is available, find the latest lane and reuse it"):** no build needed. On hbox, `~/kn-gate/fix/tipbin/` holds a checksummed binary set (host 162 MB, `mini`, verifier, link store, client consent) built from `d94a8817` (2026-10-05), which contains the `transclude` action (strings: transclude=76, authorityCellId=3, authorityCatalogueId=0). hbox root disk is at 94% with 30 GB free, so lanes write only small run roots there and never build or copy trees. `~/dev/minidregg` on hbox is stale (e1bb78d, 2026-08-07, 117 dirty files): not used.
+
+## Build wave 2 (launched 2026-10-19 evening)
+
+| Lane | Owns | Model | Deliverable |
+|---|---|---|---|
+| W7 | hbox `~/verekos-runs/w7/`, local `var/w7/`, `notes/W7-hbox-transclusion.md` | GLM | run K12T / JDV against the tipbin binaries on hbox with a fresh run root; per-step PASS/FAIL and the transclusion receipt rows |
+| W8 | `world/` | the W1 Opus veteran, resumed | pins nonempty / acyclic / sorted sources into the types; traversal over facts with its theorems; identity as an overlay (`SameAs` equivalence closure, order-free class view, reversible exact merge) |
+| W9 | `tools/scoreboard/`, `controls/`, `docs/parity/`, `notes/W9-scoreboard-machinery.md` | GLM | `score.py` with the classified-differences manifest, `board.py` → `docs/parity/BOARD.md`, `regen_controls.py` completing `controls/MANIFEST.json`, the leak-suite family decision or dump |
+| W11 | `panels/impact/`, `notes/W11-impact-panels.md` | Grok (bounded) | Runtime traversal tests as panel items + controls + drift |
+| (W3, W6) | `panels/identity/`, `panels/branch/` | GLM-flash, Grok | still running from wave 1 |
+
+Next after W7: slice 1 proper (exploration 01 §5) on hbox with the tipbin binaries, as a Lean/Rust mapper from `ekos graph export` ndjson to `mini` commands; and M1a, the reader-local compile.
 
 ## Rules
 
