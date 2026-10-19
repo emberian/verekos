@@ -17,6 +17,7 @@ import World.Log
 import World.Status
 import World.Conflicts
 import World.Visible
+import World.WellFormed
 
 namespace World.Example
 
@@ -134,5 +135,36 @@ example : visible d₀ σ₀ notB 2 conflictAB = false := by decide
 example : visible d₀ σ₀ allFiles 1 conflictAB = false := by decide
 /-- File A's table alone stays visible to the reader denied file B. -/
 example : visible d₀ σ₀ notB 1 cA = true := by decide
+
+/-! ### No pin cycles in the example state -/
+
+/-- Is this a claim pin? -/
+def isClaimPin (p : Pin C₀) : Bool :=
+  match p.target with
+  | .claim _ => true
+  | .source _ _ => false
+
+/-- A rank for `σ₀`: claims with a claim pin sit one level above the tables. -/
+def rank₀ (c : Claim C₀ Cols) : Nat := if c.pins.any isClaimPin then 1 else 0
+
+/-- The example state has no pin cycles. -/
+theorem ranked₀ : Ranked σ₀ rank₀ := ⟨by
+  rintro c' c ⟨p, hp, i, ht, hσ⟩
+  have h1 : rank₀ c' = 0 := by
+    unfold σ₀ at hσ
+    split at hσ
+    · cases hσ; decide
+    · split at hσ
+      · cases hσ; decide
+      · cases hσ
+  have h2 : rank₀ c = 1 := by
+    unfold rank₀
+    rw [if_pos]
+    exact List.any_eq_true.mpr ⟨p, hp, by simp [isClaimPin, ht]⟩
+  omega⟩
+
+/-- With the rank, visibility needs no chosen bound. -/
+example : visibleR d₀ σ₀ allFiles rank₀ conflictAB = true := by decide
+example : visibleR d₀ σ₀ notB rank₀ conflictAB = false := by decide
 
 end World.Example

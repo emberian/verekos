@@ -55,8 +55,9 @@ def ClaimKey.Canonical (k : ClaimKey C) : Prop := k.sources.Pairwise (· < ·)
 def ClaimKey.normalize (k : ClaimKey C) : ClaimKey C :=
   { k with sources := k.sources.toFinset.sort }
 
-theorem ClaimKey.normalize_canonical (k : ClaimKey C) : k.normalize.Canonical :=
-  (Finset.sortedLT_sort _).pairwise
+theorem ClaimKey.normalize_canonical (k : ClaimKey C) : k.normalize.Canonical := by
+  unfold ClaimKey.Canonical ClaimKey.normalize
+  exact (Finset.sortedLT_sort k.sources.toFinset).pairwise
 
 theorem ClaimKey.mem_normalize (k : ClaimKey C) (s : C.SourceId) :
     s ∈ k.normalize.sources ↔ s ∈ k.sources := by
@@ -112,7 +113,9 @@ theorem foldl_apply_wellFormed (d : ClaimIdDerivation C) :
     | put c₀ =>
       simp only [hop] at hj
       split at hj
-      · cases hj; exact hL r (List.mem_cons_self) c₀ hop
+      · injection hj with hj
+        subst hj
+        exact hL r List.mem_cons_self _ hop
       · exact hs j c' hj
     | retract k =>
       simp only [hop] at hj
@@ -256,7 +259,7 @@ theorem visible_iff_sourcePins (n : Nat) (c : Claim C P) (hne : c.PinsNonempty)
   · intro hv p hp doc r ht
     exact ((visible_pins d σ S n c hv hid).2 p hp).1 doc r ht
   · intro hall
-    simp only [visible, denied, allowed, hid, hdid, Bool.false_or, Bool.not_or,
+    simp only [visible, denied, allowed, hid, hdid, Bool.false_or,
       Bool.and_eq_true, Bool.not_eq_true', List.any_eq_false, List.all_eq_true,
       List.isEmpty_eq_false_iff]
     refine ⟨fun p hp => ?_, hne, fun p hp => ?_⟩
@@ -280,7 +283,7 @@ theorem asReview_pins (c : Claim C P) (i : C.ClaimId) (dg : C.Digest) (s : Statu
   unfold asReview at h
   split at h
   · split at h
-    · rename_i i' dg' w _ hpins
+    · rename_i i' dg' w hpins
       simp only [Option.some.injEq, Prod.mk.injEq] at h
       obtain ⟨rfl, rfl, -⟩ := h
       exact ⟨w, hpins⟩
