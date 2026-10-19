@@ -117,13 +117,13 @@ theorem maxPinRank_mono (m m' : RankMap C) (ps : List (Pin C))
     (h : ∀ p ∈ ps, ∀ j, p.target = .claim j → (m' j).getD 0 ≤ (m j).getD 0) :
     maxPinRank m' ps ≤ maxPinRank m ps := by
   induction ps with
-  | nil => exact le_refl _
+  | nil => exact Nat.le_refl _
   | cons q qs ih =>
     simp only [maxPinRank]
     have hq : pinRank m' q ≤ pinRank m q := by
       unfold pinRank
       cases ht : q.target with
-      | source _ _ => exact le_refl _
+      | source _ _ => exact Nat.le_refl _
       | claim j => have := h q List.mem_cons_self j ht; dsimp only; omega
     have := ih (fun p hp => h p (List.mem_cons_of_mem _ hp))
     omega
@@ -131,8 +131,8 @@ theorem maxPinRank_mono (m m' : RankMap C) (ps : List (Pin C))
 theorem maxPinRank_congr (m m' : RankMap C) (ps : List (Pin C))
     (h : ∀ p ∈ ps, ∀ j, p.target = .claim j → m' j = m j) :
     maxPinRank m' ps = maxPinRank m ps :=
-  le_antisymm (maxPinRank_mono m m' ps fun p hp j ht => by rw [h p hp j ht])
-    (maxPinRank_mono m' m ps fun p hp j ht => by rw [h p hp j ht])
+  Nat.le_antisymm (maxPinRank_mono m m' ps fun p hp j ht => by simp [h p hp j ht])
+    (maxPinRank_mono m' m ps fun p hp j ht => by simp [h p hp j ht])
 
 /-! ## Admissible logs -/
 
@@ -189,28 +189,24 @@ theorem rankInv_snoc (L : List (Receipt C P)) (r : Receipt C P) (hinv : RankInv 
   | put c₀ =>
     simp only [hop, Bool.and_eq_true, List.all_eq_true] at hadm ⊢
     obtain ⟨hpins, hcap⟩ := hadm
-    set x := c₀.id d with hx
-    set m := rankMap d L with hm
-    set nr := newRank m c₀ with hnr
-    -- c₀'s pins avoid x and name present ids.
-    have hpin : ∀ p ∈ c₀.pins, ∀ i, p.target = .claim i → i ≠ x ∧ (latest d L i).isSome := by
+    -- c₀'s pins avoid (c₀.id d) and name present ids.
+    have hpin : ∀ p ∈ c₀.pins, ∀ i, p.target = .claim i → i ≠ (c₀.id d) ∧ (latest d L i).isSome := by
       intro p hp i ht
       have := hpins p hp
       simp only [ht, Bool.and_eq_true, decide_eq_true_eq] at this
       exact this
-    -- The new map agrees with the old one except at x.
-    have hm'ne : ∀ i, i ≠ x → (if i = x then some nr else m i) = m i := by
+    -- The new map agrees with the old one except at (c₀.id d).
+    have hm'ne : ∀ i, i ≠ (c₀.id d) → (if i = (c₀.id d) then some (newRank (rankMap d L) c₀) else (rankMap d L) i) = (rankMap d L) i := by
       intro i hi; simp [hi]
     -- c₀'s computed rank is the same against the new map.
-    have hsame : newRank (fun i => if i = x then some nr else m i) c₀ = nr := by
+    have hsame : newRank (fun i => if i = (c₀.id d) then some (newRank (rankMap d L) c₀) else (rankMap d L) i) c₀ = (newRank (rankMap d L) c₀) := by
       unfold newRank
-      rw [hnr]
       exact maxPinRank_congr _ _ _ fun p hp i ht => hm'ne i (hpin p hp i ht).1
     -- The new map is no higher than the old one at every recorded id.
-    have hle : ∀ i, (m i).isSome = true →
-        ((if i = x then some nr else m i).getD 0) ≤ (m i).getD 0 := by
+    have hle : ∀ i, ((rankMap d L) i).isSome = true →
+        ((if i = (c₀.id d) then some (newRank (rankMap d L) c₀) else (rankMap d L) i).getD 0) ≤ ((rankMap d L) i).getD 0 := by
       intro i hi
-      by_cases hix : i = x
+      by_cases hix : i = (c₀.id d)
       · subst hix
         obtain ⟨k, hk⟩ := Option.isSome_iff_exists.mp hi
         simp only [if_true, Option.getD_some, hk]
@@ -218,20 +214,20 @@ theorem rankInv_snoc (L : List (Receipt C P)) (r : Receipt C P) (hinv : RankInv 
         simpa using hcap
       · simp [hix]
     refine ⟨fun j c hj => ?_, fun j c hj => ?_⟩
-    · by_cases hjx : j = x
+    · by_cases hjx : j = (c₀.id d)
       · simp only [hjx, if_true, Option.some.injEq] at hj ⊢
         subst hj
-        exact ⟨nr, rfl, by rw [hsame]⟩
+        exact ⟨(newRank (rankMap d L) c₀), rfl, Nat.le_of_eq hsame⟩
       · simp only [hjx, if_false] at hj ⊢
         obtain ⟨k, hk, hck⟩ := hA j c hj
-        refine ⟨k, hk, le_trans ?_ hck⟩
+        refine ⟨k, hk, Nat.le_trans ?_ hck⟩
         unfold newRank
         exact maxPinRank_mono _ _ _ fun p hp i ht => hle i (hB j c hj p hp i ht)
     · intro p hp i ht
-      by_cases hix : i = x
+      by_cases hix : i = (c₀.id d)
       · simp [hix]
       · simp only [hix, if_false]
-        by_cases hjx : j = x
+        by_cases hjx : j = (c₀.id d)
         · simp only [hjx, if_true, Option.some.injEq] at hj
           subst hj
           obtain ⟨-, hpres⟩ := hpin p hp i ht
@@ -241,16 +237,17 @@ theorem rankInv_snoc (L : List (Receipt C P)) (r : Receipt C P) (hinv : RankInv 
         · simp only [hjx, if_false] at hj
           exact hB j c hj p hp i ht
 
-theorem rankInv_of_admLog : ∀ (L : List (Receipt C P)), AdmLog d L → RankInv d L := by
-  intro L
-  induction L using List.reverseRecOn with
-  | nil =>
-    intro _
+theorem rankInv_of_admLog_rev : ∀ (R : List (Receipt C P)), AdmLog d R.reverse → RankInv d R.reverse
+  | [], _ => by
     refine ⟨fun j c h => ?_, fun j c h => ?_⟩ <;> cases h
-  | append_singleton L r ih =>
-    intro h
-    obtain ⟨hL, hr⟩ := (admLog_snoc d L r).mp h
-    exact rankInv_snoc d L r (ih hL) hr
+  | r :: R, h => by
+    rw [List.reverse_cons] at h ⊢
+    obtain ⟨hL, hr⟩ := (admLog_snoc d R.reverse r).mp h
+    exact rankInv_snoc d R.reverse r (rankInv_of_admLog_rev R hL) hr
+
+theorem rankInv_of_admLog (L : List (Receipt C P)) (h : AdmLog d L) : RankInv d L := by
+  have := rankInv_of_admLog_rev d L.reverse (by rw [List.reverse_reverse]; exact h)
+  rwa [List.reverse_reverse] at this
 
 /-- **An admissible log yields a ranked state**, ranked by the computed rank.
 So `visibleR` with `rankN d L` is defined on every admissible log, and by
@@ -264,7 +261,7 @@ theorem ranked_of_admLog (L : List (Receipt C P)) (h : AdmLog d L) :
   rw [hk] at this
   unfold rankN newRank
   simp only [Option.getD_some] at this
-  exact lt_of_le_of_lt hc' this
+  exact Nat.lt_of_le_of_lt hc' this
 
 /-- **On an admissible log, `rankOf` returns a rank for every claim in the
 state**, and it is the rank that `ranked_of_admLog` uses. -/

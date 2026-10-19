@@ -89,7 +89,7 @@ theorem compileHeader_rev_eq_iff (h : HeaderAtom C) (s : C.Digest) :
 theorem rev_le_compileAll (h : HeaderAtom C) (hist : List C.Digest) :
     h.rev ≤ (compileAll h hist).rev := by
   induction hist generalizing h with
-  | nil => exact le_refl _
+  | nil => exact Nat.le_refl _
   | cons s t ih =>
     show h.rev ≤ (compileAll (compileHeader h s) t).rev
     have h1 := ih (compileHeader h s)
@@ -151,9 +151,10 @@ theorem pin_moved_iff (h : HeaderAtom C) (hist : List C.Digest) :
     unfold renderHeaderPin; split <;> simp
   constructor
   · intro hm
-    by_contra hn
-    simp only [not_exists, not_and, not_not] at hn
-    rw [hs.mpr hn] at hm
+    refine Classical.byContradiction fun hn => ?_
+    have hall : ∀ s ∈ hist, s = h.sig := fun s hs' =>
+      Classical.byContradiction fun hne => hn ⟨s, hs', hne⟩
+    rw [hs.mpr hall] at hm
     cases hm
   · rintro ⟨x, hx, hne⟩
     rcases hcases with h1 | h1

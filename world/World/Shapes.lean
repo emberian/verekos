@@ -117,7 +117,7 @@ theorem importSource_statements (D : SourceDoc C A) (r : Nat) (hk : D.WellKeyed 
     (hr : ∀ a ∈ D.atoms, a.rev = r) : importSource atomOf D.header D.statements r = D := by
   obtain ⟨h, atoms⟩ := D
   simp only [importSource, SourceDoc.statements, List.map_map, SourceDoc.mk.injEq, true_and]
-  conv_rhs => rw [← List.map_id atoms]
+  conv => rhs; rw [← List.map_id atoms]
   apply List.map_congr_left
   intro a ha
   have h1 := hk _ ha
@@ -148,7 +148,7 @@ theorem reimport_unchanged (D : SourceDoc C A) (r : Nat) (hk : D.WellKeyed atomO
     (hnd : (D.atoms.map (·.key)).Nodup) : reimport atomOf D D.statements r = D := by
   obtain ⟨h, atoms⟩ := D
   simp only [reimport, SourceDoc.statements, List.map_map, SourceDoc.mk.injEq, true_and]
-  conv_rhs => rw [← List.map_id atoms]
+  conv => rhs; rw [← List.map_id atoms]
   apply List.map_congr_left
   intro a ha
   simp only [Function.comp_apply, id_eq]
@@ -454,7 +454,15 @@ def ReviewDoc.atomPins (D : ReviewDoc C) : List (C.SourceId × C.AtomRev) :=
 theorem atomPins_encodeReview (reviewed : C.ClaimId) (es : List (ReviewEntry C))
     (x : C.SourceId × C.AtomRev) :
     x ∈ (encodeReview reviewed es).atomPins ↔ ∃ e ∈ es, x = (e.headerDoc, e.headerRead) := by
-  simp [ReviewDoc.atomPins, encodeReview, ReviewEntry.toContainer, List.mem_flatMap, eq_comm]
+  simp only [ReviewDoc.atomPins, encodeReview, List.mem_flatMap, List.mem_map,
+    ReviewEntry.toContainer]
+  constructor
+  · rintro ⟨_, ⟨e, he, rfl⟩, a, ha, rfl⟩
+    simp only [List.mem_singleton] at ha
+    subst ha
+    exact ⟨e, he, rfl⟩
+  · rintro ⟨e, he, rfl⟩
+    exact ⟨_, ⟨e, he, rfl⟩, e.headerRead, List.mem_singleton_self _, rfl⟩
 
 /-! ## `ekos/compile-run/v1` and `ekos/replay-attestation/v1` -/
 

@@ -64,8 +64,9 @@ theorem mem_disagreeOn (c₁ c₂ : Claim C P) (a : C.Digest) :
     · exact absurd hsome (by simp)
   · rintro ⟨v₁, v₂, h₁, h₂, hne⟩
     refine ⟨(a, v₁), h₁, ?_⟩
-    simp
-    exact ⟨v₂, h₂, Ne.symm hne⟩
+    have : (c₂.stated reg).any (fun bw => decide (bw.1 = a ∧ bw.2 ≠ v₁)) = true :=
+      List.any_eq_true.mpr ⟨(a, v₂), h₂, by simp [Ne.symm hne]⟩
+    rw [if_pos this]
 
 /-- Conflict detection over a list: for every ordered pair of different
 claims about the same subject, the keys of the attributes they disagree on. -/

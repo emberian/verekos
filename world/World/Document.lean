@@ -249,7 +249,13 @@ theorem claimAtomPins_perm (c c' : Claim C P) (h : c'.pins.Perm c.pins) (x : C.S
 /-- Decoding keeps exactly the cell's atom pins. -/
 theorem claimAtomPins_decode (cell : Cell C P) (x : C.SourceId × C.AtomRev) :
     x ∈ claimAtomPins (decode cell) ↔ x ∈ cellAtomPins cell := by
-  simp [claimAtomPins, cellAtomPins, decode, Evidence.toPin, PremiseLink.toPin, List.mem_flatMap]
+  simp only [claimAtomPins, cellAtomPins, decode, List.mem_flatMap, List.mem_append, List.mem_map]
+  constructor
+  · rintro ⟨p, (⟨e, he, rfl⟩ | ⟨l, hl, rfl⟩), hx⟩
+    · exact ⟨e, he, by simpa [Evidence.toPin] using hx⟩
+    · simp [PremiseLink.toPin] at hx
+  · rintro ⟨e, he, hx⟩
+    exact ⟨e.toPin, Or.inl ⟨e, he, rfl⟩, by simpa [Evidence.toPin] using hx⟩
 
 /-- **Encoding keeps exactly the claim's atom pins.** -/
 theorem cellAtomPins_encode (c : Claim C P) (cell : Cell C P) (h : encode c = some cell)
@@ -398,10 +404,9 @@ theorem viewEvidence_sameBytes (readable : C.SourceId → Bool)
   split
   · rename_i h; simp only [List.all_eq_true] at h; exact iff_of_true rfl h
   · rename_i h
-    simp only [List.all_eq_true, not_forall] at h
-    obtain ⟨a, ha, hc⟩ := h
-    simp only [reduceCtorEq, false_iff, not_forall]
-    exact ⟨a, ha, hc⟩
+    simp only [List.all_eq_true] at h
+    simp only [reduceCtorEq, false_iff]
+    exact h
 
 /-- **An admitted container was read by its writer at revisions it held.** -/
 theorem admitEvidence_none (writerReads : C.SourceId → Bool)
