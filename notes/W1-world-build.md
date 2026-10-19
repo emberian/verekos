@@ -1144,3 +1144,308 @@ theorem ranked₀ : Ranked σ₀ (rankN d₀ Lσ)
 'World.Example.admLσ' does not depend on any axioms
 'World.Example.ranked₀' depends on axioms: [propext, Quot.sound]
 ```
+
+---
+
+## 2026-10-19, fourth quest: the other shapes, carry-forward, the manifest
+
+All four items are done, built and pushed to `origin/dev`. A clean build of
+`World` takes **14 s** (`var/w1/build-clean-world-q4.log`). minidregg is
+untouched. `#print axioms` on all 37 new theorems (below) shows only
+`propext`, `Classical.choice` and `Quot.sound`, or no axioms.
+`notes/W17-slice1.md` did not exist while I worked, so the shapes follow
+exploration 01 as written. If W17 records approximations the deployed client
+forced, these shapes should be compared against them.
+
+### 1. The other shapes (`World/Shapes.lean`)
+
+Each shape has:
+- a content record (what it means);
+- `encode`/`decode`;
+- `decode (encode x) = x`;
+- `encode (decode D) = D` for every document whose derived fields are
+  consistent, so the derived fields are the only thing a document can get
+  wrong;
+- atom-pin preservation where the shape pins atoms.
+
+The shapes:
+- **source**: atom ids derived from structural keys (`WellKeyed`).
+  - `reimport_unchanged`: re-importing an unchanged file changes nothing,
+    given distinct keys.
+  - `reimport_rev_iff`: **a pin moves exactly when its statement changed**.
+    An atom keeps its revision iff its bytes are unchanged, at a fresh
+    revision.
+- **manifest**:
+  - `mem_current_compile`: after a compile, the current set is exactly what
+    was emitted;
+  - `history_kept`: every entry is still there, live or unlinked.
+- **conflict**: the derived field is the signature over the attribute and the
+  members' (value, source), with lines left out as in EKOS's `signature`
+  (`conflicts.rs:162-171`). `Disputes` points at the subject. There is no
+  `chosen` field. `atomPins_encodeConflict` says every member keeps its pins.
+- **review**: each decision container pins exactly one header atom revision
+  (decoding refuses any other). `append_prefix` says the document is
+  append-only.
+- **compile-run / replay-attestation**:
+  - these hold no derived fields, so their round trip is structural; I say so
+    rather than invent one;
+  - `not_replayed_by_compiler`: the compiler cannot attest its own
+    determinism;
+  - `not_replayed_if_outputs_differ`: a differing replay never earns
+    `replayedDeterministic`;
+  - input pins keep their read heights (`mem_atomPins_compileRun`).
+- Field renames forced by Lean keywords: `attribute` became `attr`, EKOS's
+  `open` became `EStatus.isOpen` (the earlier `meta` became `info`).
+
+### 2. The transclusion is the carry-forward rule (`World/CarryForward.lean`)
+
+- `compileHeader` rewrites the conflict header atom, at a fresh revision, only
+  when the signature changes. `compileHeader_rev_eq_iff` says the revision
+  moves exactly when the signature changes.
+- `pin_sameBytes_iff` and `pin_moved_iff` describe the review's snapshot pin
+  of the header. It reads same bytes iff **every** compile since the review
+  had the reviewed signature, and `moved` iff some compile changed it.
+  `renderHeaderPin_eq_viewEvidence` ties this to `World.Document.viewEvidence`.
+- EKOS `carry_forward` (`conflicts.rs:506-535`) is modelled line by line in
+  `ekosCompile`:
+  - an open conflict stays open (its early `return` on `OPEN`);
+  - a decided one keeps its review iff `reviewed_signature ==` the fresh
+    `signature`;
+  - otherwise it reopens as `open`, with `previous_review` kept.
+
+  `ekos_holds_iff`: after a review, it holds iff every later compile had the
+  reviewed signature.
+- **`pin_agrees_with_ekos`**: the pin reads same bytes iff EKOS's review holds.
+  The design's claim holds exactly.
+- **Two corrections to the brief's wording, both stated in docstrings.**
+  - **"Same bytes iff the signature is unchanged" means unchanged throughout
+    the history since the review**, not merely "equal again now". Both the pin
+    and EKOS stay reopened after A → B → A.
+  - **The agreement with `World.Status` needs the conflict schema's `core` to
+    be the header atom's *revision*, not the signature.**
+    `status_core_rev_agrees`: with `core` = revision (through an injective
+    digest), one admitted review at the revision read gives the decision
+    exactly when EKOS's review holds, and `needsReview` exactly when EKOS
+    reopened. EKOS spells the reopened state `open` with `previous_review`;
+    World spells it `needsReview` with the old review kept in the log.
+  - **`core_sig_diverges`**: with `core` = the signature, a history A → B → A
+    makes World.Status report the old decision (the review sits at the
+    current core A), while the pin says `moved` and EKOS is open. The revision
+    is the right core because it never comes back; the signature can.
+- **Examples** (`decide`): an unchanged signature keeps the review in both the
+  pin and EKOS; A → B → A leaves both reopened.
+
+### 3. The manifest theorem
+
+`not_current_after_unemit`: `e ∉ emitted → e ∉ (M.compile emitted).current`,
+one line over `mem_current_compile`. The example compiles a two-entry manifest
+that stops emitting `orders`: the current set is `[customers]` and both
+entries are still in the document.
+
+### What I could not do
+
+- **No mapping into minidregg's own records** (`DocumentRecord`,
+  `AtomRecord`, `TransclusionRecord`, `LinkRecord`). The shapes are Lean data
+  with the same parts.
+- **Revisions are `Nat` counters.** Their freshness, a write takes a revision
+  larger than any before, is built in here. minidregg's `OperationId`
+  freshness is the same property, but no theorem connects them yet.
+- **Not checked against what the deployed client can express**, because W17's
+  memo was not there yet.
+
+### Follow-ups
+
+1. Read `notes/W17-slice1.md` when it lands, and adjust any shape the client
+   could not express.
+2. Set the conflict schema's `core` to the header revision in any concrete
+   registry that W17 or the scoreboard uses, per `status_core_rev_agrees`.
+3. Map `World.Shapes` into minidregg records in `World.Minidregg`, with the
+   atom-pin theorems restated against `TranscludeRequest.pins`.
+
+### Every new theorem statement, quoted from the source
+
+
+#### `World/Shapes.lean`
+
+```lean
+theorem statements_importSource (h : SourceHeader C) (stmts : List (Statement C)) (r : Nat) :
+    (importSource atomOf h stmts r).statements = stmts
+
+theorem importSource_wellKeyed (h : SourceHeader C) (stmts : List (Statement C)) (r : Nat) :
+    (importSource atomOf h stmts r).WellKeyed atomOf
+
+theorem importSource_statements (D : SourceDoc C A) (r : Nat) (hk : D.WellKeyed atomOf)
+    (hr : ∀ a ∈ D.atoms, a.rev = r) : importSource atomOf D.header D.statements r = D
+
+theorem atomPins_importSource (h : SourceHeader C) (stmts : List (Statement C)) (r : Nat)
+    (x : A × Nat) :
+    x ∈ (importSource atomOf h stmts r).atomPins ↔ ∃ s ∈ stmts, x = (atomOf s.key, r)
+
+theorem reimport_unchanged (D : SourceDoc C A) (r : Nat) (hk : D.WellKeyed atomOf)
+    (hnd : (D.atoms.map (·.key)).Nodup) : reimport atomOf D D.statements r = D
+
+theorem reimport_rev_iff (D : SourceDoc C A) (r : Nat)
+    (hfresh : ∀ a ∈ D.atoms, a.rev < r) (s : Statement C) (a : TextAtom C A)
+    (ha : D.atoms.find? (fun b => b.key == s.key) = some a) :
+    (match D.atoms.find? (fun b => b.key == s.key) with
+    | some a => if a.bytes = s.bytes then a else ⟨atomOf s.key, s.key, r, s.bytes⟩
+    | none => ⟨atomOf s.key, s.key, r, s.bytes⟩ : TextAtom C A).rev = a.rev ↔
+    a.bytes = s.bytes
+
+theorem current_ofCurrent (es : List (List C.KeyPart × C.ClaimId)) :
+    (Manifest.ofCurrent es).current = es
+
+theorem mem_current (M : Manifest C) (e : List C.KeyPart × C.ClaimId) :
+    e ∈ M.current ↔ ∃ l ∈ M.links, l.live = true ∧ (l.key, l.cell) = e
+
+theorem unlinkIfGone_spec (emitted : List (List C.KeyPart × C.ClaimId)) (l : ManifestLink C) :
+    (Manifest.unlinkIfGone emitted l).key = l.key ∧ (Manifest.unlinkIfGone emitted l).cell = l.cell ∧
+    ((Manifest.unlinkIfGone emitted l).live = true ↔
+    l.live = true ∧ (l.key, l.cell) ∈ emitted)
+
+theorem mem_current_compile (M : Manifest C) (emitted : List (List C.KeyPart × C.ClaimId))
+    (e : List C.KeyPart × C.ClaimId) :
+    e ∈ (M.compile emitted).current ↔ e ∈ emitted
+
+theorem not_current_after_unemit (M : Manifest C) (emitted : List (List C.KeyPart × C.ClaimId))
+    (e : List C.KeyPart × C.ClaimId) (h : e ∉ emitted) : e ∉ (M.compile emitted).current
+
+theorem history_kept (M : Manifest C) (emitted : List (List C.KeyPart × C.ClaimId))
+    (l : ManifestLink C) (hl : l ∈ M.links) :
+    ∃ l' ∈ (M.compile emitted).links, l'.key = l.key ∧ l'.cell = l.cell
+
+theorem decode_encodeConflict (k : Conflict C) : decodeConflict (encodeConflict sigOf k) = k
+
+theorem encodeConflict_consistent (k : Conflict C) : (encodeConflict sigOf k).Consistent sigOf
+
+theorem encode_decodeConflict (D : ConflictDoc C) (h : D.Consistent sigOf) :
+    encodeConflict sigOf (decodeConflict D) = D
+
+theorem atomPins_encodeConflict (k : Conflict C) (x : C.SourceId × C.AtomRev) :
+    x ∈ (encodeConflict sigOf k).atomPins ↔ ∃ m ∈ k.members, x ∈ m.pin.atoms.map (m.pin.source, ·)
+
+theorem toEntry_toContainer (e : ReviewEntry C) : e.toContainer.toEntry = some e
+
+theorem decode_encodeReview (reviewed : C.ClaimId) (es : List (ReviewEntry C)) :
+    decodeReview (encodeReview reviewed es) = some es
+
+theorem encode_decodeReview (D : ReviewDoc C) (es : List (ReviewEntry C))
+    (h : decodeReview D = some es) : encodeReview D.reviewed es = D
+
+theorem append_prefix (D : ReviewDoc C) (e : ReviewEntry C) :
+    D.decisions <+: (D.append e).decisions
+
+theorem atomPins_encodeReview (reviewed : C.ClaimId) (es : List (ReviewEntry C))
+    (x : C.SourceId × C.AtomRev) :
+    x ∈ (encodeReview reviewed es).atomPins ↔ ∃ e ∈ es, x = (e.headerDoc, e.headerRead)
+
+theorem not_replayed_by_compiler (run : CompileRunDoc C) (atts : List (ReplayAttestation C))
+    (h : ∀ a ∈ atts, a.verifier = run.compiler) : ¬ replayedDeterministic run atts
+
+theorem not_replayed_if_outputs_differ (run : CompileRunDoc C) (atts : List (ReplayAttestation C))
+    (h : ∀ a ∈ atts, a.outputs ≠ run.outputs) : ¬ replayedDeterministic run atts
+
+theorem mem_atomPins_compileRun (D : CompileRunDoc C) (x : C.SourceId × C.AtomRev × Nat) :
+    x ∈ D.atomPins ↔ ∃ i ∈ D.inputs, ∃ a ∈ i.pin.atoms, x = (i.pin.source, a, i.height)
+
+```
+
+#### `World/CarryForward.lean`
+
+```lean
+theorem compileHeader_rev_eq_iff (h : HeaderAtom C) (s : C.Digest) :
+    (compileHeader h s).rev = h.rev ↔ s = h.sig
+
+theorem rev_le_compileAll (h : HeaderAtom C) (hist : List C.Digest) :
+    h.rev ≤ (compileAll h hist).rev
+
+theorem compileAll_rev_eq_iff (h : HeaderAtom C) (hist : List C.Digest) :
+    (compileAll h hist).rev = h.rev ↔ ∀ s ∈ hist, s = h.sig
+
+theorem compileAll_sig (h : HeaderAtom C) (hist : List C.Digest) :
+    (compileAll h hist).sig = hist.getLastD h.sig
+
+theorem pin_sameBytes_iff (h : HeaderAtom C) (hist : List C.Digest) :
+    renderHeaderPin h.rev (compileAll h hist) = .sameBytes ↔ ∀ s ∈ hist, s = h.sig
+
+theorem pin_moved_iff (h : HeaderAtom C) (hist : List C.Digest) :
+    renderHeaderPin h.rev (compileAll h hist) = .moved ↔ ∃ s ∈ hist, s ≠ h.sig
+
+theorem renderHeaderPin_eq_viewEvidence (pinOf : Nat → C.AtomRev)
+    (hinj : Function.Injective pinOf) (doc : C.SourceId) (m : EvidenceMeta C)
+    (read : Nat) (h : HeaderAtom C) :
+    viewEvidence (fun _ => true) (fun _ a => decide (a = pinOf h.rev))
+    ⟨m, ⟨doc, [pinOf read]⟩⟩ = renderHeaderPin read h
+
+theorem ekosAll_open (r : Option C.Digest) (g : C.Digest) (hist : List C.Digest) :
+    (ekosAll ⟨.isOpen, r, g⟩ hist).status = .isOpen
+
+theorem ekos_holds_iff (cur : EConflict C) (s : Status) (hist : List C.Digest) :
+    (ekosAll (ekosReview cur s) hist).status = .decided s ↔ ∀ x ∈ hist, x = cur.sig
+
+theorem pin_agrees_with_ekos (h : HeaderAtom C) (cur : EConflict C) (hsig : cur.sig = h.sig)
+    (s : Status) (hist : List C.Digest) :
+    renderHeaderPin h.rev (compileAll h hist) = .sameBytes ↔
+    (ekosAll (ekosReview cur s) hist).status = .decided s
+
+theorem statusAt_single (L : List (Receipt C P)) (k : ClaimKey C) (dg₀ : C.Digest)
+    (s₀ : Status) (h : admittedReviews R reg d L k = [(dg₀, s₀)]) (dg : C.Digest) :
+    statusAt R reg d L k dg = if dg = dg₀ then s₀ else .needsReview
+
+theorem status_core_rev_agrees (revDigest : Nat → C.Digest) (hinj : Function.Injective revDigest)
+    (L : List (Receipt C P)) (k : ClaimKey C) (h : HeaderAtom C) (cur : EConflict C)
+    (hsig : cur.sig = h.sig) (s₀ : Status)
+    (hrev : admittedReviews R reg d L k = [(revDigest h.rev, s₀)]) (hist : List C.Digest) :
+    statusAt R reg d L k (revDigest (compileAll h hist).rev) =
+    if (ekosAll (ekosReview cur s₀) hist).status = .decided s₀ then s₀ else .needsReview
+
+theorem core_sig_diverges (L : List (Receipt C P)) (k : ClaimKey C) (a b : C.Digest)
+    (hab : a ≠ b) (r : Nat) (s₀ : Status)
+    (hrev : admittedReviews R reg d L k = [(a, s₀)]) (cur : EConflict C) (hsig : cur.sig = a) :
+    statusAt R reg d L k (compileAll ⟨r, a⟩ [b, a]).sig = s₀ ∧
+    renderHeaderPin r (compileAll ⟨r, a⟩ [b, a]) = .moved ∧
+    (ekosAll (ekosReview cur s₀) [b, a]).status = .isOpen
+
+```
+
+### `#print axioms`, verbatim
+
+```
+'World.statements_importSource' depends on axioms: [propext, Quot.sound]
+'World.importSource_wellKeyed' depends on axioms: [propext, Quot.sound]
+'World.importSource_statements' depends on axioms: [propext, Quot.sound]
+'World.atomPins_importSource' depends on axioms: [propext, Quot.sound]
+'World.reimport_unchanged' depends on axioms: [propext, Quot.sound]
+'World.reimport_rev_iff' depends on axioms: [propext, Quot.sound]
+'World.current_ofCurrent' depends on axioms: [propext]
+'World.mem_current' depends on axioms: [propext, Quot.sound]
+'World.unlinkIfGone_spec' depends on axioms: [propext]
+'World.mem_current_compile' depends on axioms: [propext, Quot.sound]
+'World.not_current_after_unemit' depends on axioms: [propext, Quot.sound]
+'World.history_kept' depends on axioms: [propext, Quot.sound]
+'World.decode_encodeConflict' does not depend on any axioms
+'World.encodeConflict_consistent' does not depend on any axioms
+'World.encode_decodeConflict' depends on axioms: [propext]
+'World.atomPins_encodeConflict' depends on axioms: [propext, Quot.sound]
+'World.toEntry_toContainer' depends on axioms: [propext]
+'World.decode_encodeReview' depends on axioms: [propext, Quot.sound]
+'World.encode_decodeReview' depends on axioms: [propext, Quot.sound]
+'World.append_prefix' does not depend on any axioms
+'World.atomPins_encodeReview' depends on axioms: [propext, Quot.sound]
+'World.not_replayed_by_compiler' does not depend on any axioms
+'World.not_replayed_if_outputs_differ' does not depend on any axioms
+'World.mem_atomPins_compileRun' depends on axioms: [propext, Quot.sound]
+'World.compileHeader_rev_eq_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.rev_le_compileAll' depends on axioms: [propext, Quot.sound]
+'World.compileAll_rev_eq_iff' depends on axioms: [propext, Quot.sound]
+'World.compileAll_sig' depends on axioms: [propext]
+'World.pin_sameBytes_iff' depends on axioms: [propext, Quot.sound]
+'World.pin_moved_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.renderHeaderPin_eq_viewEvidence' depends on axioms: [propext]
+'World.ekosAll_open' does not depend on any axioms
+'World.ekos_holds_iff' depends on axioms: [propext, Quot.sound]
+'World.pin_agrees_with_ekos' depends on axioms: [propext, Quot.sound]
+'World.statusAt_single' depends on axioms: [propext]
+'World.status_core_rev_agrees' depends on axioms: [propext, Quot.sound]
+'World.core_sig_diverges' depends on axioms: [propext, Classical.choice, Quot.sound]
+```
