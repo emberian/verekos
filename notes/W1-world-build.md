@@ -1626,3 +1626,118 @@ theorem mem_detectBy_label (label : C.SchemaId) (wordsOf : C.Digest → List C.K
 'World.disjointB_iff' depends on axioms: [propext, Quot.sound]
 'World.mem_detectBy_label' depends on axioms: [propext, Classical.choice, Quot.sound]
 ```
+
+---
+
+## 2026-10-19, seventh quest: `WorldCore`, the Mathlib-free library (no twins)
+
+`world/` now has two Lake libraries.
+- **`WorldCore`** (root `WorldCore.lean`) imports only modules in its own set.
+  `world/check-core-imports.sh` enforces this. It was tested: it fails on a
+  planted `import Mathlib.Data.Finset.Basic`.
+- **`World`** imports `WorldCore` and everything else.
+
+Build times:
+- a clean `nice -n 10 lake build WorldCore` is **16 jobs, 6 s**, and the log
+  names no Mathlib module (`var/w1/build-clean-worldcore.log`);
+- the full build after it is 2984 jobs, 15 s (`var/w1/build-clean-world-q7.log`).
+
+No warnings, no `sorry`. Commit `3059c8f`.
+
+**Why `detectList` and `detectListBy` cannot move to Core.** Both return a
+`Finset`, which is a Mathlib type. Moving them without a signature change is
+impossible. So they stay in `World` (module `World.Conflicts` / `World.Clash`),
+**unchanged in name, signature and body**. Core gains the list versions:
+- `World.detectL` and `World.detectLBy`, in namespace `World` (check/'s copies
+  are `Check.detectL`/`Check.detectLBy`, so there is no clash);
+- `World.detectL_toFinset : (detectL reg l).toFinset = detectList reg l`;
+- `World.detectLBy_toFinset : (detectLBy reg κ l).toFinset = detectListBy reg κ l`.
+
+check/ can therefore `import WorldCore`, call `World.detectL`/`detectLBy`,
+and delete both its copies and its `CheckProofs` equality proofs. The
+equalities now live in `World`.
+
+**Where every name check/ pins lives now:**
+
+| Name | Module | Library |
+|---|---|---|
+| `detectList` | `World.Conflicts` (unchanged) | World |
+| `detectListBy` | `World.Clash` (unchanged) | World |
+| `labelClash` | `World.ClashCore` (moved from `World.Clash`) | WorldCore |
+| `admissible`, `AdmLog`, `rstep`, `rankMap`, `rankOf` | `World.Admission` (unchanged; it now imports `World.Ranked` instead of `World.WellFormed`) | WorldCore |
+| `visible` | `World.Visible` (unchanged) | WorldCore |
+| `status`, `reviewOf` | `World.Status` (unchanged) | WorldCore |
+| `detectL`, `detectLBy` (new, the list versions) | `World.ConflictsCore`, `World.ClashCore` | WorldCore |
+
+**Everything that moved module (names, signatures and proofs unchanged):**
+- `World.WellFormed` → **`World.Ranked`**:
+  - `Claim.PinsNonempty`, `PremiseOf`, `Ranked`, `Ranked.wellFounded`,
+    `Ranked.not_self`;
+  - `any_congr_mem`, `all_congr_mem`;
+  - `denied_stable`, `allowed_stable`, `visible_stable`, `visibleR`,
+    `visible_eq_visibleR`, `visibleR_rank_irrelevant`, `visible_iff_sourcePins`;
+  - `asReview_pins`, `latest_append_put`, `reviewSurvives_put_acyclic`.
+
+  `World.WellFormed` keeps the source-order rule (`ClaimKey.Canonical`,
+  `normalize` and its theorems, `Claim.WellFormed`, `LogWellFormed`,
+  `latest_wellFormed`) and imports `World.Ranked`.
+- `World.Conflicts` → **`World.ConflictsCore`**: `ConflictKey`,
+  `Claim.stated`, `disagreeOn`, `sameSubject` and its `Decidable` instance,
+  `mem_disagreeOn`.
+- `World.Clash` → **`World.ClashCore`**: `Clash`, `Clash.differ`,
+  `disagreeOnBy`, `mem_disagreeOnBy`, `disagreeOnBy_differ`, `disjointB`,
+  `disjointB_iff`, `labelClash`.
+
+**Proof edits forced by leaving Mathlib** (statements untouched):
+- Mathlib lemma names were replaced by core ones (`Nat.le_refl`,
+  `Nat.le_antisymm`, `Nat.lt_of_le_of_lt`; `Nat.lt_wfRel.wf` for
+  `wellFounded_lt`).
+- Mathlib tactics `set`, `conv_rhs` and `by_contra` were replaced by plain
+  terms, `conv => rhs` and `Classical.byContradiction`.
+- `List.reverseRecOn` (Mathlib) was replaced by a new core lemma
+  `rankInv_of_admLog_rev` (induction on the reversed log).
+- Five simp-driven proofs were made explicit. Each still proves the same
+  statement.
+
+New statements:
+
+```lean
+def detectL (l : List (Claim C P)) : List (ConflictKey C)
+def detectLBy (l : List (Claim C P)) : List (ConflictKey C)
+
+theorem mem_detectL (l : List (Claim C P)) (k : ConflictKey C) :
+    k ∈ detectL reg l ↔
+      ∃ c₁ ∈ l, ∃ c₂ ∈ l, c₁ ≠ c₂ ∧ sameSubject c₁ c₂ ∧
+        ∃ a v₁ v₂, (a, v₁) ∈ c₁.stated reg ∧ (a, v₂) ∈ c₂.stated reg ∧ v₁ ≠ v₂ ∧
+          k = (c₁.key.schema, c₁.key.subject, a)
+
+theorem mem_detectLBy (l : List (Claim C P)) (k : ConflictKey C) :
+    k ∈ detectLBy reg κ l ↔
+      ∃ c₁ ∈ l, ∃ c₂ ∈ l, c₁ ≠ c₂ ∧ sameSubject c₁ c₂ ∧
+        ∃ a v₁ v₂, (a, v₁) ∈ c₁.stated reg ∧ (a, v₂) ∈ c₂.stated reg ∧
+          κ c₁.key.schema (c₁.key.sources, v₁) (c₂.key.sources, v₂) = true ∧
+          k = (c₁.key.schema, c₁.key.subject, a)
+
+theorem detectL_toFinset (l : List (Claim C P)) : (detectL reg l).toFinset = detectList reg l
+
+theorem detectLBy_toFinset (l : List (Claim C P)) :
+    (detectLBy reg κ l).toFinset = detectListBy reg κ l
+
+theorem rankInv_of_admLog_rev : ∀ (R : List (Receipt C P)), AdmLog d R.reverse → RankInv d R.reverse
+```
+
+`#print axioms` (new theorems, and a sample of the moved ones), verbatim:
+
+```
+'World.mem_detectL' depends on axioms: [propext, Quot.sound]
+'World.mem_detectLBy' depends on axioms: [propext, Quot.sound]
+'World.detectL_toFinset' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.detectLBy_toFinset' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.rankInv_of_admLog_rev' depends on axioms: [propext, Quot.sound]
+'World.rankInv_of_admLog' depends on axioms: [propext, Quot.sound]
+'World.ranked_of_admLog' depends on axioms: [propext, Quot.sound]
+'World.visible_stable' depends on axioms: [propext, Quot.sound]
+'World.reviewSurvives_put_acyclic' depends on axioms: [propext, Quot.sound]
+'World.mem_disagreeOn' depends on axioms: [propext, Quot.sound]
+'World.disagreeOnBy_differ' depends on axioms: [propext, Quot.sound]
+```

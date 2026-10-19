@@ -29,6 +29,30 @@ nice -n 10 lake build
   recreate those symlinks before the first `lake build`, or Lake will clone.
 - A clean build of `World` takes about 8 s once the dependencies are built.
 
+## Two libraries: `WorldCore` and `World`
+
+- **`WorldCore`** (`WorldCore.lean`) is the Mathlib-free part, for runners.
+  It holds:
+  - `World.Claim`, `.Log`, `.TxOrder`, `.Status`, `.Visible`, `.Traverse`,
+    `.Ranked`, `.Admission`;
+  - `.ConflictsCore` and `.ClashCore`: the list-based `detectL` and
+    `detectLBy`, `labelClash`;
+  - `.Document`, `.Shapes`, `.CarryForward`.
+
+  `./check-core-imports.sh` fails if any of these imports anything outside
+  that set. A clean `nice -n 10 lake build WorldCore` is 16 jobs and about
+  6 s, with no Mathlib module in the graph.
+- **`World`** (`World.lean`) imports `WorldCore` and adds everything that
+  needs Mathlib or minidregg:
+  - the `Finset`-based `detect`, `detectList`, `detectBy`, `detectListBy`;
+  - sorted keys in `WellFormed`;
+  - `Identity`'s classes;
+  - `Minidregg`;
+  - the examples.
+- **`detectL` and `detectLBy` compute exactly `detectList` and
+  `detectListBy`**: `detectL_toFinset` and `detectLBy_toFinset` in `World`
+  prove it.
+
 ## What each file states
 
 | File | What it says | Proved |
@@ -47,6 +71,9 @@ nice -n 10 lake build
 | `World/CarryForward.lean` | "The transclusion is the carry-forward rule" (design §3). The conflict header atom is rewritten, at a fresh revision, only when the signature changes. A review's snapshot pin of it reads same bytes or `moved`. EKOS's `carry_forward` is modelled line by line. | `compileHeader_rev_eq_iff`, `pin_sameBytes_iff`, `pin_moved_iff`, `renderHeaderPin_eq_viewEvidence`, `ekos_holds_iff`, `pin_agrees_with_ekos`, `status_core_rev_agrees` (World.Status agrees when the core is the header *revision*), `core_sig_diverges` (with the *signature* as core, A → B → A disagrees) |
 | `World/TxOrder.lean` | `TxMonotone`: transaction numbers strictly increase along the log (review R1, M9). Additive; nothing in `World.Log` changed. | `txMonotone_write` (`write` keeps it when the new number exceeds the last), `state_eq_replay_takeWhile` (the state at `t` is the replay of the longest prefix numbered `t` or less), `segment_contiguous`, `diff_eq_segment` (`diff a b` is exactly the ids of the contiguous segment `(a, b]`) |
 | `World/Clash.lean` | Conflicts under a **clash table**: one relation per schema on (sources, value) pairs, in place of plain inequality (lane B, F1). Additive: `detect` and `detectList_congr` are unchanged. `labelClash` is EKOS's label-mismatch rule: source sets disjoint and word sets disjoint. | `detectBy_differ` (the default table is exactly `detect`), `mem_detectBy`, `coverageBy`, `soundnessBy`, `detectListBy_congr`, `detectListBy_perm`, `detectBy_mono`, `mem_detectBy_label`; four `decide` probes of the label rule |
+| `World/Ranked.lean` (Core) | Nonempty pins and no pin cycles, split out of `WellFormed` unchanged: `PinsNonempty`, `PremiseOf`, `Ranked`, `visibleR` and its stability theorems, `reviewSurvives_put_acyclic`. | as listed under `WellFormed` before the split |
+| `World/ConflictsCore.lean` (Core) | `ConflictKey`, `Claim.stated`, `disagreeOn`, `sameSubject` (moved from `Conflicts` unchanged) and `detectL`, conflict detection over a list. | `mem_disagreeOn`, `mem_detectL`; `detectL_toFinset` (in `Conflicts`) |
+| `World/ClashCore.lean` (Core) | `Clash`, `Clash.differ`, `disagreeOnBy`, `disjointB`, `labelClash` (moved from `Clash` unchanged) and `detectLBy`. | `mem_disagreeOnBy`, `disagreeOnBy_differ`, `disjointB_iff`, `mem_detectLBy`; `detectLBy_toFinset` (in `Clash`) |
 | `World/Minidregg.lean` | The carriers filled with minidregg's types. `claimIdDerivation` derives ids the way minidregg derives identifiers. Source-pin freshness is checked against `AtomRecord.revision`. | `claimId_injective` (from an injective encoder and digest, using minidregg's `preimageCodec_encode_injective`), `sourcePinFresh_iff`, `stale_of_moved` |
 | `World/Examples.lean` | The theorems run on the table example (extended with a foreign key, a fuzzy `SameAs` and an exact `SameAs` schema, and a total order on keys), so their hypotheses are shown to be satisfiable. A human review confirms. A compiler-written review changes nothing. A core change gives `needsReview`, and restoring the core restores the decision. `diff` over-approximates. A reader denied one file does not see the conflict. The example state has a rank. The foreign key is crossed; the fuzzy candidate is not, until a human confirms it. The compiler's exact merge links two tables and is undone by retracting it. | `d₀_injective`, `ranked₀`, `keyCode_injective`, `same_empty`; about thirty examples checked by `decide` or by the theorems |
 
