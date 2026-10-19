@@ -1741,3 +1741,275 @@ theorem rankInv_of_admLog_rev : ∀ (R : List (Receipt C P)), AdmLog d R.reverse
 'World.mem_disagreeOn' depends on axioms: [propext, Quot.sound]
 'World.disagreeOnBy_differ' depends on axioms: [propext, Quot.sound]
 ```
+
+---
+
+## 2026-10-19, eighth quest: classes, and the model over minidregg's records
+
+Everything below is built and pushed to `origin/dev`.
+- Commit `2d18261` is the typeclass move; `79b0445` is the minidregg instance
+  and the cleanup.
+- Clean `lake build WorldCore`: 16 jobs, 8 s, no Mathlib module.
+- Clean full build: 3060 jobs, 18 s.
+- The one-time build of minidregg's `Kernel.ContentResource` closure (71
+  modules, inside `world/.lake/packages/minidregg`, nothing written into
+  `/Users/ember/dev/minidregg`): **124 s** (`var/w1/build-contentresource.log`).
+- No warnings and no `sorry`; `check-core-imports.sh` is green.
+- No theorem was lost, except the two stand-ins deleted on purpose
+  (`sourcePinFresh_iff`, `stale_of_moved`).
+
+### 1. Classes
+
+`Carriers` and `ClaimIdDerivation` are classes. No theorem's meaning
+changed; each is re-proved under the new binders. Unused instance arguments
+are `omit`ted, so a list lemma does not demand a carriers instance.
+
+**How check/ and map/ re-pin** (every pinned name keeps its meaning):
+- **Types lose their carriers argument:**
+  - `World.Claim C P` → `World.Claim P`, `World.Receipt C P` → `World.Receipt P`,
+    `World.Op C P` → `World.Op P`;
+  - `World.Registry C P` → `World.Registry P`, `World.Schema C P s` →
+    `World.Schema P s`;
+  - `World.ClaimKey C` → `World.ClaimKey`, `World.Pin C` → `World.Pin`,
+    `World.Scope C` → `World.Scope`;
+  - `World.Clash C` → `World.Clash`, `World.ConflictKey C` → `World.ConflictKey`;
+  - every `World.Shapes`/`World.Document` type likewise (`World.Cell P`,
+    `World.Evidence`, `World.SourceDoc A`, `World.Manifest`, …).
+- **Calls lose their derivation argument `d`:**
+  - `latest d L` → `latest L`;
+  - `visible d σ S n c` → `visible σ S n c`;
+  - `status R reg d L c` → `status R reg L c`;
+  - `statusAt R reg d L k dg` → `statusAt R reg L k dg`;
+  - `reviewOf R reg d k r` → `reviewOf R reg k r`;
+  - `admissible d L r` → `admissible L r`, `AdmLog d L` → `AdmLog L`;
+  - `rstep d m r` → `rstep m r`, `rankMap d L` → `rankMap L`,
+    `rankOf d L c` → `rankOf L c`;
+  - `c.id d` → `c.id`, `d.claimId k` → `ClaimIdDerivation.claimId k`.
+- `detectList`, `detectListBy`, `detectL`, `detectLBy` and `labelClash` keep
+  their arguments (`reg`, `κ`, the list), minus the carriers in their types.
+- **A downstream file declares its carriers as an instance**:
+  `instance : World.Carriers := …` (or `scoped`/`local`). It must keep only
+  one `Carriers` instance in scope at a time: with two, instance search picks
+  one and the other's terms no longer type-check. A `ClaimIdDerivation`
+  instance is declared the same way.
+
+### 2. The minidregg instance
+
+| Carrier | minidregg type |
+|---|---|
+| `Digest`, `SchemaId`, `Stage` | `Minidregg.Theory.TypedAuthorization.Digest` (`Theory/TypedAuthorization.lean:53`) |
+| `SourceId`, `RunId` | `DocumentId` (`Theory/Hyperdocument.lean:177`) |
+| `Range` | `StableRange` (`:409`) |
+| `AtomRev` | `AtomId × OperationId`, as `TranscludeRequest.pins` (`Kernel/ContentResource.lean:96`) |
+| `Name` | `PrincipalRef` (`Theory/Hyperdocument.lean:197`) |
+| `ClaimId` | `ElementId` (`:180`) via `deriveIdentifier`; key bytes and the digest come from the classes `KeyEncoding` and `DigestOp` |
+| `KeyPart` | `List UInt8` |
+| `Time` | `Nat`: EKOS's domain time; minidregg has no domain clock |
+
+### 3. The theorems, the minidregg results they rest on, and where the two part ways
+
+- **(a)** `Pin.staleIn store p` is "some atom read fails minidregg's `pinHolds`"
+  (`Kernel/ContentResource.lean:2177`).
+  - `staleIn_iff_moved`: stale ⇔ `renderSnapshot` (`:2188`) = `.moved height`.
+  - `same_bytes_of_not_stale`: under `transclusion_pinned`'s hypotheses
+    (`:2570`), a pin that is not stale renders exactly the opening's bytes.
+  - **Divergence.** `pinHolds` also requires the atom to be in the pinned
+    document and **not tombstoned**. The deleted stand-in `sourcePinFresh`
+    compared revisions only, so it called a deleted atom fresh.
+    `tombstoned_is_stale` states minidregg's verdict. The model now uses
+    minidregg's.
+- **(b)** `Receipt.toEvent` maps a receipt to a `VersionEventRecord`
+  (`Theory/Hyperdocument.lean:628`).
+  - `toEvent_causal_injective`: receipt → event → causal preimage is
+    injective, given an injective operation encoding (`OpEncoding`, a
+    premise). The last step is minidregg's
+    `VersionEventRecord.toCausalPreimage_injective` (`:699`).
+  - **Divergence.** Minidregg has no principal kind (compiler, agent,
+    human). It is carried in `historyDomain` by `kindDigest`, which is our
+    choice. Roots and parents are left at fixed values for the host to fill;
+    injectivity does not depend on them.
+- **(c)** The reader-render rule is `renderTransclusion` (`:2206`, stated at
+  `:52-56`): the reader renders through **its own** read of the source,
+  `Option ContentStore`.
+  - `viewEvidence_eq_render`: the model's `viewEvidence` (readable = has a
+    read, current = `pinHolds` in that read) **is** that render in snapshot
+    mode, read through `toPinView`.
+  - `render_unavailable_iff`: `unavailable` ⇔ no read.
+  - `visibleR_iff_rendered`: a compiled claim pinned only to sources is
+    visible under the reader's scope ⇔ none of its cell's transclusions
+    renders `unavailable` for that reader.
+  - **Divergences.**
+    - `Context.sourceRead` (`:126`) is the *writer's* admission context, not
+      the reader's. The brief's "over the real `sourceRead` context" mixes the
+      two. The writer side is tied separately: `admit_sourceNotCovered` puts
+      the model's `admitEvidence` refusal next to minidregg's
+      `transclude_uncovered_refused` (`:2243`) for the same request.
+    - The model's `PinView` has no view of **live** transclusions
+      (`renderLive`: `live`, `invalidated`, `unresolved`), and its `moved`
+      drops the height. `toPinView` is partial.
+- **(d)** `Evidence.toRequest` gives a `TranscludeRequest` (`:92`).
+  - `cellAtomPins_eq_requests`: a cell's (document, atom, revision) pins are
+    exactly the requests' `pins`, each with `documentOf` of its source
+    (`:81`).
+  - **Divergence.** A minidregg transclusion always names a `StableRange`.
+    The model allows a whole-document source pin (range `none`), which has no
+    request (`toRequest_none_iff`).
+
+### 4. What is still not real, said plainly
+
+- **Every concrete claim, receipt and document in the examples is built on
+  the `Nat` fixtures `C₀`/`C₁`.** No example runs on minidregg's types,
+  because `decide` cannot evaluate a minidregg `ContentStore` (a Mathlib
+  `DFinsupp`-backed store). The minidregg results above are theorems over all
+  stores, not runs.
+- **Revisions in `World.Shapes` and `World.CarryForward` are still `Nat`
+  counters**, standing in for `OperationId` freshness. `transclusion_pinned`'s
+  `fresh` hypothesis is the real form of that assumption. The two are not yet
+  connected by a theorem.
+- **Injective digests are premises** (`claimId_injective`'s `hdd`,
+  `OpEncoding`). Minidregg deliberately proves none.
+
+### Statements (`World/Minidregg.lean`)
+
+```lean
+theorem cites the minidregg definition or theorem it rests on, at the pinned
+commit `dcab86da` (`lakefile.toml`). It imports `Kernel.ContentResource`, so it
+lives in `World`, never in `WorldCore`.
+    The instance (`carriers`, scoped to `World.Minidregg`):
+    | Carrier | minidregg type |
+|---|---|
+| `SchemaId`, `Digest`, `Stage` | `Digest` (`Theory/TypedAuthorization.lean:53`) |
+| `SourceId`, `RunId` | `DocumentId` (`Theory/Hyperdocument.lean:177`) |
+| `Range` | `StableRange` (`Theory/Hyperdocument.lean:409`) |
+| `AtomRev` | `AtomId × OperationId`, the shape of `TranscludeRequest.pins` (`Kernel/ContentResource.lean:96`) |
+| `Name` | `PrincipalRef` (`Theory/Hyperdocument.lean:197`) |
+| `ClaimId` | `ElementId` (`Theory/Hyperdocument.lean:180`), through `deriveIdentifier` |
+| `KeyPart` | `List UInt8` (bytes) |
+| `Time` | `Nat`: EKOS's domain validity time; minidregg has no domain clock |
+    The theorems, and
+
+scoped instance carriers : Carriers
+
+class KeyEncoding where
+    encode : ClaimKey → List UInt8
+    /-- The deployment's digest operation: minidregg's `DigestDerivation`
+(`Theory/Hyperdocument.lean:163`). -/
+class DigestOp
+
+scoped instance claimIdDerivation [KeyEncoding] [DigestOp] : ClaimIdDerivation
+
+theorem claimId_injective [KeyEncoding] [DigestOp]
+    (hdd : Function.Injective (DigestOp.derivation).digestBytes)
+    (henc : Function.Injective (KeyEncoding.encode)) :
+    Function.Injective (ClaimIdDerivation.claimId : ClaimKey → ElementId)
+
+theorem documentOf_digest (doc : DocumentId) : documentOf doc.digest.value = doc
+
+def _root_.World.Pin.toOpening (p : Pin) (height : Nat) : Option RangeOpening
+
+def _root_.World.Pin.staleIn (store : ContentStore) (p : Pin) : Bool
+
+theorem staleIn_iff_moved (store : ContentStore) (p : Pin) (height : Nat) (o : RangeOpening)
+    (ho : p.toOpening height = some o) :
+    p.staleIn store = true ↔ renderSnapshot store o = .moved height
+
+theorem same_bytes_of_not_stale (earlier later : ContentStore) (ops : List OperationId)
+    (request : TranscludeRequest) (height : Nat)
+    (admitted : openingHolds earlier request = true) (reached : Reaches earlier later ops)
+    (fresh : ∀ pin ∈ request.pins, pin.2 ∉ ops)
+    (p : Pin) (hp : p.toOpening height = some (.ofRequest request height))
+    (hnot : p.staleIn later = false) :
+    renderSnapshot later (.ofRequest request height) =
+    .snapshot (request.pins.map (pinnedBytes earlier))
+
+theorem tombstoned_is_stale (store : ContentStore) (doc : DocumentId) (r : Option StableRange)
+    (a : AtomId × OperationId) (rec : AtomRecord) (w : Nat)
+    (hrec : semanticAtom store a.1 = some rec) (htomb : rec.tombstonedAt.isSome = true) :
+    Pin.staleIn store ⟨.source doc r, .atoms [a], w⟩ = true
+
+class OpEncoding (P : Digest → Type)
+
+def kindDigest : PrincipalKind → Digest
+
+theorem kindDigest_injective : Function.Injective kindDigest
+
+def _root_.World.Receipt.toEvent {P : Digest → Type} [OpEncoding P] (doc : DocumentId)
+    (schema : Minidregg.Theory.CausalVersionDag.SchemaRef) (r : Receipt P) :
+    VersionEventRecord
+
+theorem toEvent_causal_injective {P : Digest → Type} [OpEncoding P] (doc : DocumentId)
+    (schema : Minidregg.Theory.CausalVersionDag.SchemaRef)
+    (henc : Function.Injective (OpEncoding.encode : Op P → OperationId)) :
+    Function.Injective fun r : Receipt P => (r.toEvent doc schema).toCausalPreimage
+
+def toPinView : TransclusionView → Option PinView
+
+def _root_.World.Evidence.toOpening (e : Evidence) (height : Nat) : Option RangeOpening
+
+theorem viewEvidence_eq_render (readerSource : DocumentId → Option ContentStore)
+    (e : Evidence) (height : Nat) (o : RangeOpening) (ho : e.toOpening height = some o) :
+    some (viewEvidence (fun doc => (readerSource doc).isSome)
+    (fun doc a => match readerSource doc with
+    | some store => pinHolds store doc a
+    | none => false) e) =
+    toPinView (renderTransclusion (readerSource e.pin.source) o .snapshot)
+
+theorem render_unavailable_iff (source : Option ContentStore) (o : RangeOpening) :
+    (∃ n s, renderTransclusion source o .snapshot = .unavailable n s) ↔ source = none
+
+theorem visibleR_iff_rendered {P : Digest → Type} [ClaimIdDerivation]
+    (σ : ElementId → Option (Claim P)) (rank : Claim P → Nat)
+    (readerSource : DocumentId → Option ContentStore) (height : Nat)
+    (c : Claim P) (cell : Cell P) (hc : encode c = some cell) (hne : c.PinsNonempty)
+    (hsrc : ∀ p ∈ c.pins, ∃ doc r, p.target = .source doc r)
+    (hrange : ∀ e ∈ cell.evidence, ∃ o, e.toOpening height = some o) :
+    visibleR σ (readerScope fun doc => (readerSource doc).isSome) rank c = true ↔
+    ∀ e ∈ cell.evidence, ∀ o, e.toOpening height = some o →
+    ¬ ∃ n s, renderTransclusion (readerSource e.pin.source) o .snapshot = .unavailable n s
+
+theorem admit_sourceNotCovered (context : Context) (held : DocumentId → AtomId × OperationId → Bool)
+    (e : Evidence) (range : StableRange) (mode : TransclusionMode)
+    (huncovered : context.sourceRead e.pin.source.digest.value = none)
+    (author : PrincipalRef) (operation : OperationId) (document : DocumentId)
+    (progress : Progress) (transclusion : Minidregg.Theory.Hyperdocument.TransclusionId)
+    (link : Minidregg.Theory.Hyperdocument.LinkId) :
+    admitEvidence (fun doc : DocumentId => (context.sourceRead doc.digest.value).isSome) held e =
+    some .sourceNotCovered ∧
+    step author operation document context progress
+    (.transclude transclusion link ⟨e.pin.source.digest.value, range, mode, e.pin.atoms⟩) =
+    .error .sourceNotCovered
+
+def _root_.World.Evidence.toRequest (e : Evidence) : Option TranscludeRequest
+
+theorem toRequest_none_iff (e : Evidence) : e.toRequest = none ↔ e.info.range = none
+
+theorem cellAtomPins_eq_requests {P : Digest → Type} (cell : Cell P)
+    (reqs : List TranscludeRequest) (h : cell.evidence.mapM Evidence.toRequest = some reqs) :
+    cellAtomPins cell = reqs.flatMap fun q => q.pins.map (documentOf q.source, ·)
+
+```
+
+### `#print axioms`, verbatim (all of `World.Minidregg`, and a sample of the re-proved generic theorems)
+
+```
+'World.Minidregg.claimId_injective' depends on axioms: [propext]
+'World.Minidregg.documentOf_digest' does not depend on any axioms
+'World.Minidregg.staleIn_iff_moved' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.Minidregg.same_bytes_of_not_stale' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.Minidregg.tombstoned_is_stale' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.Minidregg.kindDigest_injective' depends on axioms: [propext]
+'World.Minidregg.toEvent_causal_injective' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.Minidregg.viewEvidence_eq_render' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.Minidregg.render_unavailable_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.Minidregg.visibleR_iff_rendered' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.Minidregg.admit_sourceNotCovered' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.Minidregg.toRequest_none_iff' depends on axioms: [propext]
+'World.Minidregg.cellAtomPins_eq_requests' depends on axioms: [propext, Quot.sound]
+'World.diffIsFootprint' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.reviewSurvives' depends on axioms: [propext, Quot.sound]
+'World.ranked_of_admLog' depends on axioms: [propext, Quot.sound]
+'World.detectL_toFinset' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.merge_reversible' depends on axioms: [propext, Classical.choice, Quot.sound]
+'World.status_core_rev_agrees' depends on axioms: [propext, Quot.sound]
+'World.visibleR_iff_room' depends on axioms: [propext, Quot.sound]
+```

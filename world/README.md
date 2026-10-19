@@ -29,6 +29,21 @@ nice -n 10 lake build
   recreate those symlinks before the first `lake build`, or Lake will clone.
 - A clean build of `World` takes about 8 s once the dependencies are built.
 
+## Classes, not carrier arguments
+
+`Carriers` (the model's types) and `ClaimIdDerivation` (how a key becomes a
+claim id) are type classes. Generic definitions and theorems take
+`[C : Carriers]` and `[d : ClaimIdDerivation]`, so types read `Claim P`,
+`Receipt P`, `ClaimKey`, `Pin`, and calls carry no derivation argument
+(`latest L`, `status R reg L c`, `visible σ S n c`, `admissible L r`).
+There are three concrete instances, each `scoped` so that only one is ever
+in scope:
+- `World.Minidregg.carriers`, over minidregg's own types. This is the real
+  one.
+- `World.Example.C₀` (in `World.Conflicts`) and `World.ClashExample.C₁` (in
+  `World.Clash`): small `Nat`-based fixtures. `decide` can run the generic
+  theorems on them. They prove nothing about minidregg.
+
 ## Two libraries: `WorldCore` and `World`
 
 - **`WorldCore`** (`WorldCore.lean`) is the Mathlib-free part, for runners.
@@ -74,7 +89,7 @@ nice -n 10 lake build
 | `World/Ranked.lean` (Core) | Nonempty pins and no pin cycles, split out of `WellFormed` unchanged: `PinsNonempty`, `PremiseOf`, `Ranked`, `visibleR` and its stability theorems, `reviewSurvives_put_acyclic`. | as listed under `WellFormed` before the split |
 | `World/ConflictsCore.lean` (Core) | `ConflictKey`, `Claim.stated`, `disagreeOn`, `sameSubject` (moved from `Conflicts` unchanged) and `detectL`, conflict detection over a list. | `mem_disagreeOn`, `mem_detectL`; `detectL_toFinset` (in `Conflicts`) |
 | `World/ClashCore.lean` (Core) | `Clash`, `Clash.differ`, `disagreeOnBy`, `disjointB`, `labelClash` (moved from `Clash` unchanged) and `detectLBy`. | `mem_disagreeOnBy`, `disagreeOnBy_differ`, `disjointB_iff`, `mem_detectLBy`; `detectLBy_toFinset` (in `Clash`) |
-| `World/Minidregg.lean` | The carriers filled with minidregg's types. `claimIdDerivation` derives ids the way minidregg derives identifiers. Source-pin freshness is checked against `AtomRecord.revision`. | `claimId_injective` (from an injective encoder and digest, using minidregg's `preimageCodec_encode_injective`), `sourcePinFresh_iff`, `stale_of_moved` |
+| `World/Minidregg.lean` | The `Carriers` instance over minidregg's types: `Digest`, `DocumentId`, `StableRange`, `AtomId × OperationId`, `PrincipalRef`, `ElementId` through `deriveIdentifier`. Theorems that tie the model to minidregg's own definitions and theorems in `Kernel.ContentResource` and `Theory.Hyperdocument`, and the places where the two part ways. | `claimId_injective`, `staleIn_iff_moved` and `same_bytes_of_not_stale` (via `transclusion_pinned`), `tombstoned_is_stale`, `toEvent_causal_injective` (via `toCausalPreimage_injective`), `viewEvidence_eq_render`, `render_unavailable_iff`, `visibleR_iff_rendered`, `admit_sourceNotCovered` (via `transclude_uncovered_refused`), `toRequest_none_iff`, `cellAtomPins_eq_requests` |
 | `World/Examples.lean` | The theorems run on the table example (extended with a foreign key, a fuzzy `SameAs` and an exact `SameAs` schema, and a total order on keys), so their hypotheses are shown to be satisfiable. A human review confirms. A compiler-written review changes nothing. A core change gives `needsReview`, and restoring the core restores the decision. `diff` over-approximates. A reader denied one file does not see the conflict. The example state has a rank. The foreign key is crossed; the fuzzy candidate is not, until a human confirms it. The compiler's exact merge links two tables and is undone by retracting it. | `d₀_injective`, `ranked₀`, `keyCode_injective`, `same_empty`; about thirty examples checked by `decide` or by the theorems |
 
 ## Quoted from minidregg (never redefined)
