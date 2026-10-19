@@ -1,5 +1,5 @@
 name = "map"
-defaultTargets = ["verekos-map"]
+defaultTargets = ["verekos-map", "MapProofs"]
 
 # The model, pinned to one commit of this repository and cloned under
 # .lake/packages/world (subDir world), as check/ does: a path dependency would
@@ -17,6 +17,11 @@ subDir = "world"
 # executable never compiles or links Mathlib.
 [[lean_lib]]
 name = "VerekosMap"
+
+# minidregg's evaluator run on the generated laws (R2, R3 and controls).
+# Built, never linked.
+[[lean_lib]]
+name = "MapProofs"
 
 [[lean_exe]]
 name = "verekos-map"

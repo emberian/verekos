@@ -186,22 +186,42 @@ def cmdImport (a : List (String × String)) : IO Unit := do
     let D : SourceDoc MC String := ⟨h, cur.toList⟩
     let r := cur.foldl (fun m t => max m t.rev) 0 + 1
     let N := reimportedSource atomOf D statements r
-    let mut prev : Option String := none
+    -- A statement the current document lacks is NOT written as `createAtom` + `insertRun`
+    -- (mapper.py's spelling): the deployed client refuses `insertRun` ("unknown workspace content
+    -- action", minidregg native/resource-client/src/content_privacy.rs:83; lane A,
+    -- notes/A-reader-local.md). It is folded into the preceding live statement atom with one
+    -- `editAtom` (lane A's shape), or into the following one when it comes first. The model's
+    -- SourceDoc still has one atom per statement; the deployed document then does not.
+    let mut hosts : Array (String × String) := #[]   -- (atom id, new payload text), first-touch order
+    let mut pending := ""                             -- new statements before any live atom
+    let mut host : Option String := none
+    let setHost := fun (hs : Array (String × String)) (id txt : String) =>
+      if hs.any (·.1 == id) then hs.map fun (i, x) => if i == id then (i, txt) else (i, x) else hs.push (id, txt)
+    let hostText := fun (hs : Array (String × String)) (id : String) (dflt : String) =>
+      ((hs.find? (·.1 == id)).map (·.2)).getD dflt
     for t in N.atoms do
       match D.atoms.find? (·.key == t.key) with
       | some old =>
-        if old.rev != t.rev then
-          acts := acts.push (.obj [("type", .str "editAtom"), ("atom", .str t.id), ("before", d.before t.id), ("kind", textKind),
-            ("payload", .str (hexs t.bytes)), ("tombstone", .bool false)])
+        let base := if old.rev != t.rev then t.bytes else old.bytes
+        if old.rev != t.rev || !pending.isEmpty then
+          hosts := setHost hosts t.id (pending ++ base)
+        pending := ""
+        host := some t.id
       | none =>
         if d.atoms.contains t.id then
           throw (IO.userError s!"import: {t.key.headD ""} returns under a tombstoned id; not handled in slice 1")
-        acts := acts.push (.obj [("type", .str "createAtom"), ("atom", .str t.id), ("kind", textKind), ("payload", .str (hexs t.bytes))])
-        let anchor : J := match prev with
-          | none => .null
-          | some p => .obj [("run", .str stmtRun), ("neighbor", .str p), ("bias", .str "after"), ("death", .str DEATH)]
-        acts := acts.push (.obj [("type", .str "insertRun"), ("run", .str stmtRun), ("anchor", anchor), ("atoms", .arr [.str t.id])])
-      prev := some t.id
+        match host with
+        | none => pending := pending ++ t.bytes
+        | some h =>
+          if (h.length > 0) && ((D.atoms.find? (·.id == h)).map (·.key.headD "") |>.getD "").startsWith "anon:" then
+            throw (IO.userError s!"import: {t.key.headD ""} would be folded into an anonymous atom, whose id is derived from its whole text; not handled")
+          let hostCur := hostText hosts h ((D.atoms.find? (·.id == h)).map (·.bytes) |>.getD "")
+          hosts := setHost hosts h (hostCur ++ t.bytes)
+    if !pending.isEmpty then
+      throw (IO.userError "import: new statements with no live statement atom to fold them into; not handled")
+    for (id, txt) in hosts do
+      acts := acts.push (.obj [("type", .str "editAtom"), ("atom", .str id), ("before", d.before id), ("kind", textKind),
+        ("payload", .str (hexs txt)), ("tombstone", .bool false)])
     for old in D.atoms do
       if !(N.atoms.any (·.key == old.key)) then
         acts := acts.push (.obj [("type", .str "editAtom"), ("atom", .str old.id), ("before", d.before old.id), ("kind", textKind),
