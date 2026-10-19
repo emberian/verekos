@@ -74,14 +74,22 @@ earlier Grok lanes died with "Prompt is too long" before Claude Code compacted.
 | Lane | Owns | Model | Deliverable |
 |---|---|---|---|
 | root | `var/ekos-build/` | — | one `cargo build -p ekos --release` of EKOS at 8e3c178 (the slice-1 and fixture lanes both need the binary; one build, not two) |
-| W12 | `tools/scoreboard/control-dump/src/{identity,branch,impact}_dump.rs`, the matching `controls/*.control.jsonl`, `notes/W12-dumps.md` | GLM | controls for the four panels that have none (identity 58, branch 3, impact 26), through EKOS's real functions; regen and board updated |
+| W12 | `tools/scoreboard/control-dump/src/{identity,branch,impact}_dump.rs`, `controls/*.control.jsonl`, `notes/W12-dumps.md` | GLM | **done, verified by the root** (regen: 58/58, 3/3, 26/26 reproducible and identical; six drift checkers clean). The lane died with "Prompt is too long" (GLM can hit it too) after committing the dumps; the root committed its last edits and wrote the memo |
 | W14 | `world/` | the Opus veteran, resumed again | **done, verified by the root** (`lake build` green, 2,975 jobs; statements read; axioms standard on every theorem of `Admission.lean` and `Document.lean`). The root's law was wrong: retract-then-re-put could close a cycle; the lane added "re-putting an id never raises its recorded rank". Proved: an admissible log yields a ranked state with the computed rank (`ranked_of_admLog`, `rankOf_some_of_admLog`), admissibility decidable, self-pins and absent pins refused. `Document.lean`: the `ekos/object/v1` cell (header, properties, window, evidence containers with snapshot pins, premise links, per-edge containers), claim→cell→claim up to pin order and cell→claim→cell exact, atom pins preserved both ways; K12T's real names (`sourceNotCovered`, `staleOpening`, placeholder, `moved`, same bytes); `visibleR_iff_readable` and `visibleR_iff_room` under nonempty source-only pins. Open: only the object cell is modelled; grants and revisions are plain functions (no heights, no audience rosters); re-ranking dependents on re-put |
-| W15 | `panels/redact/`, `notes/W15-redact-panels.md` | Grok (bounded) | redaction unit tests as panel items + controls + drift |
-| W16 | `panels/ekl/`, `notes/W16-ekl-panels.md` | Grok (bounded) | EKL parser/interpreter tests as panel items + controls + drift |
+| W15 | `panels/redact/`, `notes/W15-redact-panels.md` | Grok (bounded) | **done, drift rerun by the root** (16 fns): 26 items from 16 redaction tests |
+| W16 | `panels/ekl/`, `notes/W16-ekl-panels.md` | Grok (bounded) | **done, drift rerun by the root** (58 fns): 50 parser + 33 interpreter items |
 | W17 (after the binary) | `slice1/`, hbox `~/verekos-runs/slice1/` | Opus | **slice 1** (exploration 01 §5): import the two fixtures, compile with the real `ekos`, map the ndjson to `mini` commands, install the four laws, collect the seven receipts |
-| W18 (after the binary) | `tools/scoreboard/run_fixture.py`, `panels/ledger/`, `controls/ledger.*` | GLM | the fixture pipeline and the ledger dump (ecommerce, northwind) |
+| W18 | `tools/scoreboard/run_fixture.py`, `panels/ledger/`, `controls/ledger.*`, `notes/W18-fixture-pipeline.md` | GLM | **done**: six-stage pipeline with the release binary; ecommerce 6 tables / 6 FKs, northwind 13 / 13, EKOS's own counts reproduced; a second fresh-workspace ecommerce run is content-identical (EKOS#10 is invisible to the export; `ledger audit` shows the differing run_id/source_artifact_id). Not registered in regen (needs a control-dump subcommand or a new runner kind) |
 
-Then M1a, the reader-local compile, against the JDV documents W7 left on hbox.
+## Build wave 4 (launched 2026-10-19 night)
+
+| Lane | Owns | Model | Deliverable |
+|---|---|---|---|
+| W19 | `world/` | the Opus veteran | the source, manifest, conflict, review and compile-run document shapes with their round-trip and pin-preservation theorems; the carry-forward-as-transclusion theorem (a review's pin on the conflict header says `moved` exactly when the conflict signature changed) |
+| W20 | `tools/scoreboard/control-dump/src/ledger_dump.rs`, `controls/ledger.*`, regen registration, `notes/W20-ledger-dump.md` | GLM (compaction env set) | a Rust ledger dump over a workspace (current ids + content signatures, object_history lengths, object_at cuts, diff); the EKOS#10 reproduction: same workspace, invalidate the pass cache, recompile, measure versions per object; classify as ekos_defect if versions grow |
+| (W17) | `slice1/` | Opus | still running |
+
+Then M1a, the reader-local compile, against the world W17 leaves on hbox.
 
 ## Rules
 

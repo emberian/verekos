@@ -182,7 +182,9 @@ pub fn control_for(item: &Item) -> Value {
     }
 }
 
-fn sorted_strings(v: &Value) -> Vec<String> {
+/// A JSON array of strings as a plain `Vec<String>`, order preserved (both
+/// the control's and the expected file's lists are in input order).
+fn str_list(v: &Value) -> Vec<String> {
     v.as_array()
         .map(|a| {
             a.iter()
@@ -210,7 +212,7 @@ pub fn check_assert(control: &Value, assert: &Value) -> Vec<String> {
                     } else {
                         wanted.iter().all(|w| {
                             got.iter().any(|g| {
-                                sorted_strings(&g["members"]) == sorted_strings(&w["members"])
+                                str_list(&g["members"]) == str_list(&w["members"])
                                     && g["exact_name_match"] == w["exact_name_match"]
                             })
                         })
@@ -226,7 +228,7 @@ pub fn check_assert(control: &Value, assert: &Value) -> Vec<String> {
                         wanted.iter().all(|w| {
                             got.iter().any(|g| {
                                 g["kind"] == w["kind"]
-                                    && sorted_strings(&g["ids"]) == sorted_strings(&w["ids"])
+                                    && str_list(&g["ids"]) == str_list(&w["ids"])
                             })
                         })
                     }

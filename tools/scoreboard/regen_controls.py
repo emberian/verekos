@@ -54,14 +54,28 @@ REGISTRY = [
      "control": "controls/scope.store.control.jsonl",
      "drift": ["python3", "-I", "panels/transcribed/drift_check.py",
                "--ekos", "{ekos}", "--record", "panels/transcribed/scope_store_drift.json"]},
+    # The three lanes' own layouts: expected files where the lanes put them
+    # (W3 under the panel's controls/, W6 likewise, W11 in controls/), drift
+    # checkers per lane (identity's takes no --ekos; it pins the path itself).
+    {"sub": "identity", "panel": "panels/identity/identity.unit.jsonl",
+     "expected": "panels/identity/controls/identity.unit.controls.jsonl",
+     "control": "controls/identity.unit.control.jsonl",
+     "drift": ["python3", "-I", "panels/identity/drift.py"]},
+    {"sub": "branch", "panel": "panels/branch/items.jsonl",
+     "expected": "panels/branch/controls/expected.jsonl",
+     "control": "controls/branch.unit.control.jsonl",
+     "drift": ["python3", "-I", "panels/branch/drift.py", "--ekos", "{ekos}"]},
+    {"sub": "impact", "panel": "panels/impact/items.jsonl",
+     "expected": "controls/impact.expected.jsonl",
+     "control": "controls/impact.control.jsonl",
+     "drift": ["python3", "-I", "panels/transcribed/drift_check.py",
+               "--ekos", "{ekos}", "--record", "panels/impact/drift.json"]},
 ]
 
 # Drift checkers for panels whose dumps live in other lanes' files; run for
-# the record, never edited by this script.
-OTHER_DRIFT = [
-    ["python3", "-I", "panels/branch/drift.py", "--ekos", "{ekos}"],
-    ["python3", "-I", "panels/identity/drift.py"],
-]
+# the record, never edited by this script. (branch and identity moved into
+# REGISTRY when their dumps were built, W12.)
+OTHER_DRIFT: list[list[str]] = []
 
 
 def sha256_of(data: bytes) -> str:

@@ -1,8 +1,8 @@
 # The VerEKOS parity board (M0.5)
 
-Generated 2026-10-19T19:34:49Z by `tools/scoreboard/board.py` from the committed control and classification files. Hand edits are overwritten on the next render.
+Generated 2026-10-19T19:36:52Z by `tools/scoreboard/board.py` from the committed control and classification files. Hand edits are overwritten on the next render.
 
-- EKOS pin: `8e3c178fc45741c7e2b1576e936646e0c461e75c` (tree `8719103d4703b3b43f8294497fa446f7320d7362`), control manifest `sha256:1c1ea3ff394a…`
+- EKOS pin: `8e3c178fc45741c7e2b1576e936646e0c461e75c` (tree `8719103d4703b3b43f8294497fa446f7320d7362`), control manifest `sha256:581db7d973d9…`
 - Panels: 8 measured rows, 4 placeholder rows
 - Counts are agree / classified / unexplained. Agree with the control is not correctness: EKOS can be wrong (see classified ekos_defect rows). Classified differences are not hidden; they are counted.
 
