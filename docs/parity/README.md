@@ -26,24 +26,12 @@ Reading a row:
 
 ## The five assurance labels
 
-Exploration 03 §3.6 took these from the hyperdreggmedia audit, which is not in
-this repository; the wording below is ours. It was rewritten on 2026-10-19 when
-the Isabelle layer was dropped: every kernel is a Lean definition in `world/`,
-so "proved" means a Lean theorem about the definition that is *run* on the
-panel, not a HOL function exported to ML.
-
-| Label | Meaning |
-|---|---|
-| `design target` | no theorem about this kernel yet; the panel is measured by the control only (every row today) |
-| `executable property` | a property checked by running a Lean definition on the panel, with no theorem behind it |
-| `conditional` | a Lean theorem with an explicit premise (injective ids, a coverage premise), and the panel is scored by running that same definition |
-| `proved` | a Lean theorem with no premise beyond the model's definitions, and the panel is scored by running that same definition, hash-tied to the build |
-| `cross-language` | the claim crosses a seam no theorem covers: the Lean model on one side, a deployed minidregg host or a non-Lean reader on the other |
-
-A label describes the kernel's claim, never the panel result. A theorem about
-`World.Visible` does not make the `scope.decision` row `proved` until the
-same definition answers the panel's items; until then the row stays
-`design target` however many theorems exist.
+The definitions live once, in `panels/LABELS.json` (`assurance_labels`), and
+`board.py` prints them at the foot of `BOARD.md`. Exploration 03 §3.6 took the
+five names from the hyperdreggmedia audit, which is not in this repository;
+the wording is ours, rewritten on 2026-10-19 for Lean when the Isabelle layer
+was dropped. A theorem about a `world/` definition does not move a row past
+`design target` until that same definition answers the panel's items.
 
 ## Files
 

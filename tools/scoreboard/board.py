@@ -196,6 +196,17 @@ def main() -> int:
             lines.append("No classified differences on record.")
         lines.append("")
 
+    lines.append("## Assurance labels")
+    lines.append("")
+    lines.append("From `panels/LABELS.json`, the one copy of these definitions. A label describes "
+                 "the kernel's claim, never the panel result.")
+    lines.append("")
+    lines.append("| Label | Meaning |")
+    lines.append("|---|---|")
+    for name, meaning in labels.get("assurance_labels", {}).items():
+        lines.append(f"| `{name}` | {esc(meaning)} |")
+    lines.append("")
+
     lines.append("## Not measured")
     lines.append("")
     for item in labels.get("never_measured_here", []):

@@ -1,6 +1,6 @@
 # The VerEKOS parity board (M0.5)
 
-Generated 2026-10-19T19:52:16Z by `tools/scoreboard/board.py` from the committed control and classification files. Hand edits are overwritten on the next render.
+Generated 2026-10-19T19:56:03Z by `tools/scoreboard/board.py` from the committed control and classification files. Hand edits are overwritten on the next render.
 
 - EKOS pin: `8e3c178fc45741c7e2b1576e936646e0c461e75c` (tree `8719103d4703b3b43f8294497fa446f7320d7362`), control manifest `sha256:b4425855fdd8…`
 - Panels: 6 rows with an item-keyed control, 5 rows with inputs but no item-keyed control, 2 placeholder rows (no panel yet)
@@ -94,6 +94,18 @@ No classified differences on record.
 Placeholder: panel and expected outcomes committed (W16: 33 items from 32 interpreter tests); no control dump subcommand yet.
 
 No classified differences on record.
+
+## Assurance labels
+
+From `panels/LABELS.json`, the one copy of these definitions. A label describes the kernel's claim, never the panel result.
+
+| Label | Meaning |
+|---|---|
+| `design target` | no theorem about this kernel yet; the row exists to say the panel is measured by the control only |
+| `executable property` | a property checked by running a Lean definition on the panel (#eval or a compiled reader), with no theorem behind it |
+| `conditional` | a Lean theorem about the kernel with an explicit premise (for example injective ids, or a coverage premise), and the panel is scored by running that same definition |
+| `proved` | a Lean theorem about the kernel with no premise beyond the model's own definitions, and the panel is scored by running that same definition (hash-tied to the build) |
+| `cross-language` | the claim crosses a seam the theorem does not cover: the Lean model on one side, a deployed minidregg host or a non-Lean reader on the other |
 
 ## Not measured
 
